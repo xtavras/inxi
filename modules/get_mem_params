@@ -3,10 +3,10 @@
 
 get_mem_params()
 {
-memory_total=$(egrep -i "memtotal:" /proc/meminfo)
-memory_free=$(egrep -i "memfree:" /proc/meminfo)
-#memory_buffers=$(egrep -i "buffers:" /proc/meminfo)
-#memory_cached=$(egrep -i "cached:" /proc/meminfo)
+	local memory_total=$(egrep -i "memtotal:" /proc/meminfo)
+	local memory_free=$(egrep -i "memfree:" /proc/meminfo)
+	# local memory_buffers=$(egrep -i "buffers:" /proc/meminfo)
+	# local memory_cached=$(egrep -i "cached:" /proc/meminfo)
 	MEM=$(gawk '
 	/^MemTotal:/ { total = $2 }
 	/^(MemFree|Buffers|Cached):/ { notused+=$2 }
