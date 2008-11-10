@@ -36,7 +36,7 @@ get_hard_drive_data()
 			for (i in a) {
 				if (b[i] ~ / *type: *direct-access.*/) {
 					#c=gensub(/^ *vendor: (.+) +model: (.+) +rev: (.+)$/,"\\1 \\2 \\3","g",a[i])
-					c=gensub(/^ *vendor: (.+) +model: (.+) +rev:.*$/,"\\1 \\2","g",a[i])
+					c=gensub( /^ *vendor: (.+) +model: (.+) +rev:.*$/,"\\1 \\2","g",a[i] )
 					gsub(/,/, " ", c)
 					gsub(/^ +| +$/, "", c)
 					gsub(/ [ \t]+/, " ", c)
