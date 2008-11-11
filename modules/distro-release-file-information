@@ -1,3 +1,41 @@
+## python page on this issue: http://bugs.python.org/issue1322
+
+The distribution name returned by platform.dist() depends on the order
+of os.path.listdir( '/etc' ). It selects the first file matching the
+regex r'(\w+)[-_](release|version)' and takes part of the file name
+(i.e. matchResult.groups()[0]) as distribution name. But there are often
+several files matching this pattern (at least on Fedora and Mandriva).
+For instance, on a Mandriva 2007.1 official, I can see the following files:
+
+[login@localhost ~]$ ls -l /etc/*-release
+-rw-r--r-- 1 root root 137 jan 18  2007 /etc/lsb-release
+lrwxrwxrwx 1 root root  16 oct  7 17:32 /etc/mandrakelinux-release ->
+mandriva-r
+                              elease
+lrwxrwxrwx 1 root root  16 oct  7 17:32 /etc/mandrake-release ->
+mandriva-releas
+                                   e
+-rw-r--r-- 1 root root  50 avr  2  2007 /etc/mandriva-release
+lrwxrwxrwx 1 root root  16 oct  7 17:32 /etc/redhat-release ->
+mandriva-release
+
+Therefore, the result for platform.distrib()[0] could be mandriva,
+mandrake, redhat or even lsb. The first match wins !
+
+Ignoring symlinks could remove part of the problem. On Mandriva, it
+would leave only lsb-release and mandriva-release. It is possible to
+select the good one by ignoring lsb-release or by verifying the file's
+content (mandriva-release has one line and lsb-release has several
+lines). I do not know if the second method is portable.
+
+
+
+
+
+
+
+
+
 
 # this information is from this webpage: http://linuxmafia.com/faq/Admin/release-files.html
 /etc/release equivalents for sundry Linux (and other Unix) distributions
@@ -6,6 +44,8 @@ These are useful in cross-platform scripts.
 
 
 Annvix: /etc/annvix-release
+
+#note: arch-release has a bug, it is currently null, empty.
 Arch Linux: /etc/arch-release
 Arklinux: /etc/arklinux-release
 Aurox Linux: /etc/aurox-release
