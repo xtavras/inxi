@@ -12,7 +12,7 @@
 				# if so, use lsb-release
 				# this is for only those distro's with self named release/version files
 				# because Mint does not use such, it must be done as below
-				if [[ " $DISTROS_LSB_GOOD " == *" ${i} "* && -f /etc/lsb-release]];then
+				if [[ " $DISTROS_LSB_GOOD " == *" ${i} "* && -f /etc/lsb-release ]];then
 					distro_file='lsb-release'
 				else
 					distro_file="${i}"
