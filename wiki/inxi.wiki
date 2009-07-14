@@ -23,10 +23,9 @@ along with the output for the chosen verbosity level.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
   * -F  Show Full output for inxi. Does not show extra verbose options like -f -u -l or -p
   * -G  Show Graphic card information (card, x type, resolution, glx renderer, version).
-  * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool).
-    Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
-  * -I  Show Information: processes, uptime, memory, irc client, inxi version.
-  * -l  Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
+  * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). !!    Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
+  * -I (eye) Show Information: processes, uptime, memory, irc client, inxi version.
+  * -l (ell) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
   * -N  Show Network card information.
   * -p  Show full partition information (-P plus all other detected partitions).
   * -P  Show Partition information (shows what -v 4 would show, but without extra data).
@@ -41,8 +40,7 @@ along with the output for the chosen verbosity level.
       * 3 - Also show hard disk names as detected.
       * 4 - Also show partition size/filled data for (if present):/, /home, /var/, /boot
       * 5 - For multicore systems, also show per core clock speeds; shows audio card.
-  * -x  Show extra data: bogomips on Cpu; driver version (if available) for Network/Audio;
-    direct rendering status for Graphics (in X). Only works with verbose or line output.
+  * -x  Show extra data: bogomips on Cpu; driver version (if available) for Network/Audio; !!    direct rendering status for Graphics (in X). Only works with verbose or line output.
 
  * Additional Options:
   * -h - this help menu.
