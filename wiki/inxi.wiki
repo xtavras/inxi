@@ -6,9 +6,9 @@ Typical output for inxi -F:
 [http://inxi.googlecode.com/ http://inxi.trash80.org/pics/inxi.png]
 
 
-* inxi supports the following options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
+ * inxi supports the following options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
 
-* If you start inxi with no arguments, it will show the short form.
+ * If you start inxi with no arguments, it will show the short form.
 The following options if used without -d or -v will show just that complete line:
 A,C,D,G,I,N,P,S - you can use these together to show just the lines you want to see.
 If you use them with a -v level (or -d), it will show the full output for that line 
