@@ -1,4 +1,4 @@
-inxi is a system information script.  The code base was forked from infobash.  All code was then reworked and put into functions.  Then, as requested by users, more information was made available.  inxi is useful to system admins for identifying hardware on remote system, it is useful for desktop users, but is most helpful in irc when support services would like to know customers hardware for troubleshooting issues.
+inxi is a system information script.  The code base was forked from infobash.  All code has been reworked and put into functions.  Then, as requested by users, more information was made available as additional functions.  inxi is useful to system admins for identifying hardware on remote system, it is useful for desktop users, but is most helpful in irc when support services would like to know customers hardware for troubleshooting issues.
 
 Typical output for inxi -F:
 
