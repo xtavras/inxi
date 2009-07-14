@@ -1,3 +1,4 @@
+<font size="3" face="Times">
 inxi is a system information script.  The code base was forked from infobash.  All code has been reworked and put into functions.  Then, as requested by users, more information was made available as additional functions.  inxi is useful to system admins for identifying hardware on remote system, it is useful for desktop users, but is most helpful in irc when support services would like to know customers hardware for troubleshooting issues.
 
 Typical output for inxi -F:
@@ -52,3 +53,4 @@ along with the output for the chosen verbosity level.
   * -%  Overrides defective or corrupted data.
   * -@  Triggers debugger output. Requires debugging level 1-10 (8-10 - logging).
     * 8 - basic logging; 9 - full file/sys info logging; 10 - color logging.
+</font>
