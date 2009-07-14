@@ -1,0 +1,54 @@
+inxi is a system information script.  The code base was forked from infobash.  All code was then reworked and put into functions.  Then, as requested by users, more information was made available.  inxi is useful to system admins for identifying hardware on remote system, it is useful for desktop users, but is most helpful in irc when support services would like to know customers hardware for troubleshooting issues.
+
+Typical output for inxi -F:
+
+[http://inxi.googlecode.com/ http://inxi.trash80.org/pics/inxi.png]
+
+
+  * inxi supports the following options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
+
+If you start inxi with no arguments, it will show the short form.
+The following options if used without -d or -v will show just that complete line:
+A,C,D,G,I,N,P,S - you can use these together to show just the lines you want to see.
+If you use them with a -v level (or -d), it will show the full output for that line 
+along with the output for the chosen verbosity level.
+
+ * Output Control Options:
+  * -A  Show Audio/sound card information.
+  * -c  Available color schemes. Scheme number is required.
+    * Supported schemes: 0-15 Example: inxi -c 11
+  * -C  Show full CPU output, including per CPU clockspeed.
+  * -d  Default output verbosity level, same as: inxi -v 1
+  * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
+  * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
+  * -F  Show Full output for inxi. Does not show extra verbose options like -f -u -l or -p
+  * -G  Show Graphic card information (card, x type, resolution, glx renderer, version).
+  * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool).
+    Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
+  * -I  Show Information: processes, uptime, memory, irc client, inxi version.
+  * -l  Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
+  * -N  Show Network card information.
+  * -p  Show full partition information (-P plus all other detected partitions).
+  * -P  Show Partition information (shows what -v 4 would show, but without extra data).
+    * Shows, if detected: / /boot /home /tmp /usr /var. Use -p to see all mounted partitions.
+  * -S  Show System information: host name, kernel, distro
+  * -u  Show partition UUIDs. Default: short partition -P. For full -p output, use: -pu (or -plu).
+  * -v  Script verbosity levels. Verbosity level number is required.
+    * Supported levels: 0-5 Example: inxi -v 4
+      * 0 - short output, same as: inxi
+      * 1 - basic verbose, same as: inxi -d
+      * 2 - Also show networking card data
+      * 3 - Also show hard disk names as detected.
+      * 4 - Also show partition size/filled data for (if present):/, /home, /var/, /boot
+      * 5 - For multicore systems, also show per core clock speeds; shows audio card.
+  * -x  Show extra data: bogomips on Cpu; driver version (if available) for Network/Audio;
+    direct rendering status for Graphics (in X). Only works with verbose or line output.
+
+ * Additional Options:
+  * -h - this help menu.
+  * -U  Auto-update script. Note: if you installed as root, you
+    must be root to update, otherwise user is fine.
+  * -V  inxi version information. Prints information then exits.
+  * -%  Overrides defective or corrupted data.
+  * -@  Triggers debugger output. Requires debugging level 1-10 (8-10 - logging).
+    * 8 - basic logging; 9 - full file/sys info logging; 10 - color logging.
