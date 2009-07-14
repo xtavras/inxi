@@ -8,11 +8,9 @@ Typical output for inxi -F:
 
  * inxi supports the following options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
 
- * If you start inxi with no arguments, it will show the short form.
-The following options if used without -d or -v will show just that complete line:
-A,C,D,G,I,N,P,S - you can use these together to show just the lines you want to see.
-If you use them with a -v level (or -d), it will show the full output for that line 
-along with the output for the chosen verbosity level.
+ * If you start inxi with no arguments, it will show the short form. The following options if used without -d or -v will show just that complete line:
+   * A,C,D,G,I,N,P,S - you can use these together to show just the lines you want to see.
+   * If you use them with a -v level (or -d), it will show the full output for that line along with the output for the chosen verbosity level.
 
  * Output Control Options:
   * -A  Show Audio/sound card information.
@@ -47,8 +45,7 @@ along with the output for the chosen verbosity level.
 
  * Additional Options:
   * -h - this help menu.
-  * -U  Auto-update script. Note: if you installed as root, you
-    must be root to update, otherwise user is fine.
+  * -U  Auto-update script. Note: if you installed as root, you must be root to update, otherwise user is fine.
   * -V  inxi version information. Prints information then exits.
   * -%  Overrides defective or corrupted data.
   * -@  Triggers debugger output. Requires debugging level 1-10 (8-10 - logging).
