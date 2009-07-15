@@ -2,7 +2,7 @@
 
 {{{ wget ftp://cathbard.com/binary/inxi*.deb }}}
 
-* Or if you have cathbards repos in your apt sources.list [http://cathbard.com/cathbard-repo-howto.html add cathbard repos]:
+* Or if you have cathbards repos ( [http://cathbard.com/cathbard-repo-howto.html add cathbard repos] ) in your apt sources.list:
 
 apt-get update && apt-get install inxi
 
