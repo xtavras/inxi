@@ -1,0 +1,1 @@
+Special thanks to all those in #lsc and #smxi (irc.oftc.net) for their tireless dedication helping test inxi modules.
