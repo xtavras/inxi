@@ -22,7 +22,7 @@ If you would like to submit patches for inxi, read and understand these conventi
    * ie, get_cpu_data
  * All variables MUST be initialized / declared explicitly.
  * All variables should clearly explain what they are, except counters like i, j.
- * Each word of variable must be separated by '_' (underscore) (camel form).
+ * Each word of variable must be separated by `'_'` (underscore) (camel form).
  * Global variables are 'UPPER CASE', at top of script.
    * ie, SOME_VARIABLE=''
  * Local variables are 'lower case' and declared at the top of the function.
