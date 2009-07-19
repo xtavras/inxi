@@ -1,0 +1,1 @@
+ * gawk arrays: http://www.math.utah.edu/docs/info/gawk_12.html
