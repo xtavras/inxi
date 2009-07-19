@@ -1,0 +1,14 @@
+ * bash >=3.0(bash), df;readlink;stty;tr;uname;wc(coreutils), gawk(gawk), grep(grep), hostname(hostname), lspci(pciutils), ps;uptime(procps), glxinfo;xdpyinfo;xrandr(xbase-clients).
+----
+ * Also the proc filesystem should be present and mounted.
+----
+ * Apparently unpatched bash 3.0 has arrays broken; bug reports:
+   * [http://ftp.gnu.org/gnu/bash/bash-3.0-patches/bash30-008]
+   * [http://lists.gnu.org/archive/html/bug-bash/2004-08/msg00144.html]
+----
+ * Arrays work in bash 2.05b, but "egrep -m" does not.
+----
+ * RECOMMENDS (Needed to run certain features)
+   * For local interfaces/IP test: ifconfig (in net-tools for Debian systems)
+   * runlevel(sysvinit): to view current runlevel while not in X window system
+   * Bash 3.1 for proper array use.
