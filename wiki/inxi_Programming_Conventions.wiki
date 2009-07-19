@@ -2,7 +2,7 @@ If you would like to submit patches for inxi, read and understand these conventi
  * As with all 'rules' there are acceptions, these are noted where used.
 ----
  * Indentation: TABS
- * Do not use `....` (back quotes; outdated bash style), those are totally non-reabable, use $(....) (parens; new bash style).
+ * Do not use ``....`` (back quotes; outdated bash style), those are totally non-reabable, use $(....) (parens; new bash style).
    * Back quotes start a new shell.
    * Parenthesis run in current shell.
  * Do not use one liner flow controls. Readability is more important.
