@@ -15,8 +15,8 @@ X-Chat:
   * /exec -o inxi -`<`color`>` -`<`option`>`
     * the -o option show output to the channel.  Without it, only the user will see the output.
 ----
-WeeChat:
-  * download the [http://weechat.flashtux.org/plugins.php plugins package] follow direction on WeeChat
+`WeeChat`:
+  * download the [http://weechat.flashtux.org/plugins.php plugins package] follow direction on `WeeChat`
     * user may choose only the exec.pl (the only required script to run inxi)
   * then run:
      * /exec -o inxi -`<`color`>` -`<`option`>`n>
