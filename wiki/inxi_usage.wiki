@@ -1,0 +1,24 @@
+inxi -`<`color`>` -`<`option`>`
+
+  * ie {{{ inxi -c4 -I}}}
+      * this will change to color 4 and give inxi Information
+
+----
+*irc-client usage*
+----
+Konversation:
+  * first link or move inxi into the [http://code.google.com/p/inxi/wiki/Installation Konversations script folder]
+  * then run:
+     * /inxi -`<`color`>` -`<`option`>`
+----
+X-Chat:
+  * /exec -o inxi -`<`color`>` -`<`option`>`
+    * the -o option show output to the channel.  Without it, only the user will see the output.
+----
+WeeChat:
+  * download the [http://weechat.flashtux.org/plugins.php plugins package] follow direction on WeeChat
+    * user may choose only the exec.pl (the only required script to run inxi)
+  * then run:
+     * /exec -o inxi -`<`color`>` -`<`option`>`n>
+       * the -o option show output to the channel.  Without it, only the user will see the output.
+----
