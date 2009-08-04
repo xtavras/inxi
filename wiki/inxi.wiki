@@ -3,7 +3,7 @@ inxi is a system information script.  The code base was forked from infobash.  A
 
 Typical output for inxi -F:
 
-[http://inxi.googlecode.com/ http://inxi.trash80.org/pics/inxi.png]
+[http://inxi.googlecode.com/ http://downloads.trash80.org/inxi/pics/inxi-out.png]
 
 
  * inxi supports the following options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
