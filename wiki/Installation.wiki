@@ -12,9 +12,13 @@ apt-get update && apt-get install inxi
 [http://smxi.org/site/install.htm#inxi smxi-inxi]
 
 ----
-* For all others, use:
+* For most others, use(except in Arch or Pardus):
 
 as root: cd /usr/local/bin && wget -Nc smxi.com/inxi && chmod +x inxi
+
+* For Arch and Pardus, use:
+
+as root: cd /usr/bin && wget -Nc smxi.com/inxi && chmod +x inxi
 
 ----
 * For usage in Konversation (as root):
