@@ -12,3 +12,5 @@
    * For local interfaces/IP test: ifconfig (in net-tools for Debian systems)
    * runlevel(sysvinit): to view current runlevel while not in X window system
    * Bash 3.1 for proper array use.
+   * For temp and fan rpm usage: lm-sensors
+   * For glxinfo: mesa-utils
