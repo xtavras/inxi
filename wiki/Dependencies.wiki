@@ -1,4 +1,4 @@
-Package names in (...) are the Debian Squeeze package name. Check your distro for proper package name by doing this: which <application> then find what package owns that application file.
+Package names in (...) are the Debian Squeeze package name. Check your distro for proper package name by doing this: which [application] then find what package owns that application file.
 ----
   * DEPENDENCIES (Required for inxi to run)
      * bash >=3.0 (bash)
