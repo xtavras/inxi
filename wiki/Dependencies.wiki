@@ -9,27 +9,27 @@ Package names in (...) are the Debian Squeeze package name. Check your distro fo
    * lspci (pciutils)
    * free, ps, uptime (procps)
 ----
- * Also the proc filesystem should be present and mounted.
+  * Also the proc filesystem should be present and mounted.
 ----
- * Apparently unpatched bash 3.0 has arrays broken; bug reports:
-   * [http://ftp.gnu.org/gnu/bash/bash-3.0-patches/bash30-008]
-   * [http://lists.gnu.org/archive/html/bug-bash/2004-08/msg00144.html]
+  * Apparently unpatched bash 3.0 has arrays broken; bug reports:
+     * [http://ftp.gnu.org/gnu/bash/bash-3.0-patches/bash30-008]
+     * [http://lists.gnu.org/archive/html/bug-bash/2004-08/msg00144.html]
 ----
- * Arrays work in bash 2.05b, but "egrep -m" does not.
+  * Arrays work in bash 2.05b, but "egrep -m" does not.
 ----
- * RECOMMENDS (Needed to run certain features, listed by option)
-   * -A - for output of usb audio information: lsusb (usbutils)
-   * -Ax - for audio module version: modinfo (module-init-tools)
-   * -Dx - for hdd temp output (root only default): hddtemp (hddtemp)
+  * RECOMMENDS (Needed to run certain features, listed by option)
+     * -A - for output of usb audio information: lsusb (usbutils)
+     * -Ax - for audio module version: modinfo (module-init-tools)
+     * -Dx - for hdd temp output (root only default): hddtemp (hddtemp)
      For user level hdd temp output: sudo (sudo)
      Note: requires user action for this feature to run as user (edit /etc/sudoers file)
-   * -G - full graphics output requires:  glxinfo (mesa-utils); xdpyinfo (X11-utils);
+     * -G - full graphics output requires:  glxinfo (mesa-utils); xdpyinfo (X11-utils);
      xrandr (x11-xserver-utils)
-   * -i - IP information, local/wan - ifconfig (net-tools)
-   * -Ix - view current runlevel while not in X window system (or with -x): runlevel (sysvinit)
-   * -o - for unmounted file system information in unmounted drives (root only default): file (file)
+     * -i - IP information, local/wan - ifconfig (net-tools)
+     * -Ix - view current runlevel while not in X window system (or with -x): runlevel (sysvinit)
+     * -o - for unmounted file system information in unmounted drives (root only default): file (file)
      Note: requires user action for this feature to run as user (edit /etc/sudoers file)
      For user level unmounted file system type output: sudo (sudo)
-   * -s   For any sensors output, fan, temp, etc: sensors (lm-sensors)
+     * -s   For any sensors output, fan, temp, etc: sensors (lm-sensors)
      Note: requires setup of lm-sensors (sensors-detect and adding modules/modprobe/reboot,
      and ideally, pwmconfig) prior to full output being available. 
