@@ -1,4 +1,15 @@
- * bash >=3.0(bash), df;readlink;stty;tr;uname;wc(coreutils), gawk(gawk), grep(grep), hostname(hostname), lspci(pciutils), ps;uptime(procps), glxinfo;xdpyinfo;xrandr(xbase-clients).
+Package names in (...) are the Debian Squeeze package name. Check your 
+distro for proper package name by doing this: which <application> 
+then find what package owns that application file.
+----
+* DEPENDENCIES (Required for inxi to run)
+   * bash >=3.0 (bash)
+   * df, readlink, stty, tr, uname, wc (coreutils)
+   * gawk (gawk)
+   * grep (grep)
+   * hostname (hostname)
+   * lspci (pciutils)
+   * free, ps, uptime (procps)
 ----
  * Also the proc filesystem should be present and mounted.
 ----
@@ -8,9 +19,19 @@
 ----
  * Arrays work in bash 2.05b, but "egrep -m" does not.
 ----
- * RECOMMENDS (Needed to run certain features)
-   * For local interfaces/IP test: ifconfig (in net-tools for Debian systems)
-   * runlevel(sysvinit): to view current runlevel while not in X window system
-   * Bash 3.1 for proper array use.
-   * For temp and fan rpm usage: lm-sensors
-   * For glxinfo: mesa-utils
+ * RECOMMENDS (Needed to run certain features, listed by option)
+   * -A - for output of usb audio information: lsusb (usbutils)
+   * -Ax - for audio module version: modinfo (module-init-tools)
+   * -Dx - for hdd temp output (root only default): hddtemp (hddtemp)
+     For user level hdd temp output: sudo (sudo)
+     Note: requires user action for this feature to run as user (edit /etc/sudoers file)
+   * -G - full graphics output requires:  glxinfo (mesa-utils); xdpyinfo (X11-utils);
+     xrandr (x11-xserver-utils)
+   * -i - IP information, local/wan - ifconfig (net-tools)
+   * -Ix - view current runlevel while not in X window system (or with -x): runlevel (sysvinit)
+   * -o - for unmounted file system information in unmounted drives (root only default): file (file)
+     Note: requires user action for this feature to run as user (edit /etc/sudoers file)
+     For user level unmounted file system type output: sudo (sudo)
+   * -s   For any sensors output, fan, temp, etc: sensors (lm-sensors)
+     Note: requires setup of lm-sensors (sensors-detect and adding modules/modprobe/reboot,
+     and ideally, pwmconfig) prior to full output being available. 
