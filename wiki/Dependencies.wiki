@@ -1,6 +1,8 @@
 Package names in (...) are the Debian Squeeze package name. Check your distro for proper package name by doing this: which -application- then find what package owns that application file.
 
 Please check the inxi top comment header for the latest Depends/Recommends listing, it should always be up to date, unlike this wiki page.
+
+Note that all graphics packages previously labeled Depends have been made Recommends because inxi should be able to run on headless or X-less systems, as a system utility.
 ----
   * DEPENDENCIES (Required for inxi to run)
      * bash >=3.0 (bash)
