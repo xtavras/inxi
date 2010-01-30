@@ -20,7 +20,7 @@ As with all 'rules' there are exceptions, these are noted where used.
  * To 'return' a value in a function, use 'echo <var>'.
  * For gawk: use always {{{if ( num_of_cores > 1 ) { hanging { starter }}}for all blocks
    * This method lets us use one method for all gawk structures, including BEGIN/END, if, for, etc
-==VARIABLE/FUNCTION NAMING:==
+==Variables and Function Naming:==
  * All functions should follow standard naming--verb adjective noun. 
    * ie, get_cpu_data
  * All variables MUST be initialized / declared explicitly.
@@ -36,7 +36,7 @@ As with all 'rules' there are exceptions, these are noted where used.
  * Booleans should start with '`b_`' (local) or '`B_`' (global) and state clearly what is being tested.
  * Arrays should start with '`a_`' (local) or '`A_`' (global).
 ----
-==SPECIAL NOTES:==
+==Special Notes:==
  * The color variable ${C2} must always be followed by a space unless you know what character is going to be next for certain. Otherwise irc color codes can be accidentally activated or altered.
  * For native script konversation support (check distro for correct konvi scripts path):
    * 'KDE3' ln -s <path to inxi> /usr/share/apps/konversation/scripts/inxi
