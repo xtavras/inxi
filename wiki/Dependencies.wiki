@@ -26,6 +26,7 @@ Note that all graphics packages previously labeled Depends have been made Recomm
      * -Ax - for audio module version: modinfo (module-init-tools)
      * -Dx - for hdd temp output (root only default): hddtemp (hddtemp)
      For user level hdd temp output: sudo (sudo)
+
      Note: requires user action for this feature to run as user (edit /etc/sudoers file)
      * -G - full graphics output requires:  
          * glxinfo (mesa-utils)
@@ -35,6 +36,7 @@ Note that all graphics packages previously labeled Depends have been made Recomm
      * -Ix - view current runlevel while not in X window system (or with -x): runlevel (sysvinit)
      * -o - for unmounted file system information in unmounted drives (root only default): file (file)
      Note: requires user action for this feature to run as user (edit /etc/sudoers file)
+
      For user level unmounted file system type output: sudo (sudo)
      * -s   For any sensors output, fan, temp, etc: sensors (lm-sensors)
      Note: requires setup of lm-sensors (sensors-detect and adding modules/modprobe/reboot,
