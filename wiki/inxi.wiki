@@ -28,8 +28,7 @@ Typical output for inxi -F:
   * -l (ell) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
   * -N  Show Network card information.
   * -o  Show unmounted partition information (includes UUID and LABEL if available).
-        * Shows file system type if you have file installed, if you are root OR if you have
-        * added to /etc/sudoers (sudo v. 1.7 or newer): < username > ALL = NOPASSWD: /usr/bin/file (sample)
+        * Shows file system type if you have file installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): < username > ALL = NOPASSWD: /usr/bin/file (sample)
   * -p  Show full partition information (-P plus all other detected partitions).
   * -P  Show Partition information (shows what -v 4 would show, but without extra data).
     * Shows, if detected: / /boot /home /tmp /usr /var. Use -p to see all mounted partitions.
