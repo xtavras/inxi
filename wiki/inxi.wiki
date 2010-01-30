@@ -20,7 +20,7 @@ Typical output for inxi -F:
   * -d  Default output verbosity level, same as: inxi -v 1
   * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
-  * -F  Show Full output for inxi. Does not show extra verbose options like -f -u -l or -p
+  * -F  Show Full output for inxi. Does not show extra verbose options like -f -u -l -p or -o
   * -G  Show Graphic card information (card, x type, resolution, glx renderer, version).
   * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool).
         * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
