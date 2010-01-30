@@ -51,6 +51,7 @@ Typical output for inxi -F:
       * Shows (for single gpu, nvidia driver) screen number gpu is running on.
       * Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
       * Shows runlevel if in X, if out of X, runlevel always shows.
+
  * Additional Options:
   * -h - this help menu.
   * -U  Auto-update script. Note: if you installed as root, you must be root to update, otherwise user is fine.
