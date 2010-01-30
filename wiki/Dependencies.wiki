@@ -27,8 +27,10 @@ Note that all graphics packages previously labeled Depends have been made Recomm
      * -Dx - for hdd temp output (root only default): hddtemp (hddtemp)
      For user level hdd temp output: sudo (sudo)
      Note: requires user action for this feature to run as user (edit /etc/sudoers file)
-     * -G - full graphics output requires:  glxinfo (mesa-utils); xdpyinfo (X11-utils);
-     xrandr (x11-xserver-utils)
+     * -G - full graphics output requires:  
+         * glxinfo (mesa-utils)
+         * xdpyinfo (X11-utils)
+         * xrandr (x11-xserver-utils)
      * -i - IP information, local/wan - ifconfig (net-tools)
      * -Ix - view current runlevel while not in X window system (or with -x): runlevel (sysvinit)
      * -o - for unmounted file system information in unmounted drives (root only default): file (file)
