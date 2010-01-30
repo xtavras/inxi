@@ -29,7 +29,7 @@ Typical output for inxi -F:
   * -N  Show Network card information.
   * -o  Show unmounted partition information (includes UUID and LABEL if available).
         * Shows file system type if you have file installed, if you are root OR if you have
-        * added to /etc/sudoers (sudo v. 1.7 or newer): <username> ALL = NOPASSWD: /usr/bin/file (sample)
+        * added to /etc/sudoers (sudo v. 1.7 or newer): < username > ALL = NOPASSWD: /usr/bin/file (sample)
   * -p  Show full partition information (-P plus all other detected partitions).
   * -P  Show Partition information (shows what -v 4 would show, but without extra data).
     * Shows, if detected: / /boot /home /tmp /usr /var. Use -p to see all mounted partitions.
@@ -49,7 +49,7 @@ Typical output for inxi -F:
       * direct rendering status for Graphics (in X). Only works with verbose or line output;
       * shows (for single gpu, nvidia driver) screen number gpu is running on.
       * Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have
-      * added to /etc/sudoers (sudo v. 1.7 or newer): <username> ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
+      * added to /etc/sudoers (sudo v. 1.7 or newer): < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
 
  * Additional Options:
   * -h - this help menu.
@@ -58,4 +58,3 @@ Typical output for inxi -F:
   * -%  Overrides defective or corrupted data.
   * -@  Triggers debugger output. Requires debugging level 1-10 (8-10 - logging).
     * 8 - basic logging; 9 - full file/sys info logging; 10 - color logging.
-</font>
