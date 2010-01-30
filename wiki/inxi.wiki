@@ -46,7 +46,8 @@ Typical output for inxi -F:
       * 4 - Also show partition size/filled data for (if present):/, /home, /var/, /boot
       * 5 - For multicore systems, also show per core clock speeds; shows audio card.
   * -x  Show extra data: 
-      * dbogomips on Cpu; driver version (if available) for Network/Audio;
+      * dbogomips on Cpu
+      * driver version (if available) for Network/Audio;
       * direct rendering status for Graphics (in X). Only works with verbose or line output;
       * Shows (for single gpu, nvidia driver) screen number gpu is running on.
       * Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
