@@ -30,7 +30,7 @@ Note that all graphics packages previously labeled Depends have been made Recomm
      Note: requires user action for this feature to run as user (edit /etc/sudoers file)
      * -G - full graphics output requires:  
          * glxinfo (mesa-utils)
-         * xdpyinfo (X11-utils)
+         * xdpyinfo (x11-utils)
          * xrandr (x11-xserver-utils)
      * -i - IP information, local/wan - ifconfig (net-tools)
      * -Ix - view current runlevel while not in X window system (or with -x): runlevel (sysvinit)
