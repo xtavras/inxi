@@ -35,7 +35,7 @@ Typical output for inxi -F:
     * Shows, if detected: / /boot /home /tmp /usr /var. Use -p to see all mounted partitions.
   * -r  Show distro repository data. Currently supported repo types: 
         * APT (Debian, Ubuntu + derived versions)
-        * PACMAN (ArchLinux + derived versions)
+        * PACMAN (Arch Linux + derived versions)
         * PISI (Pardus + derived versions)
         * YUM. (Fedora, Redhat, maybe Suse + derived versions)
         * (as distro data is collected more will be added. If your's is missing please show us how to get this information and we'll try to add it.)
