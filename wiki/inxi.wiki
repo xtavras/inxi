@@ -33,6 +33,7 @@ Typical output for inxi -F:
   * -p  Show full partition information (-P plus all other detected partitions).
   * -P  Show Partition information (shows what -v 4 would show, but without extra data).
     * Shows, if detected: / /boot /home /tmp /usr /var. Use -p to see all mounted partitions.
+  * -r  Show distro repository data. Currently supported repo types: APT; PACMAN; PISI; YUM.
   * -s  Show sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds.
     * Gpu temp only for Fglrx/Nvidia drivers. Nvidia shows screen number for > 1 screens
   * -S  Show System information: host name, kernel, distro
