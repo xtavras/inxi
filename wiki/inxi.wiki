@@ -42,6 +42,10 @@ Typical output for inxi -F:
   * -s  Show sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds.
     * Gpu temp only for Fglrx/Nvidia drivers. Nvidia shows screen number for > 1 screens
   * -S  Show System information: host name, kernel, distro
+  * -t  Show processes. Requires extra options: c (cpu) m (memory) cm (cpu+memory). 
+        * If followed by numbers 1-20, shows that number of top process for each selection (default: 5): 
+        * Examples: -t cm10 :: -t c :: -t m20 :: -t cm
+        * Make sure to have no space between letters and numbers (cm10 -right, cm 10 - wrong).
   * -u  Show partition UUIDs. Default: short partition -P. For full -p output, use: -pu (or -plu).
   * -v  Script verbosity levels. Verbosity level number is required.
     * Supported levels: 0-5 Example: inxi -v 4
@@ -59,6 +63,7 @@ Typical output for inxi -F:
       * Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
            * < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
       * Shows runlevel if in X, if out of X, runlevel always shows.
+      * For -t, adds memory use output to cpu (-tx c, and cpu use to memory (-tx m).
 
  * Additional Options:
   * -h - this help menu.
