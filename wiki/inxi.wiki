@@ -44,7 +44,11 @@ Typical output for inxi -F:
   * -S  Show System information: host name, kernel, distro
   * -t  Show processes. Requires extra options: c (cpu) m (memory) cm (cpu+memory). 
         * If followed by numbers 1-20, shows that number of top process for each selection (default: 5): 
-        * Examples: -t cm10 :: -t c :: -t m20 :: -t cm
+        * Examples: 
+             * -t cm10 (shows top 10 cpu and memory processes, 20 in all)
+             * -t c (shows top 5 cpu processes)
+             * -t m20 (shows top 20 memory processes)
+             * -t cm (shows top 5 cpu and memory processes, 10 in all)
         * Make sure to have no space between letters and numbers (cm10 -right, cm 10 - wrong).
   * -u  Show partition UUIDs. Default: short partition -P. For full -p output, use: -pu (or -plu).
   * -v  Script verbosity levels. Verbosity level number is required.
