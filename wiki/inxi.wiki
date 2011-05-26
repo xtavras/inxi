@@ -1,9 +1,9 @@
 =inxi information=
 inxi is a system information script.  The code base was forked from infobash.  All code has been reworked and put into functions.  Then, as requested by users, more information was made available as additional functions.  inxi is useful to system admins for identifying hardware on remote system, it is useful for desktop users, but is most helpful in irc when support services would like to know customers hardware for troubleshooting issues.
 
-Typical output for inxi -F:
+Typical output for inxi -Fz:
 
-[http://inxi.googlecode.com/ http://downloads.trash80.org/inxi/pics/inxi-out.png]
+[http://inxi.googlecode.com/ http://smxi.org/img/screenshots/inxi-Fz-1.5.7.png]
 
 ==inxi options==
  * inxi supports the following options. This are included in inxi 1.5.7. Earlier versions will not have all the options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
