@@ -14,6 +14,7 @@ For native internal command call:
 For normal external script call, in Konversation session:
   * type: 
     * /cmd inxi -`<`option`>`
+    * example: /cmd inxi -d
 and you'll see the expected output.
 ----
 Quassel:
@@ -32,3 +33,4 @@ X-Chat:
 ----
 irssi and most other clients
   * /exec -o inxi -`<`option`>`
+  * example: /exec -o inxi -dn
