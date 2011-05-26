@@ -7,18 +7,28 @@ inxi -`<`color`>` -`<`option`>`
 *irc-client usage*
 ----
 Konversation:
+For native internal command call:
   * first link or move inxi into [http://code.google.com/p/inxi/wiki/Installation Konversation's script folder]
   * then run:
-     * /inxi -`<`color`>` -`<`option`>`
+     * /inxi -`<`option`>`
+For normal external script call, in Konversation session:
+  * type: 
+    * /cmd inxi -`<`option`>`
+and you'll see the expected output.
+----
+Quassel:
+inxi ships as a built in script with Quassel, so you should just be able to run the standard builtin command to run an internal script. 
 ----
 X-Chat:
-  * /exec -o inxi -`<`color`>` -`<`option`>`
+  * /exec -o inxi -`<`option`>`
     * the -o option show output to the channel.  Without it, only the user will see the output.
 ----
 `WeeChat`:
   * download the [http://weechat.flashtux.org/plugins.php plugins package] follow the directions on `WeeChat`
     * user may choose only the exec.pl (the only required script to run inxi)
   * then run:
-     * /exec -o inxi -`<`color`>` -`<`option`>`n>
+     * /exec -o inxi -`<`option`>`
        * the -o option show output to the channel.  Without it, only the user will see the output.
 ----
+irssi and most other clients
+  * /exec -o inxi -`<`option`>`
