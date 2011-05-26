@@ -3,6 +3,7 @@ inxi -`<`color`>` -`<`option`>`
   * ie {{{ inxi -c4 -I}}}
       * this will change to color option 4 and give inxi Information
 
+See http://code.google.com/p/inxi/wiki/inxi for full option list. Always refer to an actual current inxi for latest options since these wiki pages only get updated now and then.
 ----
 *irc-client usage*
 ----
