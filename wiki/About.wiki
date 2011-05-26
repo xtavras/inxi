@@ -2,7 +2,7 @@
 ----
  * inxi, the universal, portable, system info script for irc.
  * Tested with Irssi, Xchat, Konversation, BitchX, KSirc, ircII,
- * Gaim/Pidgin, Weechat, KVIrc and Kopete.
+ * Quassel, Gaim/Pidgin, Weechat, KVIrc and Kopete.
  * Original infobash author and copyright holder:
  * Copyright (C) 2005-2007  Michiel de Boer a.k.a. locsmif
  * inxi version: Copyright (C) 2008-9 Scott Rogers & Harald Hope
