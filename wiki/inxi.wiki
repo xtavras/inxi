@@ -6,27 +6,35 @@ Typical output for inxi -F:
 [http://inxi.googlecode.com/ http://downloads.trash80.org/inxi/pics/inxi-out.png]
 
 ==inxi options==
- * inxi supports the following options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
+ * inxi supports the following options. This are included in inxi 1.5.7. Earlier versions will not have all the options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
 
  * If you start inxi with no arguments, it will show the short form. The following options if used without -d or -v will show just that complete line:
-   * A,C,D,G,I,N,P,S - you can use these together to show just the lines you want to see.
+   * A,C,D,G,I,N,P,S,n,f,i,t,r - you can use these together or alone to show just the lines you want to see.
    * If you use them with a -v level (or -d), it will show the full output for that line along with the output for the chosen verbosity level.
 
  * Output Control Options:
   * -A  Show Audio/sound card information.
-  * -c  Available color schemes. Scheme number is required.
-    * Supported schemes: 0-15 Example: inxi -c 11
+  * -c  Available color schemes. Scheme number is required. Color selectors run a color selector option prior to inxi starting which lets you set the config file value for the selection.
+    * Supported color schemes: 0-32 Example: inxi -c 11
+    * Supported color selectors. NOTE: irc and global only show safe color set.
+      * 94 (console, no X)
+      * 95 (terminal, X)
+      * 96 (irc, X)
+      * 97 (irc, X, in terminal)
+      * 98 (irc, no X)
+      * 99 (global)
   * -C  Show full CPU output, including per CPU clockspeed.
   * -d  Default output verbosity level, same as: inxi -v 1
   * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
   * -F  Show Full output for inxi. Does not show extra verbose options like -f -u -l -p or -o
-  * -G  Show Graphic card information (card, x type, resolution, glx renderer, version).
-  * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool).
+  * -G  Show Graphic card information (card, x type, resolution, version). Also shows glx renderer, card pci busID with -x.
+  * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni
         * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
   * -I (eye) Show Information: processes, uptime, memory, irc client, inxi version.
   * -l (ell) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
-  * -N  Show Network card information.
+  * -n  Show Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state,.
+  * -N  Show Network card information. Shows card and driver. Includes support for USB networking devices. Also shows busID/USB-ID, ports, driver version with -x
   * -o  Show unmounted partition information (includes UUID and LABEL if available).
         * Shows file system type if you have file installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
               * < username > ALL = NOPASSWD: /usr/bin/file (sample)
@@ -41,7 +49,7 @@ Typical output for inxi -F:
         * (as distro data is collected more will be added. If your's is missing please show us how to get this information and we'll try to add it.)
   * -s  Show sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds.
     * Gpu temp only for Fglrx/Nvidia drivers. Nvidia shows screen number for > 1 screens
-  * -S  Show System information: host name, kernel, distro
+  * -S  Show System information: host name, kernel, desktop, desktop version (plus toolkit if -x used), distro
   * -t  Show processes. Requires extra options: c (cpu) m (memory) cm (cpu+memory). 
         * If followed by numbers 1-20, shows that number of top process for each selection (default: 5): 
         * Examples: 
@@ -62,17 +70,23 @@ Typical output for inxi -F:
   * -x  Show extra data: 
       * dbogomips on Cpu
       * driver version (if available) for Network/Audio;
+      * Shows port for Network
       * direct rendering status for Graphics (in X). Only works with verbose or line output;
       * Shows (for single gpu, nvidia driver) screen number gpu is running on.
       * Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
            * < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
       * Shows runlevel if in X, if out of X, runlevel always shows.
+      * Shows pci Bus ID / Usb ID for Audio, Network, Graphics
       * For -t, adds memory use output to cpu (-tx c, and cpu use to memory (-tx m).
+      * For -S, shows toolkit (QT or GTK) if GNOME, KDE, or XFCE
+  * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
+  * -Z  Absolute override for output filters. Useful for debugging networking issues in irc for example.
 
  * Additional Options:
-  * -h - this help menu.
+  * -h, --help This help menu.
+  * -H - This help menu, plus developer options. Do not use dev options in normal operation!
   * -U  Auto-update script. Note: if you installed as root, you must be root to update, otherwise user is fine.
-  * -V  inxi version information. Prints information then exits.
+  * -V, --version  inxi version information. Prints information then exits.
   * -%  Overrides defective or corrupted data.
   * -@  Triggers debugger output. Requires debugging level 1-10 (8-10 - logging).
     * 8 - basic logging
