@@ -22,9 +22,10 @@ Note that all graphics packages previously labeled Depends have been made Recomm
   * Arrays work in bash 2.05b, but "egrep -m" does not.
 ----
   * RECOMMENDS (Needed to run certain features, listed by option)
-     * -A - for output of usb audio information: lsusb (usbutils)
+     * -A, -N - for output of usb audio/network card information: lsusb (usbutils)
      * -Ax - for audio module version: modinfo (module-init-tools)
      * -Dx - for hdd temp output (root only default): hddtemp (hddtemp)
+     * -S - for detecting running desktop: xprop (X11-utils)
      For user level hdd temp output: sudo (sudo)
 
      Note: requires user action for this feature to run as user (edit /etc/sudoers file)
