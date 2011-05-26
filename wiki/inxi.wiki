@@ -9,7 +9,7 @@ Typical output for inxi -F:
  * inxi supports the following options. This are included in inxi 1.5.7. Earlier versions will not have all the options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
 
  * If you start inxi with no arguments, it will show the short form. The following options if used without -d or -v will show just that complete line:
-   * A,C,D,G,I,N,P,S,n,f,i,t,r - you can use these together or alone to show just the lines you want to see.
+   * A,C,D,G,I,N,P,S,f,i,n,o,p,l,u,r,s,t - you can use these together or alone to show just the line(s) you want to see.
    * If you use them with a -v level (or -d), it will show the full output for that line along with the output for the chosen verbosity level.
 
  * Output Control Options:
@@ -17,17 +17,17 @@ Typical output for inxi -F:
   * -c  Available color schemes. Scheme number is required. Color selectors run a color selector option prior to inxi starting which lets you set the config file value for the selection.
     * Supported color schemes: 0-32 Example: inxi -c 11
     * Supported color selectors. NOTE: irc and global only show safe color set.
-      * 94 (console, no X)
-      * 95 (terminal, X)
-      * 96 (irc, X)
-      * 97 (irc, X, in terminal)
-      * 98 (irc, no X)
-      * 99 (global)
+      * 94 - Console, out of X
+      * 95 - Terminal, running in X - like xTerm
+      * 96 - Gui IRC, running in X - like Xchat, Quassel, Konversation etc.
+      * 97 - Console IRC running in X - like irssi in xTerm
+      * 98 - Console IRC not in  X
+      * 99 - Global - Overrides/removes all settings. Setting specific removes global.
   * -C  Show full CPU output, including per CPU clockspeed.
   * -d  Default output verbosity level, same as: inxi -v 1
   * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
-  * -F  Show Full output for inxi. Does not show extra verbose options like -f -u -l -p or -o
+  * -F  Show Full output for inxi, includes all upper case line arguments, plus -n. Does not show extra verbose options like -f -u -l -p or -o
   * -G  Show Graphic card information (card, x type, resolution, version). Also shows glx renderer, card pci busID with -x.
   * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni
         * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
@@ -88,7 +88,11 @@ Typical output for inxi -F:
   * -U  Auto-update script. Note: if you installed as root, you must be root to update, otherwise user is fine.
   * -V, --version  inxi version information. Prints information then exits.
   * -%  Overrides defective or corrupted data.
-  * -@  Triggers debugger output. Requires debugging level 1-10 (8-10 - logging).
-    * 8 - basic logging
-    * 9 - full file/sys info logging
-    * 10 - color logging.
+  * -@  Triggers debugger output. Requires debugging level 1-13 (8-10 - logging).   Less than 8 just triggers inxi debugger output on screen. 
+    * 1-7 - On screen debugger output
+    * 8 - Basic logging
+    * 9 - Full file/sys info logging
+    * 10 - Color logging.
+    * 11 - No logging, creates tar.gz file of user data from lsusb/lspci/sensors, xiin read of /sys.
+    * 12 - No logging, creates tar.gz file of user data from lsusb/lspci/sensors, xorg data, glxinfo etc.
+    * 13 - No logging, creates tar.gz file of user data from lsusb/lspci/sensors, dev, disks, partitions etc.
