@@ -1,12 +1,12 @@
-=inxi information=
-inxi is a system information script.  The code base was forked from infobash.  All code has been reworked and put into functions.  Then, as requested by users, more information was made available as additional functions.  inxi is useful to system admins for identifying hardware on remote system, it is useful for desktop users, but is most helpful in irc when support services would like to know customers hardware for troubleshooting issues.
+=inxi options=
+Inxi has a wide range of options and custom triggers, along with useful defaults like -d or -F.
 
-Typical output for inxi -Fz (-z filters certain output like IP numbers and Mac address of network card, things that don't need to be publically displayed for security reasons):
+Here is a screenshot of typical output for inxi -Fz (-z filters certain output like IP numbers and Mac address of network card, things that don't need to be publically displayed for security reasons):
 
 [http://inxi.googlecode.com/ http://smxi.org/img/screenshots/inxi-Fz-1.5.7.png]
 
 ==inxi options==
- * inxi supports the following options. This are included in inxi 1.5.7. Earlier versions will not have all the options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
+ * inxi supports the following options. This are included in inxi 1.5.14. Earlier versions will not have all the options. You can combine them, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
 
  * If you start inxi with no arguments, it will show the short form. The following options if used without -d or -v will show just that complete line:
    * A,C,D,G,I,N,P,S,f,i,n,o,p,l,u,r,s,t - you can use these together or alone to show just the line(s) you want to see.
@@ -27,7 +27,7 @@ Typical output for inxi -Fz (-z filters certain output like IP numbers and Mac a
   * -d  Default output verbosity level, same as: inxi -v 1
   * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
-  * -F  Show Full output for inxi, includes all upper case line arguments, plus -n. Does not show extra verbose options like -f -u -l -p or -o
+  * -F  Show Full output for inxi, includes all upper case line arguments, plus --n and -s. Does not show extra verbose options like -f -u -l -p  -t or -o
   * -G  Show Graphic card information (card, x type, resolution, version). Also shows glx renderer, card pci busID with -x.
   * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni
         * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
@@ -59,7 +59,7 @@ Typical output for inxi -Fz (-z filters certain output like IP numbers and Mac a
              * -t cm (shows top 5 cpu and memory processes, 10 in all)
         * Make sure to have no space between letters and numbers (cm10 -right, cm 10 - wrong).
   * -u  Show partition UUIDs. Default: short partition -P. For full -p output, use: -pu (or -plu).
-  * -v  Script verbosity levels. Verbosity level number is required.
+  * -v  Script verbosity levels. Verbosity level number is required. Note: do not mix -v options with -d or -F, use one or the other.
     * Supported levels: 0-5 Example: inxi -v 4
       * 0 - short output, same as: inxi
       * 1 - basic verbose, same as: inxi -d
@@ -68,17 +68,17 @@ Typical output for inxi -Fz (-z filters certain output like IP numbers and Mac a
       * 4 - Also show partition size/filled data for (if present):/, /home, /var/, /boot
       * 5 - For multicore systems, also show per core clock speeds; shows audio card.
   * -x  Show extra data: 
-      * dbogomips on Cpu
-      * driver version (if available) for Network/Audio;
-      * Shows port for Network
-      * direct rendering status for Graphics (in X). Only works with verbose or line output;
-      * Shows (for single gpu, nvidia driver) screen number gpu is running on.
-      * Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
+      * -C - Bogomips on Cpu
+      * -N, -A - driver version (if available) for Network/Audio;
+      * -N - Shows port for Network
+      * -G - Direct rendering status for Graphics (in X). Only works with verbose or line output;
+      * -G - Shows (for single gpu, nvidia driver) screen number gpu is running on.
+      * -D - Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
            * < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
-      * Shows runlevel if in X, if out of X, runlevel always shows.
-      * Shows pci Bus ID / Usb ID for Audio, Network, Graphics
-      * For -t, adds memory use output to cpu (-tx c, and cpu use to memory (-tx m).
-      * For -S, shows toolkit (QT or GTK) if GNOME, KDE, or XFCE
+      * -I - Shows runlevel if in X, if out of X, runlevel always shows.
+      * -A, -N, -G - Shows pci Bus ID / Usb ID for Audio, Network, Graphics
+      * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
+      * -S - Shows toolkit (QT or GTK) if GNOME, KDE, or XFCE
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
   * -Z  Absolute override for output filters. Useful for debugging networking issues in irc for example.
 
@@ -93,6 +93,11 @@ Typical output for inxi -Fz (-z filters certain output like IP numbers and Mac a
     * 8 - Basic logging
     * 9 - Full file/sys info logging
     * 10 - Color logging.
-    * 11 - No logging, creates tar.gz file of user data from lsusb/lspci/sensors, xiin read of /sys.
-    * 12 - No logging, creates tar.gz file of user data from lsusb/lspci/sensors, xorg data, glxinfo etc.
-    * 13 - No logging, creates tar.gz file of user data from lsusb/lspci/sensors, dev, disks, partitions etc.
+    * The following create a tar.gz file of system data, plus collecting the inxi output to file, with inxi logging data as well:
+      * 11 - With data file of xiin read of /sys.
+      * 12 - With xorg conf and log data, xrandr, xprop, xdpyinfo, glxinfo etc.
+      * 13 - With data from dev, disks, partitions etc.
+      * 14 - Everything, all the data available.
+
+=inxi information=
+inxi is a system information script.  The code base was forked from infobash.  All code has been reworked and put into functions.  Then, as requested by users, more information was made available as additional functions.  inxi is useful to system admins for identifying hardware on remote system, it is useful for desktop users, but is most helpful in irc when support services would like to know customers hardware for troubleshooting issues.
