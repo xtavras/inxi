@@ -31,8 +31,8 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -G  Show Graphic card information (card, x type, resolution, version). Also shows glx renderer, card pci busID with -x.
   * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni
         * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
-  * -I (eye) Show Information: processes, uptime, memory, irc client, inxi version.
-  * -l (ell) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
+  * -I (upper case i) Show Information: processes, uptime, memory, irc client, inxi version.
+  * -l (lower case l, el) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
   * -n  Show Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state,.
   * -N  Show Network card information. Shows card and driver. Includes support for USB networking devices. Also shows busID/USB-ID, ports, driver version with -x
   * -o  Show unmounted partition information (includes UUID and LABEL if available).
