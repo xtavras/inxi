@@ -27,7 +27,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -d  Default output verbosity level, same as: inxi -v 1
   * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
-  * -F  Show Full output for inxi, includes all upper case line arguments, plus --n and -s. Does not show extra verbose options like -f -u -l -p  -t or -o
+  * -F  Show Full output for inxi, includes all upper case line arguments, plus --n and -s. Does not show extra verbose options like -f -u -l -p  -t or -o unless you add them explicitly, for example: -Fplo
   * -G  Show Graphic card information (card, x type, resolution, version). Also shows glx renderer, card pci busID with -x.
   * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni
         * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
