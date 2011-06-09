@@ -6,14 +6,16 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
 [http://inxi.googlecode.com/ http://smxi.org/img/screenshots/inxi-Fz-1.5.7.png]
 
 ==Full List of Inxi Options==
- * inxi supports the following options. These options are included as of inxi 1.6.3. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -dDc 6
+ * inxi supports the following options. These options are included as of inxi 1.6.5. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
 
- * If you start inxi with no arguments, it will show the short form. The following options if used without -d or -v will show just that complete line:
+ * If you start inxi with no arguments, it will show the short form. The following options if used without -b or -v [number] will show just that complete line:
    * A,C,D,G,I,M,N,P,S,f,i,n,o,p,l,u,r,s,t - you can use these together or alone to show just the line(s) you want to see.
-   * If you use them with a -v level (or -d), it will show the full output for that line along with the output for the chosen verbosity level.
+   * If you use them with a -v level (or -b), it will show the full output for that line along with the output for the chosen verbosity level.
+   * NOTE: as of version 1.6.5, the old basic output option -d was changed to -b, for basic. Users who were accustomed to -d will get an error message telling them about the change.
 
  * Output Control Options:
   * -A  Show Audio/sound card information.
+  * -d  Default output verbosity level, same as: inxi -v 1
   * -c  Available color schemes. Scheme number is required. Color selectors run a color selector option prior to inxi starting which lets you set the config file value for the selection.
     * Supported color schemes: 0-32 Example: inxi -c 11
     * Supported color selectors. NOTE: irc and global only show safe color set.
@@ -24,7 +26,6 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * 98 - Console IRC not in  X
       * 99 - Global - Overrides/removes all settings. Setting specific removes global.
   * -C  Show full CPU output, including per CPU clockspeed.
-  * -d  Default output verbosity level, same as: inxi -v 1
   * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
   * -F  Show Full output for inxi, includes all upper case line arguments, plus --n and -s. Does not show extra verbose options like -f -u -l -p  -t or -o unless you add them explicitly, for example: -Fplo
@@ -63,11 +64,12 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -v  Script verbosity levels. Verbosity level number is required. Note: do not mix -v options with -d or -F, use one or the other.
     * Supported levels: 0-5 Example: inxi -v 4
       * 0 - short output, same as: inxi
-      * 1 - basic verbose, same as: inxi -d
-      * 2 - Also show networking card data
-      * 3 - Also show hard disk names as detected.
-      * 4 - Also show partition size/filled data for (if present):/, /home, /var/, /boot
-      * 5 - For multicore systems, also show per core clock speeds; shows audio card.
+      * 1 - Basic verbose (b for basic), same as: inxi -b
+      * 2 - Adds networking card (-N), Machine (-M) data, and shows basic hard disk data (names only).
+      * 3 - Adds advanced CPU (-C), network (-n) data, and switches on -x advanced data option.
+      * 4 - Adds partition size/filled data (-P) for (if present):/, /home, /var/, /boot. Shows full disk data (-D)
+      * 5 - Adds audio card (-A); sensors (-s), partion label (-l) and UUID (-u).
+      * 6 - Adds full partition data (-p), unmounted partition data (-o).
   * -x  Show extra data: 
       * -C - Bogomips on Cpu
       * -N, -A - driver version (if available) for Network/Audio;
