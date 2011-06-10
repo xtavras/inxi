@@ -15,7 +15,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
 
  * Output Control Options:
   * -A  Show Audio/sound card information.
-  * -b  Default output verbosity level, same as: inxi -v 1
+  * -b  Shows basic (b for basic) output, short form. Same as: inxi -v 1
   * -c  Available color schemes. Scheme number is required. Color selectors run a color selector option prior to inxi starting which lets you set the config file value for the selection.
     * Supported color schemes: 0-32 Example: inxi -c 11
     * Supported color selectors. NOTE: irc and global only show safe color set.
