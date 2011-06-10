@@ -18,7 +18,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -b  Shows basic (b for basic) output, short form. Same as: inxi -v 1 (version 1.6.5 or later. Earlier versions use: -d)
   * -c  Available color schemes. Scheme number is required. Color selectors run a color selector option prior to inxi starting which lets you set the config file value for the selection.
     * Supported color schemes: 0-32 Example: inxi -c 11
-    * Supported color selectors. NOTE: irc and global only show safe color set.
+    * Supported color selectors. NOTE: irc and global only show safe color set. (version 1.5.x or later only)
       * 94 - Console, out of X
       * 95 - Terminal, running in X - like xTerm
       * 96 - Gui IRC, running in X - like Xchat, Quassel, Konversation etc.
