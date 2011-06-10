@@ -29,7 +29,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
   * -F  Show Full output for inxi, includes all upper case line arguments, plus --n and -s. Does not show extra verbose options like -f -u -l -p  -t or -o unless you add them explicitly, for example: -Fplo
-  * -G  Show Graphic card information (card, x type, resolution, version). Also shows glx renderer, card pci busID with -x.
+  * -G  Show Graphic card information (card, x type, resolution, version). Also shows glx renderer, card pci busID with -x. Shows active/unloaded/failed driver versions (1.5.x or later)
   * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni
         * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
   * -I (upper case i) Show Information: processes, uptime, memory, irc client, inxi version.
@@ -51,7 +51,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
         * (as distro data is collected more will be added. If your's is missing please show us how to get this information and we'll try to add it.)
   * -s  Show sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds.
     * Gpu temp only for Fglrx/Nvidia drivers. Nvidia shows screen number for > 1 screens
-  * -S  Show System information: host name, kernel, desktop, desktop version (plus toolkit if -x used), distro
+  * -S  Show System information: host name, kernel, desktop, desktop version (plus toolkit if -x used), distro (desktop features, version 1.5.x or later)
   * -t  Show processes. Requires extra options: c (cpu) m (memory) cm (cpu+memory). 
         * If followed by numbers 1-20, shows that number of top process for each selection (default: 5): 
         * Examples: 
