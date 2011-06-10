@@ -8,9 +8,9 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
 ==Full List of Inxi Options==
  * inxi supports the following options. These options are included as of inxi 1.6.5. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
 
- * If you start inxi with no arguments, it will show the short form. The following options if used without -b or -v [number] will show just that complete line:
+ * If you start inxi with no arguments, it will show the short form. The following options if used without -b, -F or -v  + number will show just that complete line:
    * A,C,D,G,I,M,N,P,S,f,i,n,o,p,l,u,r,s,t - you can use these together or alone to show just the line(s) you want to see.
-   * If you use them with a -v level (or -b), it will show the full output for that line along with the output for the chosen verbosity level.
+   * If you use them with a -v + level, -b, or -F, it will show the full output for that line along with the output for the chosen verbosity level.
    * NOTE: as of version 1.6.5, the old basic output option -d was changed to -b, for basic. Users who were accustomed to -d will get an error message telling them about the change.
 
  * Output Control Options:
