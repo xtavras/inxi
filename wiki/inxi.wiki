@@ -90,6 +90,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
  * Additional Options:
   * -h, --help This help menu.
   * -H - This help menu, plus developer options. Do not use dev options in normal operation!
+  * --recommends  Checks inxi application dependencies + recommends, and directories, then shows what package(s) you need to install to add support for that feature.
   * -U  Auto-update script. Note: if you installed as root, you must be root to update, otherwise user is fine.
   * -V, --version  inxi version information. Prints information then exits.
   * -%  Overrides defective or corrupted data.
