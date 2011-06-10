@@ -6,7 +6,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
 [http://inxi.googlecode.com/ http://smxi.org/img/screenshots/inxi-Fz-1.5.7.png]
 
 ==Full List of Inxi Options==
- * inxi supports the following options. These options are included as of inxi 1.6.5. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
+ * inxi supports the following options. These options are included as of inxi 1.6.6. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
 
  * If you start inxi with no arguments, it will show the short form. The following options if used without -b, -F or -v  + number will show just that complete line:
    * A,C,D,G,I,M,N,P,S,f,i,n,o,p,l,u,r,s,t - you can use these together or alone to show just the line(s) you want to see.
@@ -34,8 +34,8 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
         * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
   * -I (upper case i) Show Information: processes, uptime, memory, irc client, inxi version.
   * -l (lower case l, el) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
-  * -M  Show machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo).
-  * -n  Show Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state,.
+  * -M  Show machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo) (version 1.6.x and later).
+  * -n  Show Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state (version 1.5.x and later).
   * -N  Show Network card information. Shows card and driver. Includes support for USB networking devices. Also shows busID/USB-ID, ports, driver version with -x
   * -o  Show unmounted partition information (includes UUID and LABEL if available).
         * Shows file system type if you have file installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
@@ -82,7 +82,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * -A, -N, -G - Shows pci Bus ID / Usb ID for Audio, Network, Graphics
       * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
       * -S - Shows toolkit (QT or GTK) if GNOME, KDE, or XFCE
-  * -xx Show extra, extra data (only works with verbose or line output, not short form). You can also trigger it with -Fx (but not -xF):
+  * -xx Show extra, extra data (only works with verbose or line output, not short form). You can also trigger it with -Fx (but not -xF) (Version 1.6.x and later)
      * -M - Adds chassis information, if any data for that is available.
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
   * -Z  Absolute override for output filters. Useful for debugging networking issues in irc for example.
@@ -90,7 +90,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
  * Additional Options:
   * -h, --help This help menu.
   * -H - This help menu, plus developer options. Do not use dev options in normal operation!
-  * --recommends  Checks inxi application dependencies + recommends, and directories, then shows what package(s) you need to install to add support for that feature.
+  * --recommends  Checks inxi application dependencies + recommends, and directories, then shows what package(s) you need to install to add support for that feature (version 1.6.6 and later).
   * -U  Auto-update script. Note: if you installed as root, you must be root to update, otherwise user is fine.
   * -V, --version  inxi version information. Prints information then exits.
   * -%  Overrides defective or corrupted data.
