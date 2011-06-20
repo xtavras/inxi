@@ -1,0 +1,22 @@
+  * *RECOMMENDS* (Needed to run certain features, listed by option)
+----
+     * -A, -N - for output of usb audio/network card information: lsusb (usbutils)
+     * -Ax - for audio module version: modinfo (module-init-tools)
+     * -Dx - for hdd temp output (root only default): hddtemp (hddtemp)
+     * -S - for detecting running desktop: xprop (X11-utils)
+     For user level hdd temp output: sudo (sudo)
+
+     Note: requires user action for this feature to run as user (edit /etc/sudoers file)
+     * -G - full graphics output requires:  
+         * glxinfo (mesa-utils)
+         * xdpyinfo (x11-utils)
+         * xrandr (x11-xserver-utils)
+     * -i - IP information, local/wan - ifconfig (net-tools)
+     * -I (out of X) or -Ix (in X) - view current runlevel: runlevel (sysvinit)
+     * -o - for unmounted file system information in unmounted drives (root only default): file (file)
+     Note: requires user action for this feature to run as user (edit /etc/sudoers file)
+
+     For user level unmounted file system type output: sudo (sudo)
+     * -s   For any sensors output, fan, temp, etc: sensors (lm-sensors)
+     Note: requires setup of lm-sensors (sensors-detect and adding modules/modprobe/reboot,
+     and ideally, pwmconfig) prior to full output being available. 
