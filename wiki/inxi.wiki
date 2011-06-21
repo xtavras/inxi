@@ -1,3 +1,4 @@
+#summary Explanation of all current inxi options. See inxi_usage for how to use these options in various clients, irc etc.
 =Inxi Options=
 Inxi has a wide range of options and custom triggers, along with useful defaults like -b or -F. Plain inxi, no options, prints a single line of basic system information.
 
