@@ -1,3 +1,4 @@
+#summary List of inxi dependencies - see also Recommends for other apps used.
 ----
   * *DEPENDENCIES* (Required for inxi to run)
 ----
