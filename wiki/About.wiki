@@ -1,4 +1,6 @@
- * inxi is a fork of infobash 3.02, the bash sys info script by locsmif
+#summary Basic information about the script and its contributors.
+=About inxi=
+* inxi is a fork of infobash 3.02, the bash sys info script by locsmif
 ----
  * inxi, the universal, portable, system info script for irc.
  * Tested with Irssi, Xchat, Konversation, BitchX, KSirc, ircII,
