@@ -16,7 +16,6 @@ As of version 1.6.6, you can run the start option --recommends which will print 
      * df, readlink, stty, tr, uname, wc (coreutils)
      * gawk (gawk)
      * grep (grep)
-     * hostname (hostname)
      * lspci (pciutils)
      * free, ps, uptime (procps)
 ----
