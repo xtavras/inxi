@@ -1,1 +1,17 @@
+#summary Special programming notes, resources, and information.
+
  * gawk arrays: http://www.math.utah.edu/docs/info/gawk_12.html
+ * Bash string padding with sed: http://ideatrash.net/2011/01/bash-string-padding-with-sed.html 
+   This is the important part of the code:
+   {{{
+Left justify with string length of 80
+sed -e :a -e 's/^.\{1,80\}$/& /;ta'
+Right justify with string length of 80
+sed -e :a -e 's/^.\{1,80\}$/ &/;ta'
+Center with string length of 80.
+sed -e :a -e 's/^.\{1,80\}$/ & /;ta'
+}}}
+ * Bash Regular Expressions: http://analyser.oli.tudelft.nl/regex/index.html.en
+   More Bash regex: http://www.faqs.org/docs/abs/HTML/regexp.html
+ * Bash special characters and variables: http://tldp.org/LDP/abs/html/special-chars.html
+ * Bash parameter substitution: http://tldp.org/LDP/abs/html/parameter-substitution.html
