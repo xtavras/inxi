@@ -82,7 +82,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * -I - Shows runlevel if in X, if out of X, runlevel always shows.
       * -A, -N, -G - Shows pci Bus ID / Usb ID for Audio, Network, Graphics
       * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
-      * -S - Shows toolkit (QT or GTK) if GNOME, KDE, or XFCE
+      * -S - Shows toolkit (QT or GTK) if GNOME, KDE, or XFCE. Shows kernel gcc version. 
   * -xx Show extra, extra data (only works with verbose or line output, not short form). You can also trigger it with -Fx (but not -xF) (Version 1.6.x and later)
      * -M - Adds chassis information, if any data for that is available.
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
