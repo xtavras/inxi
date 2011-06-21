@@ -1,21 +1,21 @@
 =Inxi Options=
 Inxi has a wide range of options and custom triggers, along with useful defaults like -b or -F. Plain inxi, no options, prints a single line of basic system information.
 
-Here is a screenshot of typical output for inxi -Fz (-z filters certain output like IP numbers and Mac address of network card, things that don't need to be publically displayed for security reasons):
+Here is a screenshot of typical output for inxi -Fz (-z filters certain output like IP numbers and Mac address of network card, things that don't need to be publically displayed for security reasons). The display output has changed slightly as of 1.7.x:
 
 [http://inxi.googlecode.com/ http://smxi.org/img/screenshots/inxi-Fz-1.5.7.png]
 
 ==Full List of Inxi Options==
- * inxi supports the following options. These options are included as of inxi 1.6.6. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
+ * inxi supports the following options. These options are included as of inxi 1.7.5. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
 
  * If you start inxi with no arguments, it will show the short form. The following options if used without -b, -F or -v  + number will show just that complete line:
    * A,C,D,G,I,M,N,P,S,f,i,n,o,p,l,u,r,s,t - you can use these together or alone to show just the line(s) you want to see.
-   * If you use them with a -v + level, -b, or -F, it will show the full output for that line along with the output for the chosen verbosity level.
-   * NOTE: as of version 1.6.5, the old basic output option -d was changed to -b, for basic. Users who were accustomed to -d will get an error message telling them about the change.
+   * If you use them with either a -v + level, a -b, or with -F, it will show the full output for that line along with the output for the chosen verbosity level.
+   * NOTE: as of version 1.6.5, the old basic output option -d was changed to -b, for basic. -d is now used for the extended disk option, showing cdrom/dvd information as well.
 
  * Output Control Options:
   * -A  Show Audio/sound card information.
-  * -b  Shows basic (b for basic) output, short form. Same as: inxi -v 1 (version 1.6.5 or later. Earlier versions use: -d)
+  * -b  Shows basic (b for basic) output, short form. Same as: inxi -v 2 (version 1.6.5 or later. Earlier versions use: -d). Shows -S -M  -C -G -N -D (short form), and -I
   * -c  Available color schemes. Scheme number is required. Color selectors run a color selector option prior to inxi starting which lets you set the config file value for the selection.
     * Supported color schemes: 0-32 Example: inxi -c 11
     * Supported color selectors. NOTE: irc and global only show safe color set. (version 1.5.x or later only)
@@ -28,10 +28,10 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -C  Show full CPU output, including per CPU clockspeed.
   * -D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB.
   * -f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming.
-  * -F  Show Full output for inxi, includes all upper case line arguments, plus --n and -s. Does not show extra verbose options like -f -u -l -p  -t or -o unless you add them explicitly, for example: -Fplo
+  * -F  Show Fuller output for inxi, includes all upper case line arguments, plus -n and -s. Does not show extra verbose options like -d -f -u -l -p  -t or -o unless you add them explicitly, for example: -Fplo
   * -G  Show Graphic card information (card, x type, resolution, version). Also shows glx renderer, card pci busID with -x. Shows active/unloaded/failed driver versions (1.5.x or later)
   * -i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni
-        * Not shown with -F for user security reasons, you shouldn't paste your local/wan IP.
+        * If you are going to use this for public posting of  your data, consider running it with the -z option for filtering. IRC filters by default. 
   * -I (upper case i) Show Information: processes, uptime, memory, irc client, inxi version.
   * -l (lower case l, el) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
   * -M  Show machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo) (version 1.6.x and later).
@@ -64,20 +64,21 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -v  Script verbosity levels. Verbosity level number is required. Note: do not mix -v options with -b or -F, use one or the other.
     * Supported levels: 0-5 Example: inxi -v 4
       * 0 - short output, same as: inxi
-      * 1 - Basic verbose (b for basic), same as: inxi -b
-      * 2 - Adds networking card (-N), Machine (-M) data, and shows basic hard disk data (names only).
+      * 1 - Basic verbose. Roughly the same as the old -d, 
+      * 2 - Adds networking card (-N), Machine (-M) data, and shows basic hard disk data (names only), same as: inxi -b.
       * 3 - Adds advanced CPU (-C), network (-n) data, and switches on -x advanced data option.
       * 4 - Adds partition size/filled data (-P) for (if present):/, /home, /var/, /boot. Shows full disk data (-D)
       * 5 - Adds audio card (-A); sensors (-s), partion label (-l) and UUID (-u).
-      * 6 - Adds full partition data (-p), unmounted partition data (-o).
+      * 6 - Adds full partition data (-p), unmounted partition data (-o), -d full disk data, including CD/DVD information.
   * -x  Show extra data: 
       * -C - Bogomips on Cpu
       * -N, -A - driver version (if available) for Network/Audio;
-      * -N - Shows port for Network
+      * -N, -A - Shows port for card/device, if available.
       * -G - Direct rendering status for Graphics (in X). Only works with verbose or line output;
       * -G - Shows (for single gpu, nvidia driver) screen number gpu is running on.
       * -D - Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
            * < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
+      * -d - Shows more information if present on cd/dvd devices.
       * -I - Shows runlevel if in X, if out of X, runlevel always shows.
       * -A, -N, -G - Shows pci Bus ID / Usb ID for Audio, Network, Graphics
       * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
