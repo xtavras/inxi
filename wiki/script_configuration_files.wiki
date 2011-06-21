@@ -1,13 +1,11 @@
 #summary Inxi script configuration methods and variables.
 
 =Inxi Script Configuration=
-
 Inxi features a very wide range of user configurable options. For clarity, let us assume your user name is fred for the rest of this page when it comes to system paths and so on.
 
 Please note, for distributions or packagers that include inxi, they might want to take a look at creating global configurations that more accurately suite their defaults, for example the range of colors that can be used for each purpose. See the options page for more information about colors. In general I suggest running the -c color selector to see what the colors really look like before setting them, and it's easy to use that tool to set the config file data per user.
 
 ==Script Configuration Files==
-
 You can create inxi configuration files, or let inxi create them for you if you use the -c 94 through 99 color selector.
 
 As usual, inxi, allows for either a global configuration file, located at:
@@ -35,7 +33,6 @@ Please note the . in the inxi directory, that's a hidden file type, also as usua
 Note that file is always checked for, first the /etc, then the specific logged in user, and anything in those will override the script defaults, but will in turn be overridden if you start inxi with an overriding option.
 
 ==Short List of Script Built in Default Variables for Change==
-
 Keep in mind, ALL top script global variables can be set, but some are dynamically loaded during the script's execution, so there's no point in setting those in your config files.
 
 As with normal Bash, you can use comments in your config files. Comments use a # mark before the commented text.
