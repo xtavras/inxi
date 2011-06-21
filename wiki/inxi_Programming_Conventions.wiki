@@ -1,3 +1,5 @@
+#summary Rules and conventions used in inxi programming.
+=Programming Conventions=
 If you would like to submit patches for inxi, read and understand these conventions.  Patches not following these rules will be ignored.  (While these are the rules, some old code still remains in inxi which breaks these rules.  Those will be dealt with in time.)
 
 As with all 'rules' there are exceptions, these are noted where used.
