@@ -1,3 +1,5 @@
+#summary List of recommended applications for full feature support in inxi. See Dependencies for required application list.
+
 ----
   * *RECOMMENDS* (Needed to run certain features, listed by option)
 ----
