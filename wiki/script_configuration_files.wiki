@@ -1,6 +1,6 @@
 #summary Inxi script configuration methods and variables.
 
-= nxi Script Configuration=
+=Inxi Script Configuration=
 
 Inxi features a very wide range of user configurable options. For clarity, let us assume your user name is fred for the rest of this page when it comes to system paths and so on.
 
