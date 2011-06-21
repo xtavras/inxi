@@ -1,3 +1,5 @@
+#summary How to use inxi in various IRC clients and other settings. See inxi for full option list.
+=Inxi Usage=
 inxi -`<`color`>` -`<`option`>`
 
   * ie {{{ inxi -c4 -I}}}
