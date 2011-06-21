@@ -1,3 +1,4 @@
+#summary What the cpu flags shown by -C or -f (all flags) means.
 Thanks to [http://boincfaq.mundayweb.com/index.php?language=1&view=176 Jorden]
 ----
  * 3DNOW
