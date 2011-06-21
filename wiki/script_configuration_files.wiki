@@ -1,0 +1,35 @@
+#summary Inxi script configuration methods and variables.
+
+= Inxi Script Configuration =
+
+Inxi features a very wide range of user configurable options. For clarity, let us assume your user name is fred for the rest of this page when it comes to system paths and so on.
+
+== Script Configuration Files ==
+
+You can create inxi configuration files, or let inxi create them for you if you use the -c 94 through 99 color selector.
+
+As usual, inxi, allows for either a global configuration file, located at:
+
+{{{
+/etc/inxi.conf
+}}}
+or specific user, including root, configuration files, located at:
+{{{
+$HOME/.inxi/inxi.conf
+}}}
+
+So let's say you, fred, are logged in as fred, this would put your inxi configuration directory/file here:
+{{{
+/home/fred/.inxi/inxi.conf
+}}}
+
+Please note the . in the inxi directory, that's a hidden file type, also as usual. Everything inxi needs will be found in there, including debugging or log files if you run inxi with those options activated.
+
+Note that file is always checked for, first the /etc, then the specific logged in user, and anything in those will override the script defaults, but will in turn be overridden if you start inxi with an overriding option.
+
+== Short List of Script Built in Default Variables for Change ==
+
+Keep in mind, ALL top script global variables can be set, but some are dynamically loaded during the script's execution, so there's no point in setting those in your config files.
+
+
+
