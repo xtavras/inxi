@@ -1,3 +1,4 @@
+#summary How to install inxi using a variety of methods.
 * For debian systems use cathbards repo:
 
 {{{ wget ftp://cathbard.com/binary/inxi*.deb }}}
