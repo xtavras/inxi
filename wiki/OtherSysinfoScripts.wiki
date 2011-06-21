@@ -1,3 +1,4 @@
+#summary Other system information scripts for Linux type operating systems.
 Some other sysinfo scripts in perl.
 
 http://scripts.irssi.org/html/sysinfo277-irssi.pl.html
