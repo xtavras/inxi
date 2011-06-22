@@ -25,7 +25,7 @@ As of version 1.6.6, you can run the start option --recommends which will print 
          * glxinfo (mesa-utils)
          * xdpyinfo (x11-utils)
          * xrandr (x11-xserver-utils)
-     * -i - IP information, local/wan - ifconfig (net-tools)
+     * -i - IP information, local/wan - ip (iproute) (previous to 1.7.8, inxi used the deprecated tool: ifconfig (net-tools). Please note that so as to not break previous inxi installs, inxi still will use ifconfig if ip is missing, so you won't see any unexpected errors.
      * -I (out of X) or -Ix (in X) - view current runlevel: runlevel (sysvinit)
      * -o - for unmounted file system information in unmounted drives (root only default): file (file)
      Note: requires user action for this feature to run as user (edit /etc/sudoers file)
