@@ -14,42 +14,47 @@ import sys
 class PythonVersionCheck(object):
     # http://stackoverflow.com/questions/1093322/how-do-i-check-what-version-of-python-is-running-my-script
 
-    def __init__(self):
-        """
-        """
+    def __init__(self, lowestVersion = 0x02060000):        
         self = self
-        self.lowestVersion = None
+        self.lowestVersion = lowestVersion
     #end
 
     def check(self):
-            """ Detects Python compatibility."""
+        """
+        Detects Python compatibility.
+        """
 
-            pythonVersionText = 'Detecting Python version...[version 2.6+ required]...'
-            pythonVersionErrorText = 'ERROR: Incorrect Python version: 2.6+ is required'
-            pythonVersionPassText = 'Passed...continuing'
+        pythonVersionText = 'Detecting Python version...[version 2.6+ required]...'
+        pythonVersionErrorText = 'ERROR: Incorrect Python version: 2.6+ is required'
+        pythonVersionPassText = 'Passed...continuing'
 
+        print('')
+        print(pythonVersionText)
+
+        if sys.hexversion < self.lowestVersion:
             print('')
-            print(pythonVersionText)
+            print(pythonVersionErrorText)
+            exit(1)
+        else:
+            print(pythonVersionPassText)
+            print('')
+            return
+    #end
 
-            if (self.lowestVersion is None):
-                self.setMinimumVersion()
-
-            if sys.hexversion < self.lowestVersion:
-                print('')
-                print(pythonVersionErrorText)
-                exit(1)
-            else:
-                print(pythonVersionPassText)
-                print('')
-                return
-        #end
-
-    def setMinimumVersion(self, lowestVersion = 0x02060000):
+    def setMinimumVersion(self, lowestVersion):
         """
         lowestVersion:  The minimum python version required. [Default: 2.6 ]
         """
+
         self.lowestVersion = lowestVersion
+    #end
 #end
+
+################################################################################
+####
+####        test method, don't use in code
+####
+################################################################################
 
 if __name__ == '__main__':
     version = PythonVersionCheck()

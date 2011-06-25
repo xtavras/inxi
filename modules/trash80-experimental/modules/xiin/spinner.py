@@ -14,6 +14,10 @@ import sys
 import time
 
 class Spinner(object):
+    """
+    Spinner Class used to show a busy spinner within a loop.
+    [Usage:     spinner.render(counter) ]
+    """
 
     def __init__(self, typeOfSpinner = [ ' [\\] ', ' [|] ', ' [/] ', ' [-] '], color = None):
         """
@@ -63,8 +67,13 @@ class Spinner(object):
     def getSpinnerColor(self):
         return self.color
     #end
-
 #end
+
+################################################################################
+####
+####        test method, don't use in code
+####
+################################################################################
 
 if __name__ == '__main__':
     spinner = Spinner()
