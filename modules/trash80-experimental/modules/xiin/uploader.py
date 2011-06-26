@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-#    author: Scott Rogers
-#    stability: alpha
-#    copying: 'Copyright (C) 2011 W. Scott Rogers
-#              This program is free software.
-#              You can redistribute it and/or modify it under the terms of the
-#              GNU General Public License as published by the Free Software Foundation;
-#              version 2 of the License.
-#
-#   Special thanks: h2, aka Harald Hope
+__author__      = 'Scott Rogers, aka trash80'
+__stability__   = 'alpha'
+__version__     = '2011.06.25-7'
+__copying__     = """Copyright (C) 2011 W. Scott Rogers \
+                        This program is free software.
+                        You can redistribute it and/or modify it under the terms of the
+                        GNU General Public License as published by the Free Software Foundation;
+                        version 2 of the License.
+                    """
+
 
 import os
 import sys
