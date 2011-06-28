@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__     = '2011.06.26-0'
+__version__     = '2011.06.26-00'
 __author__      = 'Scott Rogers, aka trash80'
 __stability__   = 'alpha'
 __copying__     = """Copyright (C) 2011 W. Scott Rogers \
