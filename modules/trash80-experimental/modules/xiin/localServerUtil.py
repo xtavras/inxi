@@ -21,10 +21,10 @@ class xiinLocalServer(object):
 
     def local_module_dict(self):
         """
-
+        A dictionary of local modules with versions.
         """
+        
         localmoduleDict = {}
-
         localmoduleList = self.get_local_module_list()
 
         for localmodule in localmoduleList:
@@ -36,7 +36,7 @@ class xiinLocalServer(object):
 
     def get_local_module_list(self):
         """
-
+        A list of local modules.
         """
 
         localmoduleList = []
@@ -56,7 +56,7 @@ class xiinLocalServer(object):
 
     def get_local_module_version(self, module):
         """
-
+        Get the version for each local module.
         """
         module = '{0}/{1}'.format(self.xiinDir, module)
 

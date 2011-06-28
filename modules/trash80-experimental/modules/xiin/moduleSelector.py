@@ -14,17 +14,31 @@ from localServerUtil import xiinLocalServer
 from moduleUtil import xiinModuleUtil
 
 class xiinModuleSelector(object):
+    """
+    Compare the list of server module versions with local module version. Return
+    a list of out of date modules.
+    """
 
     def __init__(self):
         self = self
-        pass
+        self.xiinRemoteStatus     = 'Checking latest versions of xiin modules...'
+        self.xiinLocalStatus = 'Checking local xiin module version...'
     #end
 
     def getDownloadList(self):
+        """
+        Returns a list of modules requiring updates.
+        """
         remoteModule = xiinRemoteServer()
         localModule = xiinLocalServer()
 
+
+        print(self.xiinLocalStatus)
+        print('')
         localModuleDict = localModule.local_module_dict()
+
+        print(self.xiinRemoteStatus)
+        print('')
         remoteModuleDict = remoteModule.remote_server_module_dict()
         
         downloadList = self.buildDownloadList(localModuleDict, remoteModuleDict)
@@ -34,7 +48,8 @@ class xiinModuleSelector(object):
 
     def buildDownloadList(self, localModuleDict, remoteModuleDict):
         """
-
+        Compare the versions of local and server modules to create a list of
+        outdated modules.
         """
         versionDate = xiinModuleUtil()
 
@@ -57,4 +72,5 @@ class xiinModuleSelector(object):
                     downloadList.append(remoteModule)
 
         return downloadList
+    #end
 #end

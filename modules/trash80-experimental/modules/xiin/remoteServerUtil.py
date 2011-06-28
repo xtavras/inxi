@@ -19,16 +19,15 @@ class xiinRemoteServer(object):
         self = self
         self.urlHome        = 'http://inxi.googlecode.com'
         self.urlDirectory   = '/svn/modules/trash80-experimental/modules/xiin'
-        self.remoteModule     = '/reader.py'
-        pass
     #end
 
     def remote_server_module_dict(self):
         """
-        Creates a dictionary of module(key):version(value) of server side modules
+        Creates a dictionary of module(key):version(value) of server side modules.
         """
-        moduleDict = {}
+        moduleDict       = {}
         remoteModuleList = self.get_server_module_list()
+
         for moduleName in remoteModuleList:
             moduleVersion = self.get_server_module_version(moduleName)
             moduleDict[str(moduleName)] = str(moduleVersion)
@@ -38,7 +37,7 @@ class xiinRemoteServer(object):
 
     def get_server_module_list(self):
         """
-        Creates a list of server side modules
+        Creates a list of server side modules.
         """
         listUrl     = '{0}{1}'
         parser      = xiinHTMLParser()
@@ -53,17 +52,17 @@ class xiinRemoteServer(object):
 
     def get_server_module_version(self, module):
         """
-        Returns the version of a module
+        Returns the version of a module.
         """
         # home, directory, module
         urlFull = '{0}{1}/{2}'
         urlFull = urlFull.format(self.urlHome, self.urlDirectory, module)
 
-        connection = urllib2.urlopen(urlFull)
-        version = connection.readlines()[1]
+        connection  = urllib2.urlopen(urlFull)
+        version     = connection.readlines()[1]
 
-        cleanVersion = xiinModuleUtil()
-        remoteVersion = cleanVersion.clean(version)
+        cleanVersion    = xiinModuleUtil()
+        remoteVersion   = cleanVersion.clean(version)
 
         return remoteVersion
     #end

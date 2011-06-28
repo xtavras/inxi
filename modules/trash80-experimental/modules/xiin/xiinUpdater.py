@@ -12,6 +12,21 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
 from moduleSelector import xiinModuleSelector
 
 if __name__ == '__main__':
-    downloadListSelector = xiinModuleSelector()
-    print(downloadListSelector.getDownloadList())
+    print('Please wait while xiin checks for updates...')
+    print('')
+    
+    downloadList = xiinModuleSelector()
+    xiinModList = downloadList.getDownloadList()
+
+    if len(xiinModList) > 0:
+        for xiinMod in xiinModList:
+            print('Updating {0}'.format(xiinMod))
+            print('')
+            # TODO: add module to install new modules
+    else:
+        print('Nothing to update.')
+        print('')
+
+    print('Continuing...')
+    print('')
 #end

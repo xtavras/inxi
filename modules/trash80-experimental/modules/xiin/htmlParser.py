@@ -13,6 +13,10 @@ from HTMLParser import HTMLParser
 
 class xiinHTMLParser(HTMLParser):
 # http://stackoverflow.com/questions/1699634/how-to-retrieve-a-directory-of-files-from-a-remote-server
+    """
+    Custom/extended HTMLParser.
+    """
+
     remoteList = []
 
     def handle_starttag(self, tag, attrs):
@@ -25,6 +29,9 @@ class xiinHTMLParser(HTMLParser):
     #end
 
     def get_parser_list(self):
+        """
+        Returns the server list of files.
+        """
         return self.remoteList
 
 #end
