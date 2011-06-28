@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__     = '2011.06.27-00'
+__version__     = '2011.06.27-01'
 __author__      = 'Scott Rogers, aka trash80'
 __stability__   = 'alpha'
 __copying__     = """Copyright (C) 2011 W. Scott Rogers \
@@ -20,26 +20,26 @@ class xiinRemoteServer(object):
         self = self
         self.urlHome        = 'http://inxi.googlecode.com'
         self.urlDirectory   = '/svn/modules/trash80-experimental/modules/xiin'
-        self.remoteFile     = '/reader.py'
+        self.remoteModule     = '/reader.py'
         pass
     #end
 
-    def remote_server_file_dict(self):
+    def remote_server_module_dict(self):
         """
-        
+        Creates a dictionary of module(key):version(value) of server side modules
         """
-        fileDict = {}
-        remoteFileList = self.get_server_file_list()
-        for fileName in remoteFileList:
-            fileVersion = self.get_server_file_version(fileName)
-            fileDict[str(fileName)] = str(fileVersion)
+        moduleDict = {}
+        remoteModuleList = self.get_server_module_list()
+        for moduleName in remoteModuleList:
+            moduleVersion = self.get_server_module_version(moduleName)
+            moduleDict[str(moduleName)] = str(moduleVersion)
 
-        return fileDict
+        return moduleDict
     #end
 
-    def get_server_file_list(self):
+    def get_server_module_list(self):
         """
-
+        Creates a list of server side modules
         """
         listUrl     = '{0}{1}'
         parser      = xiinHTMLParser()
@@ -52,21 +52,19 @@ class xiinRemoteServer(object):
         return parser.get_parser_list()
     #end
 
-    def get_server_file_version(self, file):
+    def get_server_module_version(self, module):
         """
-
+        Returns the version of a module
         """
-        # home, directory, file
+        # home, directory, module
         urlFull = '{0}{1}/{2}'
-        urlFull = urlFull.format(self.urlHome, self.urlDirectory, file)
+        urlFull = urlFull.format(self.urlHome, self.urlDirectory, module)
 
         connection = urllib2.urlopen(urlFull)
         version = connection.readlines()[1]
 
         cleanVersion = xiinVersionClean()
         remoteVersion = cleanVersion.clean(version)
-
-        # TODO: convert the version to epoch
         
         return remoteVersion
     #end
@@ -97,59 +95,59 @@ class xiinLocalServer(object):
         self.xiinDir = os.getcwd()
     #end
 
-    def local_file_dict(self):
+    def local_module_dict(self):
         """
 
         """
-        localFileDict = {}
+        localmoduleDict = {}
 
-        localFileList = self.get_local_file_list()
+        localmoduleList = self.get_local_module_list()
 
-        for localFile in localFileList:
-            localFileVersion = self.get_local_file_version(localFile)
-            localFileDict[localFile] = localFileVersion
+        for localmodule in localmoduleList:
+            localmoduleVersion = self.get_local_module_version(localmodule)
+            localmoduleDict[localmodule] = localmoduleVersion
 
-        return localFileDict
+        return localmoduleDict
     #end
 
-    def get_local_file_list(self):
+    def get_local_module_list(self):
         """
 
         """
 
-        localFileList = []
+        localmoduleList = []
 
-        for root, dirs, files in os.walk(self.xiinDir):
-            for remoteFile in files:
-                if not '.svn' in remoteFile:
-                    splitFileName = remoteFile.split('.')
-                    fileNameLength = len(splitFileName)
-                    if fileNameLength > 1:
-                        ext = splitFileName[fileNameLength - 1]
+        for root, dirs, modules in os.walk(self.xiinDir):
+            for remotemodule in modules:
+                if not '.svn' in remotemodule:
+                    splitmoduleName = remotemodule.split('.')
+                    moduleNameLength = len(splitmoduleName)
+                    if moduleNameLength > 1:
+                        ext = splitmoduleName[moduleNameLength - 1]
                         if ext == 'py':
-                            localFileList.append(remoteFile)
+                            localmoduleList.append(remotemodule)
                             
-        return localFileList
+        return localmoduleList
     #end
 
-    def get_local_file_version(self, file):
+    def get_local_module_version(self, module):
         """
 
         """
-        modFile = '{0}/{1}'.format(self.xiinDir, file)
+        module = '{0}/{1}'.format(self.xiinDir, module)
 
         cleanVersion = xiinVersionClean()
 
         try:
-            with open(modFile, 'r') as currentModFile:
-                localVersion = currentModFile.readlines()[1]
+            with open(module, 'r') as currentModule:
+                localVersion = currentModule.readlines()[1]
                 return cleanVersion.clean(localVersion)
         except:
             pass
     #end
 #end
 
-class xiinFileSelector(object):
+class xiinModuleSelector(object):
 
     def __init__(self):
         self = self
@@ -157,21 +155,21 @@ class xiinFileSelector(object):
     #end
 
     def getDownloadList(self):
-        remoteFile = xiinRemoteServer()
-        localFile = xiinLocalServer()
+        remoteModule = xiinRemoteServer()
+        localModule = xiinLocalServer()
 
-        localFileDict = localFile.local_file_dict()
-        remoteFileDict = remoteFile.remote_server_file_dict()
+        localModuleDict = localModule.local_module_dict()
+        remoteModuleDict = remoteModule.remote_server_module_dict()
 
-        print('localDict: ' + str(localFileDict))
-        print('remoteDict: ' + str(remoteFileDict))
+        print('localDict: ' + str(localModuleDict))
+        print('remoteDict: ' + str(remoteModuleDict))
 
-        downloadList = self.buildDownloadList(localFileDict, remoteFileDict)
+        downloadList = self.buildDownloadList(localModuleDict, remoteModuleDict)
 
         print('downloadList: ' + str(downloadList))
     #end
 
-    def buildDownloadList(self, localFileDict, remoteFileDict):
+    def buildDownloadList(self, localModuleDict, remoteModuleDict):
         """
 
         """
@@ -179,21 +177,21 @@ class xiinFileSelector(object):
 
         downloadList = []
 
-        # if localFileDict is empty, then we need all the files
+        # if localModuleDict is empty, then we need all the modules
 
-        for remoteFile in remoteFileDict:
-            if len(localFileDict) == 0 or remoteFile not in localFileDict:
-                downloadList.append(remoteFile)
+        for remoteModule in remoteModuleDict:
+            if len(localModuleDict) == 0 or remoteModule not in localModuleDict:
+                downloadList.append(remoteModule)
             else:
-                localVersion = versionDate.toDate(localFileDict[remoteFile])
-                remoteVersion = versionDate.toDate(remoteFileDict[remoteFile])
+                localVersion = versionDate.toDate(localModuleDict[remoteModule])
+                remoteVersion = versionDate.toDate(remoteModuleDict[remoteModule])
 
                 if localVersion[0] == remoteVersion[0]:
                     if localVersion[1] < remoteVersion[1]:
-                        downloadList.append(remoteFile)
+                        downloadList.append(remoteModule)
 
                 if localVersion[0] < remoteVersion[0]:
-                    downloadList.append(remoteFile)
+                    downloadList.append(remoteModule)
 
         return downloadList
 #end
@@ -225,6 +223,6 @@ class xiinVersionClean(object):
 #end
 
 if __name__ == '__main__':
-    downloadListSelector = xiinFileSelector()
+    downloadListSelector = xiinModuleSelector()
     downloadListSelector.getDownloadList()
 #end
