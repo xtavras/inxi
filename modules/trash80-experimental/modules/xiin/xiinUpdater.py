@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__     = '2011.06.27-00'
+__version__     = '2011.06.29-00'
 __author__      = 'Scott Rogers, aka trash80'
 __stability__   = 'alpha'
 __copying__     = """Copyright (C) 2011 W. Scott Rogers \
@@ -10,22 +10,24 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
                     """
 
 from moduleSelector import xiinModuleSelector
-from downloadUtil import xiinDownloadModule
+from moduleDownloadUtil import xiinDownloadModuleUtil
 
 if __name__ == '__main__':
     print('Please wait while xiin checks for updates...')
     print('')
-    
-    downloadList = xiinModuleSelector()
-    xiinModList = downloadList.getDownloadList()
-    updateFile = xiinDownloadModule()
+
+    xiinUpdater     = xiinDownloadModuleUtil()
+    xiinSelector    = xiinModuleSelector()
+    xiinModList     = xiinSelector.get_download_list()
+
+    source = 'http://inxi.googlecode.com/svn/modules/trash80-experimental/modules/xiin/'
+    destination = '/home/scott/xiinTest/'
 
     if len(xiinModList) > 0:
         for xiinMod in xiinModList:
             print('Updating {0}'.format(xiinMod))
             print('')
-            updateFile.downloadModule(xiinMod)
-            # TODO: add module to install new modules
+            xiinUpdater.download(source + xiinMod, destination + xiinMod)
     else:
         print('Nothing to update.')
         print('')

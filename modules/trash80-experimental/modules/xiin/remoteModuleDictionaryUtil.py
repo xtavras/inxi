@@ -12,6 +12,7 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
 import urllib2
 from htmlParser import xiinHTMLParser
 from moduleUtil import xiinModuleUtil
+from spinner import Spinner
 
 class xiinRemoteModuleDictionary(object):
 
@@ -27,13 +28,17 @@ class xiinRemoteModuleDictionary(object):
         Creates a dictionary of module(key):version(value) of server side modules.
         """
         moduleDict       = {}
+        spinner          = Spinner()
         listUrl          = '{0}{1}'.format(self.urlHome, self.urlDirectory)
         remoteModuleList = self.get_server_module_list(listUrl)
+        count = 1
 
         for moduleName in remoteModuleList:
+            spinner.render(count)
             urlFull = '{0}{1}/{2}'.format(self.urlHome, self.urlDirectory, moduleName)
             moduleVersion = self.get_server_module_version(urlFull)
             moduleDict[str(moduleName)] = str(moduleVersion)
+            count = count + 1
 
         return moduleDict
     #end
@@ -76,7 +81,7 @@ class xiinRemoteModuleDictionary(object):
         self.urlDirectory = xiinDir
     #end
 
-    def get_url_directroy(self):
+    def get_url_directory(self):
         return self.urlDirectory
     #end
 #end

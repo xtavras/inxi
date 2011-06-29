@@ -43,7 +43,6 @@ class xiinLocalModuleDictionary(object):
 
         for module in os.listdir(dir):
             if not '.svn' in module:
-                print(module)
                 splitmoduleName = module.split('.')
                 moduleNameLength = len(splitmoduleName)
                 if moduleNameLength > 1:

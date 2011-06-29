@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__     = '2011.06.27-00'
+__version__     = '2011.06.28-00'
 __author__      = 'Scott Rogers, aka trash80'
 __stability__   = 'alpha'
 __copying__     = """Copyright (C) 2011 W. Scott Rogers \
@@ -9,8 +9,8 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
                         version 2 of the License.
                     """
 
-from remoteServerUtil import xiinRemoteServer
-from localServerUtil import xiinLocalServer
+from remoteModuleDictionaryUtil import xiinRemoteModuleDictionary
+from localModuleDictionaryUtil import xiinLocalModuleDictionary
 from moduleUtil import xiinModuleUtil
 
 class xiinModuleSelector(object):
@@ -25,28 +25,7 @@ class xiinModuleSelector(object):
         self.xiinLocalStatus    = 'Checking local xiin module version...'
     #end
 
-    def getDownloadList(self):
-        """
-        Returns a list of modules requiring updates.
-        """
-        remoteModule = xiinRemoteServer()
-        localModule = xiinLocalServer()
-
-
-        print(self.xiinLocalStatus)
-        print('')
-        localModuleDict = localModule.local_module_dict()
-
-        print(self.xiinRemoteStatus)
-        print('')
-        remoteModuleDict = remoteModule.remote_server_module_dict()
-        
-        downloadList = self.buildDownloadList(localModuleDict, remoteModuleDict)
-
-        return downloadList
-    #end
-
-    def buildDownloadList(self, localModuleDict, remoteModuleDict):
+    def build_download_list(self, localModuleDict, remoteModuleDict):
         """
         Compare the versions of local and server modules to create a list of
         outdated modules.
@@ -70,6 +49,27 @@ class xiinModuleSelector(object):
 
                 if localVersion[0] < remoteVersion[0]:
                     downloadList.append(remoteModule)
+
+        return downloadList
+    #end
+
+    def get_download_list(self):
+        """
+        Returns a list of modules requiring updates.
+        """
+        remoteModule = xiinRemoteModuleDictionary()
+        localModule = xiinLocalModuleDictionary()
+
+
+        print(self.xiinLocalStatus)
+        print('')
+        localModuleDict = localModule.get_local_module_dict()
+
+        print(self.xiinRemoteStatus)
+        print('')
+        remoteModuleDict = remoteModule.get_remote_server_module_dict()
+        
+        downloadList = self.build_download_list(localModuleDict, remoteModuleDict)
 
         return downloadList
     #end

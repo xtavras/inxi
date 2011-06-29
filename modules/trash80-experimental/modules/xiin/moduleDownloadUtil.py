@@ -11,7 +11,7 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
 
 import urllib2
 
-class xiinDownloadUtil(object):
+class xiinDownloadModuleUtil(object):
 
     def __init__(self, blocksize = 8192):
         self = self
