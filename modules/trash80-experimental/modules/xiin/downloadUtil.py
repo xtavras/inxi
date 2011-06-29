@@ -11,28 +11,36 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
 
 import urllib2
 
-class xiinDownloadModule(object):
+class xiinDownloadUtil(object):
 
-    def __init__(self):
+    def __init__(self, blocksize = 8192):
         self = self
-        self.urlHome        = 'http://inxi.googlecode.com'
-        self.urlDirectory   = '/svn/modules/trash80-experimental/modules/xiin'
+        self.blockSize = blocksize
     #end
 
-    def downloadModule(self, module):
+    def download(self, source, destination): #moduleURIName):
         """
         Download a new version of a module
         """
+        connection  = urllib2.urlopen(source)
 
-        urlFull = '{0}{1}/{2}'
-        urlFull = urlFull.format(self.urlHome, self.urlDirectory, module)
-
-        connection  = urllib2.urlopen(urlFull)
-        with open(module, 'w') as localFile:
-            localFile.write(connection.read())
+        try:
+            with open(destination, 'w') as localFile:
+                while True:
+                    modLine = connection.read(self.blockSize)
+                    if not modLine:
+                        break
+                    localFile.write(modLine)
+            return True
+        except:
+            return False
     #end
 
-    def testSuccessfulDownload(self, module):
-        pass
+    def setBlockSize(self, blocksize):
+        self.blockSize = blocksize
+    #end
+
+    def getBlockSize(self):
+        return self.blockSize
     #end
 #end

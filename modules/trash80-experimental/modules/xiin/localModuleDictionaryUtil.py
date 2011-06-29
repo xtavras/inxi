@@ -12,20 +12,20 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
 import os
 from moduleUtil import xiinModuleUtil
 
-class xiinLocalServer(object):
+class xiinLocalModuleDictionary(object):
 
-    def __init__(self):
+    def __init__(self, xiinDir = os.getcwd()):
         self = self
-        self.xiinDir = os.getcwd()
+        self.xiinDir = xiinDir
     #end
 
-    def local_module_dict(self):
+    def get_local_module_dict(self):
         """
-        A dictionary of local modules with versions.
+        Returns a dictionary of local modules with versions.
         """
         
         localmoduleDict = {}
-        localmoduleList = self.get_local_module_list()
+        localmoduleList = self.get_local_module_list(self.xiinDir)
 
         for localmodule in localmoduleList:
             localmoduleVersion = self.get_local_module_version(localmodule)
@@ -34,22 +34,22 @@ class xiinLocalServer(object):
         return localmoduleDict
     #end
 
-    def get_local_module_list(self):
+    def get_local_module_list(self, dir):
         """
-        A list of local modules.
+        Returns a list of local modules.
         """
 
         localmoduleList = []
 
-        for root, dirs, modules in os.walk(self.xiinDir):
-            for remotemodule in modules:
-                if not '.svn' in remotemodule:
-                    splitmoduleName = remotemodule.split('.')
-                    moduleNameLength = len(splitmoduleName)
-                    if moduleNameLength > 1:
-                        ext = splitmoduleName[moduleNameLength - 1]
-                        if ext == 'py':
-                            localmoduleList.append(remotemodule)
+        for module in os.listdir(dir):
+            if not '.svn' in module:
+                print(module)
+                splitmoduleName = module.split('.')
+                moduleNameLength = len(splitmoduleName)
+                if moduleNameLength > 1:
+                    ext = splitmoduleName[moduleNameLength - 1]
+                    if ext == 'py' or ext == 'yml':
+                        localmoduleList.append(module)
 
         return localmoduleList
     #end
@@ -68,5 +68,13 @@ class xiinLocalServer(object):
                 return cleanVersion.clean(localVersion)
         except:
             pass
+    #end
+
+    def set_local_dir(self, dir):
+        self.xiinDir = dir
+    #end
+
+    def get_local_dir(self):
+        return self.xiinDir
     #end
 #end

@@ -10,6 +10,7 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
                     """
 
 from moduleSelector import xiinModuleSelector
+from downloadUtil import xiinDownloadModule
 
 if __name__ == '__main__':
     print('Please wait while xiin checks for updates...')
@@ -17,11 +18,13 @@ if __name__ == '__main__':
     
     downloadList = xiinModuleSelector()
     xiinModList = downloadList.getDownloadList()
+    updateFile = xiinDownloadModule()
 
     if len(xiinModList) > 0:
         for xiinMod in xiinModList:
             print('Updating {0}'.format(xiinMod))
             print('')
+            updateFile.downloadModule(xiinMod)
             # TODO: add module to install new modules
     else:
         print('Nothing to update.')

@@ -21,8 +21,8 @@ class xiinModuleSelector(object):
 
     def __init__(self):
         self = self
-        self.xiinRemoteStatus     = 'Checking latest versions of xiin modules...'
-        self.xiinLocalStatus = 'Checking local xiin module version...'
+        self.xiinRemoteStatus   = 'Checking latest versions of xiin modules...'
+        self.xiinLocalStatus    = 'Checking local xiin module version...'
     #end
 
     def getDownloadList(self):

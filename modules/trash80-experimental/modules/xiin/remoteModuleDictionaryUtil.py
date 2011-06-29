@@ -13,35 +13,37 @@ import urllib2
 from htmlParser import xiinHTMLParser
 from moduleUtil import xiinModuleUtil
 
-class xiinRemoteServer(object):
+class xiinRemoteModuleDictionary(object):
 
     def __init__(self):
         self = self
         self.urlHome        = 'http://inxi.googlecode.com'
         self.urlDirectory   = '/svn/modules/trash80-experimental/modules/xiin'
+
     #end
 
-    def remote_server_module_dict(self):
+    def get_remote_server_module_dict(self):
         """
         Creates a dictionary of module(key):version(value) of server side modules.
         """
         moduleDict       = {}
-        remoteModuleList = self.get_server_module_list()
+        listUrl          = '{0}{1}'.format(self.urlHome, self.urlDirectory)
+        remoteModuleList = self.get_server_module_list(listUrl)
 
         for moduleName in remoteModuleList:
-            moduleVersion = self.get_server_module_version(moduleName)
+            urlFull = '{0}{1}/{2}'.format(self.urlHome, self.urlDirectory, moduleName)
+            moduleVersion = self.get_server_module_version(urlFull)
             moduleDict[str(moduleName)] = str(moduleVersion)
 
         return moduleDict
     #end
 
-    def get_server_module_list(self):
+    def get_server_module_list(self, xiinUrlDir):
         """
         Creates a list of server side modules.
         """
-        listUrl     = '{0}{1}'
         parser      = xiinHTMLParser()
-        connection  = urllib2.urlopen(listUrl.format(self.urlHome, self.urlDirectory))
+        connection  = urllib2.urlopen(xiinUrlDir)
         response    = connection.read()
 
         parser.feed(response)
@@ -50,20 +52,31 @@ class xiinRemoteServer(object):
         return parser.get_parser_list()
     #end
 
-    def get_server_module_version(self, module):
+    def get_server_module_version(self, xiinUrlMod):
         """
         Returns the version of a module.
         """
-        # home, directory, module
-        urlFull = '{0}{1}/{2}'
-        urlFull = urlFull.format(self.urlHome, self.urlDirectory, module)
+        cleaner         = xiinModuleUtil()
+        connection      = urllib2.urlopen(xiinUrlMod)
+        dirtyVersion    = connection.readlines()[1]
+        version         = cleaner.clean(dirtyVersion)
 
-        connection  = urllib2.urlopen(urlFull)
-        version     = connection.readlines()[1]
+        return version
+    #end
 
-        cleanVersion    = xiinModuleUtil()
-        remoteVersion   = cleanVersion.clean(version)
+    def set_url_home(self, xiinUrl):
+        self.urlHome = xiinUrl
+    #end
 
-        return remoteVersion
+    def get_url_home(self):
+        return self.urlHome
+    #end
+
+    def set_url_directory(self, xiinDir):
+        self.urlDirectory = xiinDir
+    #end
+
+    def get_url_directroy(self):
+        return self.urlDirectory
     #end
 #end
