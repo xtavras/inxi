@@ -45,3 +45,12 @@ set_color_scheme()
 	# ((COLOR_SCHEME++)) ## note: why is this? ##
 	eval $LOGFE
 }
+
+"""
+http://cia-vc.googlecode.com/svn/trunk/cia/LibCIA/IRC/Formatting.py
+http://wiki.bash-hackers.org/scripting/terminalcodes
+http://pypi.python.org/pypi/colorama
+http://code.google.com/p/colorama/source/browse/colorama/ansi.py
+http://pypi.python.org/pypi/termcolor
+
+"""

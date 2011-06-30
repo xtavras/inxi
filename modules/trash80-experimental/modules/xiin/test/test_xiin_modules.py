@@ -12,20 +12,45 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
 import subprocess
 
 def test_sequence():
-    test_remote_server_util()
-    test_local_module_list()
-    test_download_util()
-    test_module_selector()
-    test_xiin_updater()
-#    pass
+#    test_remote_server_util()
+#    test_local_module_list()
+#    test_download_util()
+#    test_module_selector()
+#    test_xiin_updater()
+    text_xiin_ftp_uploader()
+    pass
+#end
+
+def text_xiin_ftp_uploader():
+    from source.uploader import xiinUploader
+
+    source      = None
+    target      = None
+    uname       = None
+    password    = None
+    if len(sys.argv) > 2:
+        source      = sys.argv[1]
+        target      = sys.argv[2]
+    else:
+        print('')
+        print('No options given')
+        print('[Usage: uploader <source> <target> <uname> <password> ]')
+        print('')
+        exit(0)
+    if len(sys.argv) > 3:
+        uname       = sys.argv[3]
+        password    = sys.argv[4]
+
+    uploader    = xiinUploader()
+    uploader.upload(source, target, uname, password)
 #end
 
 def test_xiin_updater():
-    subprocess.call('/home/scott/Applications/inxi/modules/trash80-experimental/modules/xiin/xiinUpdater.py')
+    subprocess.call('/home/scott/Applications/inxi/modules/trash80-experimental/modules/xiin/source/xiinUpdater.py')
 #end
 
 def test_module_selector():
-    from moduleSelector import xiinModuleSelector
+    from source.moduleSelector import xiinModuleSelector
 
     list = xiinModuleSelector()
     moduleList = list.get_download_list()
@@ -37,7 +62,7 @@ def test_module_selector():
 #end
 
 def test_remote_server_util():
-    from remoteModuleDictionaryUtil import xiinRemoteModuleDictionary
+    from source.remoteModuleDictionaryUtil import xiinRemoteModuleDictionary
 
     dict        = xiinRemoteModuleDictionary()
     remoteDict  = dict.get_remote_server_module_dict()
@@ -49,7 +74,7 @@ def test_remote_server_util():
 #end
 
 def test_local_module_list():
-    from localModuleDictionaryUtil import xiinLocalModuleDictionary
+    from source.localModuleDictionaryUtil import xiinLocalModuleDictionary
 
     dict        = xiinLocalModuleDictionary()
     localDict   = dict.get_local_module_dict()
@@ -61,7 +86,7 @@ def test_local_module_list():
 #end
 
 def test_download_util():
-    from moduleDownloadUtil import xiinDownloadModuleUtil
+    from source.moduleDownloadUtil import xiinDownloadModuleUtil
 
     downld = xiinDownloadModuleUtil()
 
@@ -77,8 +102,4 @@ def test_download_util():
     else:
         print('Module test failed: {0}'.format(result))
         exit(1)
-#end
-
-if __name__ == '__main__':
-    test_sequence()
 #end

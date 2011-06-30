@@ -20,7 +20,7 @@ if __name__ == '__main__':
     xiinSelector    = xiinModuleSelector()
     xiinModList     = xiinSelector.get_download_list()
 
-    source = 'http://inxi.googlecode.com/svn/modules/trash80-experimental/modules/xiin/'
+    source = 'http://inxi.googlecode.com/svn/modules/trash80-experimental/modules/xiin/source/'
     destination = '/home/scott/xiinTest/'
 
     if len(xiinModList) > 0:

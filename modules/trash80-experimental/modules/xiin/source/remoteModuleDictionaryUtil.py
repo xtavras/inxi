@@ -19,7 +19,7 @@ class xiinRemoteModuleDictionary(object):
     def __init__(self):
         self = self
         self.urlHome        = 'http://inxi.googlecode.com'
-        self.urlDirectory   = '/svn/modules/trash80-experimental/modules/xiin'
+        self.urlDirectory   = '/svn/modules/trash80-experimental/modules/xiin/source/'
 
     #end
 
@@ -50,7 +50,7 @@ class xiinRemoteModuleDictionary(object):
         parser      = xiinHTMLParser()
         connection  = urllib2.urlopen(xiinUrlDir)
         response    = connection.read()
-
+        
         parser.feed(response)
         parser.close()
 

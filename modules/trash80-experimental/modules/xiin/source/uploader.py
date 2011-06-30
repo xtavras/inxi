@@ -11,10 +11,10 @@ __copying__     = """Copyright (C) 2011 W. Scott Rogers \
 
 
 import os
-import sys
+import time
 import ftplib
 
-class XiinUploader(object):
+class xiinUploader(object):
     """
     Uploads a specified file to a specified ftp sight.  \
     [Usage: uploader <source> <target> <uname> <password> ] \
@@ -46,6 +46,10 @@ class XiinUploader(object):
         self.errorDestinationNotFound   = 'ERROR: destination folder not found'
         self.errorFileNotSaved          = 'ERROR: file not saved'
         self.errorIncorrectFileType     = 'ERROR: Incorrect file type'
+    #end
+
+    def upload(self, source, target):
+        self.upload(source, target, None, None)
     #end
 
     def upload(self, source, target, uname = None, password = None):
@@ -153,32 +157,4 @@ class XiinUploader(object):
 
         return newName
     #end
-#end
-
-################################################################################
-####
-####        test method, don't use in code
-####
-################################################################################
-
-if __name__ == '__main__':
-    source      = None
-    target      = None
-    uname       = None
-    password    = None
-    if len(sys.argv) > 2:
-        source      = sys.argv[1]
-        target      = sys.argv[2]
-    else:
-        print('')
-        print('No options given')
-        print('[Usage: uploader <source> <target> <uname> <password> ]')
-        print('')
-        exit(0)
-    if len(sys.argv) > 3:
-        uname       = sys.argv[3]
-        password    = sys.argv[4]
-
-    uploader    = XiinUploader()
-    uploader.upload(source, target, uname, password)
 #end
