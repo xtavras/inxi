@@ -71,6 +71,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * 4 - Adds partition size/filled data (-P) for (if present):/, /home, /var/, /boot. Shows full disk data (-D)
       * 5 - Adds audio card (-A); sensors (-s), partion label (-l) and UUID (-u).
       * 6 - Adds full partition data (-p), unmounted partition data (-o), -d full disk data, including CD/DVD information.
+      * 7 - Adds network IP data (-i); triggers -xx.
   * -x  Show extra data: 
       * -C - Bogomips on Cpu
       * -d - Shows more information if present on cd/dvd devices.
