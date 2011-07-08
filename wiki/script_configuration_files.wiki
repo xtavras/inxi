@@ -57,6 +57,20 @@ LINE_MAX_CONSOLE='115'
 LINE_MAX_IRC='105'
 }}}
 
+
+===Data Field Separators===
+This value adds separators to output, for example:
+{{{
+System:    Host: moxie Kernel: 2.6.37-2.dmz.1-liquorix-686 i686 (32 bit, gcc: 4.4.5)
+}}}
+Only sub fields, not line/item starters will be affected. That is, Host: would not be changed, but Kernel: would become Kernel~ if you changed the separator from ':' to '~'
+{{{
+SEP3_CONSOLE=':'
+SEP3_IRC=''
+}}}
+
+Please be aware that many IRC clients add emoticons, so it's generally a BAD idea to add any IRC separator since it may trigger a happy face for other users, or whatever emoticon it is.
+
 ===Colors, Colors, and More Colors!===
 These can all be adjusted on a per user basis using the
 inxi -c 94 through 99 options.
