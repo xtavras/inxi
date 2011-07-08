@@ -73,19 +73,22 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * 6 - Adds full partition data (-p), unmounted partition data (-o), -d full disk data, including CD/DVD information.
   * -x  Show extra data: 
       * -C - Bogomips on Cpu
-      * -N, -A - driver version (if available) for Network/Audio;
-      * -N, -A - Shows port for card/device, if available.
+      * -d - Shows more information if present on cd/dvd devices.
+       * -D - Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
+           * < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
       * -G - Direct rendering status for Graphics (in X). Only works with verbose or line output;
       * -G - Shows (for single gpu, nvidia driver) screen number gpu is running on.
-      * -D - Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
-           * < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
-      * -d - Shows more information if present on cd/dvd devices.
-      * -I - Shows runlevel if in X, if out of X, runlevel always shows.
-      * -A, -N, -G - Shows pci Bus ID / Usb ID for Audio, Network, Graphics
-      * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
+      * -i - Show IPv6 as well for LAN interface (IF) devices.
+      * -I - Show system GCC, default. With -xx, also show other installed GCC versions.
+      * -N, -A - driver version (if available) for Network/Audio;
+      * -N, -A - Shows port for card/device, if available.
+      * -N -A -G - Shows pci Bus ID / Usb ID for Audio, Network, Graphics
       * -S - Shows toolkit (QT or GTK) if GNOME, KDE, or XFCE. Shows kernel gcc version. 
+      * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
   * -xx Show extra, extra data (only works with verbose or line output, not short form). You can also trigger it with -Fx (but not -xF) (Version 1.6.x and later)
+     * -I - Adds other detected installed gcc versions to primary gcc output (if present).
      * -M - Adds chassis information, if any data for that is available.
+     * -xx -@ <11-14> - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com.
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
   * -Z  Absolute override for output filters. Useful for debugging networking issues in irc for example.
 
@@ -101,7 +104,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
     * 8 - Basic logging
     * 9 - Full file/sys info logging
     * 10 - Color logging.
-    * The following create a tar.gz file of system data, plus collecting the inxi output to file, with inxi logging data as well:
+    * The following create a tar.gz file of system data, plus collecting the inxi output to file. To automatically upload debugger data tar.gz file to ftp.techpatterns.com: inxi -xx@ <11-14> For alternate ftp upload locations: Example: inxi -! ftp.yourserver.com/incoming -xx@ 14
       * 11 - With data file of xiin read of /sys.
       * 12 - With xorg conf and log data, xrandr, xprop, xdpyinfo, glxinfo etc.
       * 13 - With data from dev, disks, partitions etc.
