@@ -1,4 +1,4 @@
-#summary How to use inxi in various IRC clients and other settings. Full [http://code.google.com/p/inxi/wiki/inxi option] list.
+#summary How to use inxi in various IRC clients and other settings.
 =Inxi Usage=
 inxi -`<`color`>` -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
 
