@@ -13,7 +13,7 @@ Konversation:
 For native internal command call:
   * first link or move inxi into [http://code.google.com/p/inxi/wiki/Installation Konversation's script folder]
   * then run:
-     * /inxi -`<`option`>`
+     * /inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
 For normal external script call, in Konversation session:
   * type: 
     * /cmd inxi -`<`option`>`
