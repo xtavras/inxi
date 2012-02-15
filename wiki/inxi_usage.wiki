@@ -33,6 +33,8 @@ X-Chat:
   * then run:
      * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
        * the -o option show output to the channel.  Without it, only the user will see the output.
+  * /shell -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
+    * If exec.pl is broken, then use shell.py instead. exec.pl has been broken off and on for a while  now, so  you might be better off just sticking with /shell <command>
 ----
 irssi and most other clients
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
