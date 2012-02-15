@@ -29,12 +29,10 @@ X-Chat:
 ----
 `WeeChat`:
   * download the [http://weechat.flashtux.org/plugins.php plugins package] follow the directions on `WeeChat`
-    * user may choose only the exec.pl (the only required script to run inxi)
+    * user may choose only the shell.py script (the only required script to run inxi)
   * then run:
-     * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
-       * the -o option show output to the channel.  Without it, only the user will see the output.
-  * If exec.pl is broken, then use shell.py instead. exec.pl has been broken off and on for a while  now, so  you might be better off just sticking with /shell <command>
      * /shell -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
+        * the -o option show output to the channel.  Without it, only the user will see the output.
 ----
 irssi and most other clients
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
