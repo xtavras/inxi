@@ -36,6 +36,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -I (upper case i) Show Information: processes, uptime, memory, irc client, inxi version.
   * -l (lower case l, el) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
   * -M  Show machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo) (version 1.6.x and later).
+        Older systems/kernels without the required /sys data can use dmidecode instead, run as root.
   * -n  Show Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state (version 1.5.x and later).
   * -N  Show Network card information. Shows card and driver. Includes support for USB networking devices. Also shows busID/USB-ID, ports, driver version with -x
   * -o  Show unmounted partition information (includes UUID and LABEL if available).
@@ -69,7 +70,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * 2 - Adds networking card (-N), Machine (-M) data, and shows basic hard disk data (names only), same as: inxi -b.
       * 3 - Adds advanced CPU (-C), network (-n) data, and switches on -x advanced data option.
       * 4 - Adds partition size/filled data (-P) for (if present):/, /home, /var/, /boot. Shows full disk data (-D)
-      * 5 - Adds audio card (-A); sensors (-s), partion label (-l) and UUID (-u).
+      * 5 - Adds audio card (-A); sensors (-s), partition label (-l) and UUID (-u).
       * 6 - Adds full partition data (-p), unmounted partition data (-o), -d full disk data, including CD/DVD information.
       * 7 - Adds network IP data (-i); triggers -xx.
   * -x  Show extra data: 
