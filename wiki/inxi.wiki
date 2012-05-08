@@ -51,6 +51,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
         * PISI (Pardus + derived versions)
         * YUM. (Fedora, Redhat, maybe Suse + derived versions)
         * (as distro data is collected more will be added. If your's is missing please show us how to get this information and we'll try to add it.)
+  * -R  (COMING - NEW FEATURE) Show RAID data. Shows RAID devices and components, and extra data with -x/-xx
   * -s  Show sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds.
     * Gpu temp only for Fglrx/Nvidia drivers. Nvidia shows screen number for > 1 screens
   * -S  Show System information: host name, kernel, desktop, desktop version (plus toolkit if -x used), distro (desktop features, version 1.5.x or later)
@@ -88,6 +89,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * -S - Shows toolkit (QT or GTK) if GNOME, KDE, or XFCE. Shows kernel gcc version. 
       * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
   * -xx Show extra, extra data (only works with verbose or line output, not short form). You can also trigger it with -Fx (but not -xF) (Version 1.6.x and later)
+     * -D - Adds disk serial number.
      * -I - Adds other detected installed gcc versions to primary gcc output (if present).
      * -M - Adds chassis information, if any data for that is available.
      * -xx -@ <11-14> - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com.
