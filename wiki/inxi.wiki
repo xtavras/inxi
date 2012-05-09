@@ -92,7 +92,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
      * -D - Adds disk serial number.
      * -I - Adds other detected installed gcc versions to primary gcc output (if present).
      * -M - Adds chassis information, if any data for that is available.
-     * -xx -@ <11-14> - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com.
+     * -xx -@ [11-14] - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com.
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
   * -Z  Absolute override for output filters. Useful for debugging networking issues in irc for example.
 
@@ -108,7 +108,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
     * 8 - Basic logging
     * 9 - Full file/sys info logging
     * 10 - Color logging.
-    * The following create a tar.gz file of system data, plus collecting the inxi output to file. To automatically upload debugger data tar.gz file to ftp.techpatterns.com: inxi -xx@ <11-14> For alternate ftp upload locations: Example: inxi -! ftp.yourserver.com/incoming -xx@ 14
+    * The following create a tar.gz file of system data, plus collecting the inxi output to file. To automatically upload debugger data tar.gz file to ftp.techpatterns.com: inxi -xx@ [11-14] For alternate ftp upload locations: Example: inxi -! ftp.yourserver.com/incoming -xx@ 14
       * 11 - With data file of xiin read of /sys.
       * 12 - With xorg conf and log data, xrandr, xprop, xdpyinfo, glxinfo etc.
       * 13 - With data from dev, disks, partitions etc.
