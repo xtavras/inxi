@@ -16,7 +16,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
 
  * Output Control Options:
   * -A  Show Audio/sound card information.
-  * -b  Shows basic (b for basic) output, short form. Same as: inxi -v 2 (version 1.7.5 or later. Earlier versions use: -d). Shows -S -M  -C -G -N -D (short form), and -I
+  * -b  Shows basic (b for basic - version 1.7.5 or later. Earlier versions used: -d) output, short form. Similar to inxi -v 2. Shows -S -M  -C -G -N -D and -R (short forms), and -I. -R does not show if no raid devices found.
   * -c  Available color schemes. Scheme number is required. Color selectors run a color selector option prior to inxi starting which lets you set the config file value for the selection.
     * Supported color schemes: 0-32 Example: inxi -c 11
     * Supported color selectors. NOTE: irc and global only show safe color set. (version 1.5.x or later only)
@@ -68,7 +68,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
     * Supported levels: 0-7 Example: inxi -v 4
       * 0 - short output, same as: inxi
       * 1 - Basic verbose. Roughly the same as the old -d, 
-      * 2 - Adds networking card (-N), Machine (-M) data, and shows basic hard disk data (names only), and basic raid (devices only, and if inactive, notes that). Same as: inxi -b
+      * 2 - Adds networking card (-N), Machine (-M) data, and shows basic hard disk data (names only), and basic raid (devices only, and if inactive, notes that). Similar to inxi -b
       * 3 - Adds advanced CPU (-C), network (-n) data, and switches on -x advanced data option.
       * 4 - Adds partition size/filled data (-P) for (if present):/, /home, /var/, /boot. Shows full disk data (-D)
       * 5 - Adds audio card (-A); sensors (-s), partition label (-l) and UUID (-u), short form of optical drives, and standard raid data (-R).
