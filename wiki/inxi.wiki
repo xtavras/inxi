@@ -51,7 +51,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
         * PISI (Pardus + derived versions)
         * YUM. (Fedora, Redhat, maybe Suse + derived versions)
         * (as distro data is collected more will be added. If your's is missing please show us how to get this information and we'll try to add it.)
-  * -R  (COMING - NEW FEATURE) Show RAID data. Shows RAID devices and components, and extra data with -x/-xx
+  * -R  Show RAID data. Shows RAID devices, states, levels, and components, and extra data with -x/-xx. If device is resyncing, shows resync progress line as well.
   * -s  Show sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds.
     * Gpu temp only for Fglrx/Nvidia drivers. Nvidia shows screen number for > 1 screens
   * -S  Show System information: host name, kernel, desktop, desktop version (plus toolkit if -x used), distro (desktop features, version 1.5.x or later)
@@ -68,10 +68,10 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
     * Supported levels: 0-7 Example: inxi -v 4
       * 0 - short output, same as: inxi
       * 1 - Basic verbose. Roughly the same as the old -d, 
-      * 2 - Adds networking card (-N), Machine (-M) data, and shows basic hard disk data (names only), same as: inxi -b.
+      * 2 - Adds networking card (-N), Machine (-M) data, and shows basic hard disk data (names only), and basic raid (devices only, and if inactive, notes that). Same as: inxi -b
       * 3 - Adds advanced CPU (-C), network (-n) data, and switches on -x advanced data option.
       * 4 - Adds partition size/filled data (-P) for (if present):/, /home, /var/, /boot. Shows full disk data (-D)
-      * 5 - Adds audio card (-A); sensors (-s), partition label (-l) and UUID (-u).
+      * 5 - Adds audio card (-A); sensors (-s), partition label (-l) and UUID (-u), short form of optical drives, and standard raid data (-R).
       * 6 - Adds full partition data (-p), unmounted partition data (-o), -d full disk data, including CD/DVD information.
       * 7 - Adds network IP data (-i); triggers -xx.
   * -x  Show extra data: 
@@ -86,12 +86,14 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * -N, -A - driver version (if available) for Network/Audio;
       * -N, -A - Shows port for card/device, if available.
       * -N -A -G - Shows pci Bus ID / Usb ID for Audio, Network, Graphics
+      * -R - Shows component raid id. Adds second RAID Info line: raid level; report on drives (like 5/5); blocks; chunk size; bitmap (if present). Resync line, shows blocks synced/total blocks.
       * -S - Shows toolkit (QT or GTK) if GNOME, KDE, or XFCE. Shows kernel gcc version. 
       * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
   * -xx Show extra, extra data (only works with verbose or line output, not short form). You can also trigger it with -Fx (but not -xF) (Version 1.6.x and later)
      * -D - Adds disk serial number.
      * -I - Adds other detected installed gcc versions to primary gcc output (if present).
      * -M - Adds chassis information, if any data for that is available.
+     * -R - Adds superblock (if present); algorythm, U data. Adds system info line (kernel support, read ahead, raid events). Adds if present, unused device line. Resync line, shows progress bar. 
      * -xx -@ [11-14] - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com.
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
   * -Z  Absolute override for output filters. Useful for debugging networking issues in irc for example.
