@@ -41,16 +41,21 @@ There no longer seems to be need for plugins as above
 Click on the download button at
 http://www.weechat.org/scripts/source/stable/shell.py.html/
 
-Make the script executable..........chmod +x shell.py
-
+Make the script executable by
+{{{
+chmod +x shell.py
+}}}
 Move it to folder..................~/.weechat/python/autoload/
 
-Next time you boot, run the command inside weechat
-
+Next time you open weechat at top of screen, you will see shell is loaded and then you can run
+{{{
 /shell -o inxi (option)
-
+}}}
 
 ----
 irssi and most other clients
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
-  * example: /exec -o inxi -dn
+  * example: 
+{{{
+/exec -o inxi -dn
+}}}
