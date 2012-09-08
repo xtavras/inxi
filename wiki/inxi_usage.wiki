@@ -29,11 +29,27 @@ X-Chat:
 ----
 `WeeChat`:
   * you can install shell.py in one of these ways if you don't already have it:
-    * download the [http://weechat.flashtux.org/plugins.php plugins package], then you can choose only the shell.py script (the only required script to run inxi). To install this,  follow the directions on `WeeChat`)
+    * download the [http://weechat.flashtux.org/plugins.php plugins package], then you can choose only the shell.py script (the only required script to run inxi). To install this,  follow the directions on `WeeChat` http://www.weechat.org)
     *  Run this command inside of weechat: /weeget install shell.py
   * then, once you have shell.py installed, run:
      * /shell -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
         * the -o option show output to the channel.  Without it, only the user will see the output.
+
+ * Alternate Solution
+There no longer seems to be need for plugins as above
+
+Click on the download button at
+http://www.weechat.org/scripts/source/stable/shell.py.html/
+
+Make the script executable..........chmod +x shell.py
+
+Move it to folder..................~/.weechat/python/autoload/
+
+Next time you boot, run the command inside weechat
+
+/shell -o inxi (option)
+
+
 ----
 irssi and most other clients
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
