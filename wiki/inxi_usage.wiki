@@ -23,7 +23,8 @@ and you'll see the expected output.
 Quassel:
 inxi ships as a built in script with Quassel, so you should just be able to run the standard builtin command to run an internal script. 
 ----
-XChat:
+===XChat===
+
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
     * the -o option show output to the channel.  Without it, only the user will see the output.
 ----
