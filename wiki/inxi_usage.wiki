@@ -7,7 +7,7 @@ inxi -`<`color`>` -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
 
 See inxi [http://code.google.com/p/inxi/wiki/inxi option] list for full list and explanation of available options. Always refer to an actual current inxi for latest options since these wiki pages only get updated now and then.
 ----
-*irc-client usage*
+*IRC client usage*
 ----
 Konversation:
 For native internal command call:
@@ -23,23 +23,15 @@ and you'll see the expected output.
 Quassel:
 inxi ships as a built in script with Quassel, so you should just be able to run the standard builtin command to run an internal script. 
 ----
-X-Chat:
+XChat:
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
     * the -o option show output to the channel.  Without it, only the user will see the output.
 ----
-`WeeChat`:
-  * you can install shell.py in one of these ways if you don't already have it:
-    * download the [http://weechat.flashtux.org/plugins.php plugins package], then you can choose only the shell.py script (the only required script to run inxi). To install this,  follow the directions on `WeeChat` http://www.weechat.org)
-    *  Run this command inside of weechat: /weeget install shell.py
-  * then, once you have shell.py installed, run:
-     * /shell -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
-        * the -o option show output to the channel.  Without it, only the user will see the output.
+WeeChat:
 
- * Alternate Solution
-There no longer seems to be need for plugins as above
+* Quickest way
 
-Click on the download button at
-http://www.weechat.org/scripts/source/stable/shell.py.html/
+Click on the download button at http://www.weechat.org/scripts/source/stable/shell.py.html/
 
 Make the script executable by
 {{{
@@ -47,11 +39,51 @@ chmod +x shell.py
 }}}
 Move it to folder..................~/.weechat/python/autoload/
 
-Next time you open weechat at top of screen, you will see shell is loaded and then you can run
+logout
+
+start WeeChat with
+{{{
+weechat-curses
+}}}
+
+Top of screen should say what pythons scripts have loaded...
+includes shell
+
+Now you can run
 {{{
 /shell -o inxi (option)
 }}}
 
+
+* Newbie way to get extra scripts
+
+Click on the download button at http://www.weechat.org/scripts/source/stable/weeget.py.html/
+
+Make the script executable by
+{{{
+chmod +x weeget.py
+}}}
+Move it to folder..................~/.weechat/python/autoload/
+
+logout
+
+start weechat with
+{{{
+weechat-curses
+}}}
+
+Top of screen should say what pythons scripts have loaded...
+includes weeget
+
+run 
+{{{
+/weeget install shell.py
+}}}
+
+Before logging off, move or check shell.py is in autoload folder please
+
+Opinion of aus9 is that newbies might find xchat 
+an easier IRC client.
 ----
 irssi and most other clients
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
