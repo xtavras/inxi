@@ -33,3 +33,5 @@ ln -s /usr/local/bin/inxi /usr/share/apps/konversation/scripts/inxi
 ln -s /usr/local/bin/inxi /usr/share/kde4/apps/konversation/scripts/inxi
 
 ----
+To go to wiki list  try clicking
+[http://code.google.com/p/inxi/w/list here]
