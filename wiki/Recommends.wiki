@@ -34,3 +34,7 @@ As of version 1.6.6, you can run the start option --recommends which will print 
      * -s   For any sensors output, fan, temp, etc: sensors (lm-sensors)
      Note: requires setup of lm-sensors (sensors-detect and adding modules/modprobe/reboot,
      and ideally, pwmconfig) prior to full output being available. 
+
+----
+To go to wiki list try clicking
+[http://code.google.com/p/inxi/w/list here]
