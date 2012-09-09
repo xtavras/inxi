@@ -35,5 +35,6 @@ weechat-curses
 }}}
 Top of screen should say what pythons scripts have loaded... includes shell
 
+----
 To go to wiki list  try clicking
 [http://code.google.com/p/inxi/w/list here]
