@@ -118,3 +118,7 @@ B_SHOW_HOST='false'
 
 ==Have Fun!==
 And that's about it for variables you'd have any reason to change, or that would be potentially useful. 
+
+----
+To go to wiki list try clicking
+[http://code.google.com/p/inxi/w/list here]
