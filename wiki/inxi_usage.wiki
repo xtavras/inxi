@@ -27,9 +27,12 @@ XChat:
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
     * the -o option show output to the channel.  Without it, only the user will see the output.
 ----
-weechat:
+===WeeChat===
 
-For weechat to run external scripts like inxi, you have to install shell.py (if you don't already have it). To install shell.py,
+For Debian users, installing weechat also installs the weechat-plugins.
+Check with your distro for similar package before attempting below please.
+
+For weechat to run external scripts like inxi, you have to install shell.py, if you don't already have it. To install 
 
 In a web browser, Click on the download button at
 http://www.weechat.org/scripts/source/stable/shell.py.html/
