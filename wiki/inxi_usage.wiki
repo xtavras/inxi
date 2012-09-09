@@ -27,7 +27,7 @@ XChat:
   * /exec -o inxi -`<`[http://code.google.com/p/inxi/wiki/inxi option]`>`
     * the -o option show output to the channel.  Without it, only the user will see the output.
 ----
-WeeChat:
+WeeChat
 
 * Quickest way
 
