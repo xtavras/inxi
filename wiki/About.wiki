@@ -10,3 +10,7 @@
  * inxi version: Copyright (C) 2008-9 Scott Rogers & Harald Hope
  * Further fixes (listed as known): Horst Tritremmel <hjt at sidux.com>
  * Steven Barrett (aka: damentz) - usb audio patch; swap percent used patch
+
+----
+To go to wiki list  try clicking
+[http://code.google.com/p/inxi/w/list here]
