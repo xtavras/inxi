@@ -28,3 +28,7 @@ As of version 1.6.6, you can run the start option --recommends which will print 
      * [http://lists.gnu.org/archive/html/bug-bash/2004-08/msg00144.html]
 ----
   * Arrays work in bash 2.05b, but "egrep -m" does not.
+
+----
+To go to wiki list  try clicking
+[http://code.google.com/p/inxi/w/list here]
