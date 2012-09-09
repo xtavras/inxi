@@ -1,0 +1,18 @@
+#summary IRC client.
+
+= Introduction =
+
+home page
+
+http://www.weechat.org/
+
+=== Extra Information ===
+
+http://www.weechat.org/files/doc/stable/weechat_quickstart.en.html
+
+http://www.weechat.org/files/doc/stable/weechat_user.en.html#running_weechat
+
+plugins (needed for python scripts)
+
+http://www.weechat.org/files/doc/stable/weechat_user.en.html#scripts_plugins
+
