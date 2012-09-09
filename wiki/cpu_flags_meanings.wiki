@@ -201,3 +201,7 @@ Thanks to [http://boincfaq.mundayweb.com/index.php?language=1&view=176 Jorden]
 
  * XTPR
    * TPR register chipset update control messenger. Part of the APIC code. 
+
+----
+To go to wiki list try clicking
+[http://code.google.com/p/inxi/w/list here]
