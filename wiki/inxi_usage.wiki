@@ -29,7 +29,7 @@ XChat:
 ----
 weechat:
 
-For WeeChat to run external scripts like inxi, you have to install shell.py (if you don't already have it). To install shell.py,
+For weechat to run external scripts like inxi, you have to install shell.py (if you don't already have it). To install shell.py,
 
 In a web browser, Click on the download button at
 http://www.weechat.org/scripts/source/stable/shell.py.html/
@@ -42,7 +42,7 @@ Move it to your home folder /.weechat/python/autoload/
 
 logout
 
-start WeeChat with
+start weechat with
 {{{
 weechat-curses
 }}}
@@ -54,7 +54,7 @@ Then to run inxi, you would enter a command like this:
 }}}
 If you leave off the -o, only you will see the output on your local weechat.
 
-WeeChat users may also like to check out the weeget.py
+weechat users may also like to check out the weeget.py
 
 ----
 irssi and most other clients
