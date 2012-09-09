@@ -51,3 +51,7 @@ irssi and most other clients
 {{{
 /exec -o inxi -dn
 }}}
+
+----
+To go to wiki list try clicking
+[http://code.google.com/p/inxi/w/list here]
