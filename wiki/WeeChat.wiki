@@ -34,3 +34,6 @@ start weechat with
 weechat-curses
 }}}
 Top of screen should say what pythons scripts have loaded... includes shell
+
+To go back click on your browser back button or try clicking
+[http://code.google.com/p/inxi/wiki/inxi_usage here]
