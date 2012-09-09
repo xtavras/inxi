@@ -33,24 +33,8 @@ inxi ships as a built in script with Quassel, so you should just be able to run 
 For Debian users, installing weechat also installs the weechat-plugins.
 Check with your distro for similar package before attempting below please.
 
-For weechat to run external scripts like inxi, you have to install shell.py, if you don't already have it. To install 
-
-In a web browser, Click on the download button at
-http://www.weechat.org/scripts/source/stable/shell.py.html/
-
-Make the script executable by
-{{{
-chmod +x shell.py
-}}}
-Move it to your home folder /.weechat/python/autoload/
-
-logout
-
-start weechat with
-{{{
-weechat-curses
-}}}
-Top of screen should say what pythons scripts have loaded... includes shell
+For weechat to run external scripts like inxi, you have to install shell.py, if you don't already have it. To read how to install click 
+[http://code.google.com/p/inxi/wiki/WeeChat here] 
 
 Then to run inxi, you would enter a command like this:
 {{{
