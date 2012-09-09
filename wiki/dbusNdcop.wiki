@@ -12,3 +12,7 @@
   * ||Konvi dbus/usage|| `qdbus org.kde.konversation /irc say <server> <target-channel> <output>`||
 
   * ||Python usage....|| [http://wiki.python.org/moin/DbusExamples]||
+
+----
+To go to wiki list  try clicking
+[http://code.google.com/p/inxi/w/list here]
