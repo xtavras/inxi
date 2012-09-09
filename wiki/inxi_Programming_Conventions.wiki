@@ -44,3 +44,7 @@ As with all 'rules' there are exceptions, these are noted where used.
    * 'KDE3' ln -s <path to inxi> /usr/share/apps/konversation/scripts/inxi
    * 'KDE4' ln -s <path to inxi> /usr/share/kde4/apps/konversation/scripts/inxi
  * DCOP doesn't like \n, so avoid using it for most output unless required, as in error messages.
+
+----
+To go to wiki list  try clicking
+[http://code.google.com/p/inxi/w/list here]
