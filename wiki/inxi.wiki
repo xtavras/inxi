@@ -93,6 +93,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
      * -D - Adds disk serial number.
      * -I - Adds other detected installed gcc versions to primary gcc output (if present).
      * -M - Adds chassis information, if any data for that is available.
+     * -N -A -G - Shows vendor:product ID for Audio, Network, Graphics
      * -R - Adds superblock (if present); algorythm, U data. Adds system info line (kernel support, read ahead, raid events). Adds if present, unused device line. Resync line, shows progress bar. 
      * -xx -@ [11-14] - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com.
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
