@@ -1,9 +1,3 @@
-
-
-
-
-http://pastebin.com/2Q9eaLCM
-
 linux mint debian:
 
 $ cat /etc/os-release
