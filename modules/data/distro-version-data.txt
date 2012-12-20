@@ -1,1 +1,0 @@
-/home/harald/bin/scripts/smxi/data/os-lsb-release-data.txt
