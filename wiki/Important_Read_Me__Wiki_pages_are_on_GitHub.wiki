@@ -1,5 +1,0 @@
-Update wiki here:
-
-http://github.com/inxi/inxi/wiki
-
-Do not edit, add, or delete pages.
