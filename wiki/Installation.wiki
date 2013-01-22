@@ -1,0 +1,44 @@
+#summary How to install inxi using a variety of methods.
+* For debian systems use cathbards repo:
+
+{{{ wget ftp://cathbard.com/binary/inxi*.deb }}}
+
+* Or if you have cathbards repos ( [http://cathbard.com/cathbard-repo-howto.html add cathbard repos] ) in your apt sources.list:
+
+apt-get update && apt-get install inxi
+
+----
+* For smxi users, follow the steps here: 
+
+[http://smxi.org/site/install.htm#inxi smxi-inxi]
+
+----
+* For most others, use(except in Arch or Pardus):
+
+as root: cd /usr/local/bin && wget -Nc smxi.org/inxi && chmod +x inxi
+
+* For Arch and Pardus, use:
+
+as root: cd /usr/bin && wget -Nc smxi.org/inxi && chmod +x inxi
+
+----
+* For usage in Konversation (as root):
+
+  * KDE3:
+
+ln -s /usr/local/bin/inxi /usr/share/apps/konversation/scripts/inxi
+
+  * KDE4:
+
+ln -s /usr/local/bin/inxi /usr/share/kde4/apps/konversation/scripts/inxi
+
+----
+
+If you did not use a distribution installed package to install inxi, then you might want to run inxi again to update the man pages as well, with this command:
+inxi -U
+This will then also install the man pages. Please do not use that option in general if you installed inxi from your distribution's repositories, the packagers should have included the man files in the inxi package. If in doubt, first try this command: man inxi
+
+If nothing happens, you don't have the man page, which means you have either an old install, or you installed it manually. In that case, just upgrade it with -U and everything should be updated automatically. If the man page does not automatically update when you run -U, it means you have an older inxi, and need to use -U again, so the new version can then bring in the man page.
+----
+To go to wiki list  try clicking
+[http://code.google.com/p/inxi/w/list here]
