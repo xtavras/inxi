@@ -9,6 +9,9 @@ The Upstream Maintainer, prefers the following design:
 The Tarball Maintainer, subject to approval intends to keep older tarballs here.
 --not all trunk svn changes will be tarballed as sometimes there are frequent changes.
 
+Important: the only version of inxi that is supported is the latest current svn trunk release.
+No issue reports or bug reports will be accepted for anything other than current svn trunk.
+
 The version design follows these guidelines:
 Using example 1.8.14-6
 
