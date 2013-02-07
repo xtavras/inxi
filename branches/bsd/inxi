@@ -243,6 +243,7 @@ B_ID_SET='false'
 # override certain errors due to currupted data
 B_HANDLE_CORRUPT_DATA='false'
 B_LABEL_SET='false'
+B_LSPCI='false'
 B_LOG_COLORS='false'
 B_LOG_FULL_DATA='false'
 B_MAPPER_SET='false'
@@ -833,6 +834,10 @@ check_script_suggested_apps()
 	else
 		script_debugger "Suggestion: update to Bash v3.1 for optimal inxi output"
 	fi
+	# test for a few apps that bsds may not have after initial tests
+	if [[ -n $( type -p lspci ) ]];then
+		B_LSPCI='true'
+	fi
 	# now setting qdbus/dcop for first run, some systems can have both by the way
 	if [[ -n $( type -p qdbus ) ]];then
 		B_QDBUS='true'
@@ -1384,6 +1389,8 @@ debug_data_collector()
 		fi
 		
 		echo 'Collecting system info: sensors, lsusb, lspci, lspci -v data, plus /proc data'
+		echo 'also checking for dmidecode data: note, you must be root to have dmidecode work.'
+		dmidecode &> $debug_data_dir/dmidecode.txt
 		lsusb &> $debug_data_dir/lsusb.txt
 		lspci &> $debug_data_dir/lspci.txt
 		lspci -n &> $debug_data_dir/lspci-n.txt
@@ -1643,6 +1650,7 @@ check_recommends_items()
 	xrandr:x11-xserver-utils~xrandr~x11-server-utils~:-G_single_screen_resolution
 	'
 	local recommended_apps='
+	dmidecode:dmidecode~dmidecode~dmidecode~:-M_if_no_sys_machine_data 
 	file:file~file~file~:-o_unmounted_file_system
 	hddtemp:hddtemp~hddtemp~hddtemp~:-Dx_show_hdd_temp 
 	ifconfig:net-tools~net-tools~net-tools~:-i_ip_lan-deprecated
@@ -1654,7 +1662,7 @@ check_recommends_items()
 	sudo:sudo~sudo~sudo~:-Dx_hddtemp-user;-o_file-user
 	'
 	local recommended_dirs='
-	/sys/class/dmi/id:-M_system,_motherboard,_bios
+	/sys/class/dmi/id:-M_system,_motherboard,_bios_(or_dmidecode_as_root)
 	/dev:-l,-u,-o,-p,-P,-D_disk_partition_data
 	/dev/disk/by-label:-l,-o,-p,-P_partition_labels
 	/dev/disk/by-uuid:-u,-o,-p,-P_partition_uuid
@@ -4827,11 +4835,15 @@ get_hdd_temp_data()
 get_lspci_data()
 {
 	eval $LOGFS
-	local lspci_data="$( lspci -$1 | gawk '{
-		gsub(/\(prog-if[^)]*\)/,"")
-		sub(/^0000:/, "", $0) # seen case where the 0000: is prepended, rare, but happens
-		print
-	}' )"
+	local lspci_data=''
+
+	if [[ $B_LSPCI == 'true' ]];then
+		lspci_data="$( lspci -$1 | gawk '{
+			gsub(/\(prog-if[^)]*\)/,"")
+			sub(/^0000:/, "", $0) # seen case where the 0000: is prepended, rare, but happens
+			print
+		}' )"
+	fi
 	
 	echo "$lspci_data"
 	log_function_data 'raw' "lspci_data $1:\n$lspci_data"
