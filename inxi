@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 10-bsd
+####  Patch Number: 11-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6828,7 +6828,7 @@ get_sysctl_data()
 		sysctl_data="$( sysctl -$1 )"
 	fi
 	log_function_data "sysctl_data: $sysctl_data"
-	echo $sysctl_data
+	echo "$sysctl_data"
 	eval $LOGFE
 }
 
