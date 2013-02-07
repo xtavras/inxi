@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 05-bsd
+####  Patch Number: 06-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7080,14 +7080,15 @@ print_it_out()
 	# and in some cases, their children, with Lspci_v_Data
 	local Lspci_v_Data='' Lspci_n_Data='' # only for verbose
 	local Sysctl_a_Data=''
+	
+	if [[ $B_BSD == 'true' ]];then
+		Sysctl_a_Data="$( get_sysctl_data 'a' )"
+	fi
 
 	if [[ $B_SHOW_SHORT_OUTPUT == 'true' ]];then
 		print_short_data
 	else
 		Lspci_v_Data="$( get_lspci_data 'v' )"
-		if [[ $B_BSD == 'true' ]];then
-			Sysctl_a_Data="$( get_sysctl_data 'a' )"
-		fi
 		if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
 			Lspci_n_Data="$( get_lspci_data 'n' )"
 		fi
