@@ -184,6 +184,7 @@ DEV_DISK_ID=''
 DEV_DISK_LABEL=''
 DEV_DISK_MAPPER=''
 DEV_DISK_UUID=''
+DMIDECODE_DATA=''
 FILTER_STRING='<filter>'
 IRC_CLIENT=''
 IRC_CLIENT_VERSION=''
@@ -232,6 +233,7 @@ B_DBUS_CLIENT='false'
 B_DCOP='false'
 # Debug flood override: make 'true' to allow long debug output
 B_DEBUG_FLOOD='false'
+B_DMIDECODE_SET='false'
 # show extra output data
 B_EXTRA_DATA='false'
 # triggered by -xx
@@ -3047,25 +3049,6 @@ get_audio_alsa_data()
 	eval $LOGFE
 }
 
-get_console_irc_tty()
-{
-	eval $LOGFS
-	local tty_number=''
-	if [[ -n ${IRC_CLIENT} ]];then
-		tty_number=$( ps aux | gawk '
-			BEGIN {
-				IGNORECASE=1
-			}
-			/'${IRC_CLIENT}'/ {
-				gsub(/[^0-9]/, "", $7)
-				print $7
-			}' )
-	fi
-	log_function_data "tty_number: $tty_number"
-	echo $tty_number
-	eval $LOGFE
-}
-
 ## create A_CPU_CORE_DATA, currently with two values: integer core count; core string text
 ## return value cpu core count string, this helps resolve the multi redundant lines of old style output
 get_cpu_core_count()
@@ -3755,11 +3738,11 @@ get_distro_data()
 	# never apply for ubuntu or debian, which will filter down to the following conditions. In general
 	# if there's a specific distro release file available, that's to be preferred, but this is a good backup.
 	elif [[ -n $distro_file && $B_LSB_FILE == 'true' && " $DISTROS_LSB_GOOD" == *" $distro_file "* ]];then
-		distro=$( get_lsb_os_release_data 'lsb-file' )
+		distro=$( get_distro_lsb_os_release_data 'lsb-file' )
 	elif [[ $distro_file == 'lsb-release' ]];then
-		distro=$( get_lsb_os_release_data 'lsb-file' )
+		distro=$( get_distro_lsb_os_release_data 'lsb-file' )
 	elif [[ $distro_file == 'os-release' ]];then
-		distro=$( get_lsb_os_release_data 'os-release-file' )
+		distro=$( get_distro_lsb_os_release_data 'os-release-file' )
 	# then if the distro id file was found and it's not in the exluded primary distro file list, read it
 	elif [[ -n $distro_file && -s /etc/$distro_file && " $DISTROS_EXCLUDE_LIST " != *" $distro_file "* ]];then
 		# new opensuse uses os-release, but older ones may have a similar syntax, so just use the first line
@@ -3776,7 +3759,7 @@ get_distro_data()
 		# lsb gives more manageable and accurate output than issue, but mint should use issue for now
 		# some bashism, boolean must be in parenthesis to work correctly, ie [[ $(boolean) ]] not [[ $boolean ]]
 		if [[ $B_LSB_FILE == 'true' ]] && [[ -z $( grep -i 'mint' /etc/issue ) ]];then
-			distro=$( get_lsb_os_release_data 'lsb-file' )
+			distro=$( get_distro_lsb_os_release_data 'lsb-file' )
 		else
 			distro=$( gawk '
 			BEGIN {
@@ -3807,10 +3790,10 @@ get_distro_data()
 	## test for /etc/lsb-release as a backup in case of failure, in cases where > one version/release file
 	## were found but the above resulted in null distro value
 	if [[ -z $distro ]] && [[ $B_LSB_FILE == 'true' ]];then
-		distro=$( get_lsb_os_release_data 'lsb-file' )
+		distro=$( get_distro_lsb_os_release_data 'lsb-file' )
 	fi
 	if [[ -z $distro ]] && [[ $B_OS_RELEASE_FILE == 'true' ]];then
-		distro=$( get_lsb_os_release_data 'os-release-file' )
+		distro=$( get_distro_lsb_os_release_data 'os-release-file' )
 	fi
 	# now some final null tries
 	if [[ -z $distro ]];then
@@ -3840,7 +3823,7 @@ get_distro_data()
 }
 
 # args: $1 - lsb-file/lsb-app/os-release-file
-get_lsb_os_release_data()
+get_distro_lsb_os_release_data()
 {
 	eval $LOGFS
 	local distro=''
@@ -3988,6 +3971,84 @@ s					if ( $2 != "n/a" ) {
 	eval $LOGFE
 }
 
+get_dmidecode_data()
+{
+	eval $LOGFS
+	
+	local dmidecodePath=''
+
+	if [[ $B_DMIDECODE_SET != 'true' ]];then
+		dmidecodePath=$( type -p dmidecode 2>/dev/null )
+		if [[ -n $dmidecodePath ]];then
+			# note stripping out these lines: Handle 0x0016, DMI type 17, 27 bytes
+			# but NOT deleting them, in case the dmidecode data is missing empty lines which will be
+			# used to separate results. Then we remove the doubled empty lines to keep it clean and
+			# strip out all the stuff we don't want to see in the results.
+			DMIDECODE_DATA="$( $dmidecodePath 2>/dev/null \
+			| gawk -F ':' '
+			BEGIN {
+				IGNORECASE=1
+				cutExtraTab="false"
+			}
+			{
+				if ( $2 != "" ) {
+					twoHolder="true"
+				}
+				else {
+					twoHolder="false"
+				}
+				if ( $0 ~ /^\tDMI type/ ) {
+					sub(/^\tDMI type.*/, "", $0)
+					cutExtraTab="true"
+				}
+				gsub(/'"$BAN_LIST_NORMAL"'/, "", $2)
+				gsub(/,/, " ", $0)
+				# clean out Handle line
+				sub(/^Handle.*/,"", $0)
+				sub(/^[[:space:]]*Inactive.*/,"",$0)
+				# yes, there is a typo in a user data set, unknow
+				# Base Board Version|Base Board Serial Number
+				# Chassis Manufacturer|Chassis Version|Chassis Serial Number
+				# System manufacturer|System Product Name|System Version
+				# To Be Filled By O.E.M.
+				sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*/, "", $2) 
+				gsub(/bios|acpi/, "", $2)
+				sub(/http:\/\/www.abit.com.tw\//, "Abit", $2)
+				
+				# for double indented values replace with ~ so later can test for it, we are trusting that
+				# indentation will be tabbed in this case
+				# special case, dmidecode 2.2 has an extra tab and a DMI type line
+				if ( cutExtraTab == "true" ) {
+					sub(/^\t\t\t+/, "~", $1)
+				}
+				else {
+					sub(/^\t\t+/, "~", $1)
+				}
+				
+				gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
+				gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1)
+				gsub(/ [ \t]+/, " ", $2)
+				# reconstructing the line for processing so gawk can use -F : again
+				if ( $1 != "" && twoHolder == "true" ) {
+					print $1 ":" $2
+				}
+				else {
+					print $0
+				}
+			}' \
+			| sed '/^$/{
+N
+/^\n$/D
+}' \
+			)"
+		fi
+		B_DMIDECODE_SET='true'
+		log_function_data "DMIDECODE_DATA: $DMIDECODE_DATA"
+	fi
+
+	eval $LOGFE
+}
+# get_dmidecode_data;echo "$DMIDECODE_DATA";exit
 get_gcc_kernel_version()
 {
 	# note that we use gawk to get the last part because beta, alpha, git versions can be non-numeric
@@ -4824,11 +4885,13 @@ get_machine_data()
 			separator=','
 		done
 	else
-		if [[ -n $( type -p dmidecode 2>/dev/null ) && -n $( dmidecode 2>/dev/null ) ]];then
+		get_dmidecode_data
+		if [[ -n $DMIDECODE_DATA ]];then
 			if [[ $B_ROOT == 'true' ]];then
 				# this handles very old systems, like Lenny 2.6.26, with dmidecode, but no data
-				if [[ -z $( dmidecode 2>/dev/null | grep -i 'no smbios or dmi' ) ]];then
+				if [[ -n $( grep -i 'no smbios or dmi' <<< "$DMIDECODE_DATA" ) ]];then
 					array_string='dmidecode-no-smbios-dmi-data'
+				# please note: only dmidecode version 2.11 or newer supports consistently the -s flag
 				else
 					for dmi_name in $dmi_names
 					do
@@ -4866,6 +4929,7 @@ get_machine_data()
 	A_MACHINE_DATA=( $array_string )
 	IFS="$ORIGINAL_IFS"
 	temp_array=${A_MACHINE_DATA[@]}
+	# echo ${temp_array[@]}
 	log_function_data "A_MACHINE_DATA: $temp_array"
 	eval $LOGFE
 }
@@ -6696,6 +6760,36 @@ get_shell_parent()
 	eval $LOGFE
 }
 
+get_tty_console_irc()
+{
+	eval $LOGFS
+	local tty_number=''
+	if [[ -n ${IRC_CLIENT} ]];then
+		tty_number=$( ps aux | gawk '
+			BEGIN {
+				IGNORECASE=1
+			}
+			/'${IRC_CLIENT}'/ {
+				gsub(/[^0-9]/, "", $7)
+				print $7
+			}' )
+	fi
+	log_function_data "tty_number: $tty_number"
+	echo $tty_number
+	eval $LOGFE
+}
+
+get_tty_number()
+{
+	eval $LOGFS
+	
+	local tty_number=$( basename "$( tty 2>/dev/null )" | sed 's/[^0-9]*//g' )
+	
+	echo $tty_number
+	
+	eval $LOGFE
+}
+
 get_unmounted_partition_data()
 {
 	eval $LOGFS
@@ -7650,7 +7744,7 @@ print_info_data()
 			if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
 				shell_parent=$( get_shell_parent )
 				if [[ $B_RUNNING_IN_X != 'true' ]];then
-					shell_parent=$( basename "$( tty 2>/dev/null )" | sed 's/[^0-9]*//g' )
+					shell_parent=$( get_tty_number )
 					shell_parent="tty $shell_parent"
 				fi
 				if [[ $shell_parent == 'login' ]];then
@@ -8935,7 +9029,7 @@ print_system_data()
 	local host_name=$HOSTNAME
 	local current_kernel=$( uname -rm ) # | gawk '{print $1,$3,$(NF-1)}' )
 	local distro="$( get_distro_data )"
-	local tty_session=$( basename "$( tty 2>/dev/null )" | sed 's/[^0-9]*//g' )
+	local tty_session=''
 	
 	# I think these will work, maybe, if logged in as root and in X
 	if [[ $B_RUNNING_IN_X == 'true' ]];then
@@ -8951,8 +9045,9 @@ print_system_data()
 			fi
 		fi
 	else
+		tty_session=$( get_tty_number )
 		if [[ -z $tty_session && $B_CONSOLE_IRC == 'true' ]];then
-			tty_session=$( get_console_irc_tty )
+			tty_session=$( get_tty_console_irc )
 		fi
 		if [[ -n $tty_session ]];then
 			tty_session=" $tty_session"
