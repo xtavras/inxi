@@ -3707,6 +3707,14 @@ get_distro_data()
 {
 	eval $LOGFS
 	local i='' j='' distro='' distro_file='' a_distro_glob='' temp_array=''
+	
+	if [[ $B_BSD == 'true' ]];then
+		distro=$( uname -s )
+		echo "$distro"
+		log_function_data "distro: $distro"
+		eval $LOGFE
+		return 0
+	fi
 
 	# get the wild carded array of release/version /etc files if present
 	shopt -s nullglob
