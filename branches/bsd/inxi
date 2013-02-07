@@ -4994,8 +4994,21 @@ get_memory_data()
 			printf("%.1f/%.1fMB\n", used/1024, tot/1024)
 		}' $FILE_MEMINFO )
 		log_function_data 'cat' "$FILE_MEMINFO"
-	elif [[ $B_SYSCTL == 'true' ]];then
+	elif [[ $B_SYSCTL == 'true' && -n $Sysctl_a_Data ]];then
 		memory_full="$( grep -i 'memory' <<< "$Sysctl_a_Data" )"
+		memory=$( gawk '
+		/^Real Memory:/ {
+			gsub(/[^0-9]/,"",$4)
+			tot = $4
+		}
+		/^Free Memory:/ {
+			gsub(/[^0-9]/,"",$3)
+			notused = $3
+		}
+		END {
+			used = tot-notused
+			printf("%.1f/%.1fMB\n", used/1024, tot/1024)
+		}' 	<<< "$Sysctl_a_Data" )
 	fi
 	echo "$memory"
 	log_function_data "memory: $memory"
