@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 09-bsd
+####  Patch Number: 10-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4995,8 +4995,7 @@ get_memory_data()
 		}' $FILE_MEMINFO )
 		log_function_data 'cat' "$FILE_MEMINFO"
 	elif [[ $B_SYSCTL == 'true' && -n $Sysctl_a_Data ]];then
-		memory_full=$( echo "$Sysctl_a_Data" | grep -i 'memory' )
-		memory=$( gawk '
+		memory=$( echo "$Sysctl_a_Data" | grep -i 'memory' | gawk '
 		/^Real Memory:/ {
 			gsub(/[^0-9]/,"",$4)
 			tot = $4
@@ -5008,7 +5007,7 @@ get_memory_data()
 		END {
 			used = tot - notused
 			printf("%.1f/%.1fMB\n", used/1024, tot/1024)
-		}' <<< "$memory_full")
+		}' )
 	fi
 	echo "$memory"
 	log_function_data "memory: $memory"
