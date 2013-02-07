@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 12-bsd
+####  Patch Number: 13-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6094,7 +6094,7 @@ get_raid_data()
 	
 	local mdstat=''
 		
-	if [[ $B_MDSTAT_FILE ]];then
+	if [[ $B_MDSTAT_FILE == 'true' ]];then
 	 	mdstat="$( cat $FILE_MDSTAT 2>/dev/null )"
 	fi
 	
