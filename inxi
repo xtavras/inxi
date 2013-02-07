@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 ########################################################################
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: January 28 2013
-####  Patch Number: 00
+####  Patch Number: 00-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -223,6 +223,7 @@ A_X_DATA=''
 # flag to allow distro maintainers to turn off update features. If false, turns off
 # -U and -! testing/advanced update options, as well as removing the -U help menu item
 B_ALLOW_UPDATE='true'
+B_BSD='false'
 B_COLOR_SCHEME_SET='false'
 B_CONSOLE_IRC='false'
 # triggers full display of cpu flags
@@ -432,6 +433,7 @@ SCRIPT_DOWNLOAD_BRANCH_1='http://inxi.googlecode.com/svn/branches/one/'
 SCRIPT_DOWNLOAD_BRANCH_2='http://inxi.googlecode.com/svn/branches/two/'
 SCRIPT_DOWNLOAD_BRANCH_3='http://inxi.googlecode.com/svn/branches/three/'
 SCRIPT_DOWNLOAD_BRANCH_4='http://inxi.googlecode.com/svn/branches/four/'
+SCRIPT_DOWNLOAD_BRANCH_BSD='http://inxi.googlecode.com/svn/branches/bsd/'
 SCRIPT_DOWNLOAD_DEV='http://smxi.org/test/'
 # note, you can use any ip url here as long as it's the only line on the output page.
 # Also the ip address must be the last thing on that line.
@@ -697,9 +699,16 @@ initialize_script_data()
 {
 	eval $LOGFS
 	
+	if [[ -n $( grep -i 'bsd' <<< $( uname -s 2>/dev/null ) ) ]];then
+		B_BSD='true'
+	fi
+	
 	# now set the script BOOLEANS for files required to run features
-	if [[ -d "/proc/" ]];then
+	# note that freebsd has /proc but it's empty
+	if [[ -d "/proc/" && $B_BSD != 'true' ]];then
 		B_PROC_DIR='true'
+	elif [[ $B_BSD == 'true' ]];then
+		B_PROC_DIR='false'
 	else
 		error_handler 6
 	fi
@@ -2162,6 +2171,9 @@ get_parameters()
 					14)
 						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_4" 'svn: branch four server'
 						;;
+					15)
+						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_BSD" 'svn: branch bsd server'
+						;;
 					30)
 						B_RUNNING_IN_SHELL='true'
 						;;
@@ -2350,6 +2362,7 @@ show_options()
 		print_screen_output "-! 12 - Triggers an update from svn branch two - if present, of course."
 		print_screen_output "-! 13 - Triggers an update from svn branch three - if present, of course."
 		print_screen_output "-! 14 - Triggers an update from svn branch four - if present, of course."
+		print_screen_output "-! 15 - Triggers an update from svn branch BSD - if present, of course."
 		print_screen_output "-! <http://......> - Triggers an update from whatever server you list."
 		print_screen_output "-! <ftp.......> - Changes debugging data ftp upload location to whatever you enter here."
 		print_screen_output "   Only used together with -xx@ 11-14, and must be used in front of that."
