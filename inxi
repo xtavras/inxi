@@ -840,7 +840,7 @@ check_script_suggested_apps()
 		B_LSPCI='true'
 	fi
 	if [[ $B_BSD == 'true' ]];then
-		if -n $( type -p sysctl ) ]];then
+		if [[ -n $( type -p sysctl ) ]];then
 			B_SYSCTL='true'
 		fi
 	fi
