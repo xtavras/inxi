@@ -4990,7 +4990,7 @@ get_memory_data()
 			notused+=$2
 		}
 		END {
-			used = tot-notused
+			used = tot - notused
 			printf("%.1f/%.1fMB\n", used/1024, tot/1024)
 		}' $FILE_MEMINFO )
 		log_function_data 'cat' "$FILE_MEMINFO"
@@ -5006,7 +5006,7 @@ get_memory_data()
 			notused = $3
 		}
 		END {
-			used = tot-notused
+			used = tot - notused
 			printf("%.1f/%.1fMB\n", used/1024, tot/1024)
 		}' 	<<< "$Sysctl_a_Data" )
 	fi
