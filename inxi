@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 17-bsd
+####  Patch Number: 18-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6020,18 +6020,26 @@ get_patch_version_string()
 get_ps_data()
 {
 	eval $LOGFS
-	local array_length='' reorder_temp='' i=0 head_tail='' sort_type=''
+	local array_length='' reorder_temp='' i=0 head_tail='' sort_type='' ps_data=''
 	
 	# bummer, have to make it more complex here because of reverse sort
 	# orders in output, pesky lack of support of +rss in old systems
 	case $1 in
 		mem)
 			head_tail='head'
-			sort_type='-rss'
+			if [[ $B_BSD != 'true' ]];then
+				sort_type='ps aux --sort -rss'
+			else
+				sort_type='ps aux -m'
+			fi
 			;;
 		cpu)
 			head_tail='tail'
-			sort_type='%cpu'
+			if [[ $B_BSD != 'true' ]];then
+				sort_type='ps aux --sort %cpu'
+			else
+				sort_type='ps aux -r'
+			fi
 			;;
 	esac
 	
@@ -6040,10 +6048,12 @@ get_ps_data()
 		PS_THROTTLED=$PS_COUNT
 		PS_COUNT=5
 	fi
+	# use eval here to avoid glitches with -
+	ps_data="$( eval $sort_type )"
 
 	IFS=$'\n'
 	# note that inxi can use a lot of cpu, and can actually show up here as the script runs
-	A_PS_DATA=( $( ps aux --sort $sort_type | grep -Ev "($SCRIPT_NAME|%CPU|[[:space:]]ps[[:space:]])" | $head_tail -n $PS_COUNT | gawk '
+	A_PS_DATA=( $( echo "$ps_data" | grep -Ev "($SCRIPT_NAME|%CPU|[[:space:]]ps[[:space:]])" | $head_tail -n $PS_COUNT | gawk '
 	BEGIN {
 		IGNORECASE=1
 		appName=""
