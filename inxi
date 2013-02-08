@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 17-bsd
+####  Patch Number: 18-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -85,7 +85,7 @@
 ####  -S   For desktop environment, user must be in X and have xprop installed (in X11-utils)
 ########################################################################
 ####  BSD Adjustments
-####  * All uses of sed -i '' must use -i form to be BSD sed compliant
+####  * sed -i '' '' form added to bsd branch by inxi2bsd script automatically.
 ####  * Note: BSD sed supports using -r instead of -E for compatibility with gnu sed
 ####  * Gnu grep options can be used if the function component is only run in linux
 ####    These are the options that bsd grep does not support that inxi uses: -m <number> -o 
@@ -446,6 +446,7 @@ SCRIPT_DOWNLOAD_BRANCH_2='http://inxi.googlecode.com/svn/branches/two/'
 SCRIPT_DOWNLOAD_BRANCH_3='http://inxi.googlecode.com/svn/branches/three/'
 SCRIPT_DOWNLOAD_BRANCH_4='http://inxi.googlecode.com/svn/branches/four/'
 SCRIPT_DOWNLOAD_BRANCH_BSD='http://inxi.googlecode.com/svn/branches/bsd/'
+SCRIPT_DOWNLOAD_BRANCH_GNUBSD='http://inxi.googlecode.com/svn/branches/gnubsd/'
 SCRIPT_DOWNLOAD_DEV='http://smxi.org/test/'
 # note, you can use any ip url here as long as it's the only line on the output page.
 # Also the ip address must be the last thing on that line.
@@ -2243,6 +2244,9 @@ get_parameters()
 					15)
 						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_BSD" 'svn: branch bsd server'
 						;;
+					16)
+						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_GNUBSD" 'svn: branch gnubsd server'
+						;;
 					30)
 						B_RUNNING_IN_SHELL='true'
 						;;
@@ -2432,6 +2436,7 @@ show_options()
 		print_screen_output "-! 13 - Triggers an update from svn branch three - if present, of course."
 		print_screen_output "-! 14 - Triggers an update from svn branch four - if present, of course."
 		print_screen_output "-! 15 - Triggers an update from svn branch BSD - if present, of course."
+		print_screen_output "-! 16 - Triggers an update from svn branch GNUBSD - if present, of course."
 		print_screen_output "-! <http://......> - Triggers an update from whatever server you list."
 		print_screen_output "-! <ftp.......> - Changes debugging data ftp upload location to whatever you enter here."
 		print_screen_output "   Only used together with -xx@ 11-14, and must be used in front of that."
