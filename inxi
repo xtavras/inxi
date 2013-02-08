@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 10-bsd
+####  Patch Number: 11-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4474,7 +4474,7 @@ get_graphics_glx_data()
 get_graphics_res_data()
 {
 	eval $LOGFS
-	local screen_resolution='' xdpy_data='' screens_count=0
+	local screen_resolution='' xdpy_data='' screens_count=0 tty_session=''
 
 	if [[ $B_SHOW_X_DATA == 'true' && $B_ROOT != 'true' ]];then
 		# Added the two ?'s , because the resolution is now reported without spaces around the 'x', as in
@@ -4523,13 +4523,20 @@ get_graphics_res_data()
 		# note: this works fine for all systems but keeping the above for now since
 		# the above is probably more accurate for linux systems.
 		else
-			screen_resolution=$( stty -a | gawk -F ';' '
-				/^speed/ {
-					gsub(/[[:space:]]*(rows|columns)[[:space:]]*/,"",$0)
-					gsub(/[[:space:]]*/,"",$2)
-					gsub(/[[:space:]]*/,"",$3)
-					print $3"x"$2
-				}' )
+			if [[ $B_CONSOLE_IRC != 'true' ]];then
+				screen_resolution=$( stty -a | gawk -F ';' '
+					/^speed/ {
+						gsub(/[[:space:]]*(rows|columns)[[:space:]]*/,"",$0)
+						gsub(/[[:space:]]*/,"",$2)
+						gsub(/[[:space:]]*/,"",$3)
+						print $3"x"$2
+					}' )
+			else
+				if [[ $B_BSD == 'true' ]];then
+					tty_session=$( get_tty_console_irc )
+					screen_resolution="$( tput cols -T $tty_session )x$( tput rows -T $tty_session )"
+				fi
+			fi
 		fi
 	fi
 	echo "$screen_resolution"
