@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 16-bsd
+####  Patch Number: 17-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5484,7 +5484,7 @@ get_optical_drive_data()
 	local separator='' linked='' disk='' item_string='' proc_info_string='' 
 	local dev_disks_links="$( ls /dev/dvd* /dev/cd* /dev/scd* 3>/dev/null  )"
 	# get the actual disk dev location, first try default which is easier to run, need to preserve line breaks
-	local dev_disks_real="$( echo "$dev_disks_links" | xargs -L readlink 3>/dev/null | sort -u )"
+	local dev_disks_real="$( echo "$dev_disks_links" | xargs -L 1 readlink 3>/dev/null | sort -u )"
 	# Some systems don't support xargs -L so we need to do it manually
 	if [[ -z $dev_disks_real ]];then
 		for linked in $dev_disks_links
