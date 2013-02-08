@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 11-bsd
+####  Patch Number: 12-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4534,7 +4534,7 @@ get_graphics_res_data()
 			else
 				if [[ $B_BSD == 'true' ]];then
 					tty_session=$( get_tty_console_irc )
-					screen_resolution="$( tput cols -T $tty_session )x$( tput rows -T $tty_session )"
+					screen_resolution="$( tput cols -T $tty_session )x$( tput lines -T $tty_session )"
 				fi
 			fi
 		fi
