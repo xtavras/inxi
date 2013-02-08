@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 05-bsd
+####  Patch Number: 07-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -700,7 +700,7 @@ initialize_script_data()
 {
 	eval $LOGFS
 	
-	if [[ -n $( grep -i 'bsd' <<< $( uname -s 3>/dev/null ) ) ]];then
+	if [[ -n $( grep -i 'bsd' <<< $( uname -s 2>/dev/null ) ) ]];then
 		B_BSD='true'
 	fi
 	SCRIPT_PATH=$( dirname $0 )
@@ -718,7 +718,7 @@ initialize_script_data()
 	
 	# found a case of battery existing but having nothing in it on desktop mobo
 	# not all laptops show the first, 
-	if [[ -n $( ls /proc/acpi/battery 3>/dev/null ) ]];then
+	if [[ -n $( ls /proc/acpi/battery 2>/dev/null ) ]];then
 		B_PORTABLE='true'
 	fi
 	if [[ -e $FILE_CPUINFO ]]; then
@@ -775,7 +775,7 @@ initialize_script_data()
 	else
 		# Detect location of the Xorg log file
 		if [[ -n $( type -p xset ) ]]; then
-			FILE_XORG_LOG=$( xset q 3>/dev/null | grep -i 'Log file' | gawk '{print $3}')
+			FILE_XORG_LOG=$( xset q 2>/dev/null | grep -i 'Log file' | gawk '{print $3}')
 			if [[ -e $FILE_XORG_LOG ]];then
 				B_XORG_LOG='true'
 			fi
@@ -1486,7 +1486,7 @@ debug_data_collector()
 			else
 				touch $debug_data_dir/no-xorg-conf-file
 			fi
-			if [[ -n $( ls /etc/X11/xorg.conf.d/ 3>/dev/null ) ]];then
+			if [[ -n $( ls /etc/X11/xorg.conf.d/ 2>/dev/null ) ]];then
 				ls /etc/X11/xorg.conf.d &> $debug_data_dir/ls-etc-x11-xorg-conf-d.txt
 				cp /etc/X11/xorg.conf.d $SCRIPT_DATA_DIR/$debug_data_dir
 			else
@@ -2217,7 +2217,7 @@ get_parameters()
 	## this must occur here so you can use the debugging flag to show errors
 	## Reroute all error messages to the bitbucket (if not debugging)
 	if [[ $DEBUG -eq 0 ]];then
-		exec 3>/dev/null
+		exec 2>/dev/null
 	fi
 	#((DEBUG)) && exec 2>&1 # This is for debugging konversation
 
@@ -2449,290 +2449,40 @@ print_version_info()
 get_start_client()
 {
 	eval $LOGFS
-	local irc_client_path='' irc_client_path_lower='' non_native_konvi='' i=''
-	local b_non_native_app='false' pppid='' app_working_name='' file_data=''
+	local Irc_Client_Path='' irc_client_path_lower='' non_native_konvi='' i=''
+	local B_Non_Native_App='false' pppid='' App_Working_Name='' file_data=''
 	local b_qt4_konvi='false' ps_parent=''
 
 	if [[ $B_RUNNING_IN_SHELL == 'true' ]];then
 		IRC_CLIENT='Shell'
 		unset IRC_CLIENT_VERSION
-	elif [[ -n $PPID ]];then
-	# elif [[ -n $PPID && -f /proc/$PPID/exe ]];then
+	# elif [[ -n $PPID ]];then
+	elif [[ -n $PPID && -f /proc/$PPID/exe ]];then
 		if [[ $B_OVERRIDE_FILTER != 'true' ]];then
 			B_OUTPUT_FILTER='true'
 		fi
-		# irc_client_path=$( readlink /proc/$PPID/exe )
-		irc_client_path=$( ps -p $PPID | gawk '!/[[:space:]]*PID/ {print $5}'  )
+		Irc_Client_Path=$( readlink /proc/$PPID/exe )
+		# Irc_Client_Path=$( ps -p $PPID | gawk '!/[[:space:]]*PID/ {print $5}'  )
 		# echo $( ps -p $PPID )
-		irc_client_path_lower=$( tr '[:upper:]' '[:lower:]' <<< $irc_client_path )
-		app_working_name=$( basename $irc_client_path_lower )
+		irc_client_path_lower=$( tr '[:upper:]' '[:lower:]' <<< $Irc_Client_Path )
+		App_Working_Name=$( basename $irc_client_path_lower )
 		# handles the xchat/sh/bash/dash cases, and the konversation/perl cases, where clients
 		# report themselves as perl or unknown shell. IE:  when konversation starts inxi
 		# from inside itself, as a script, the parent is konversation/xchat, not perl/bash etc
 		# note: perl can report as: perl5.10.0, so it needs wildcard handling
-		case $app_working_name in
+		case $App_Working_Name in
 			bash|dash|sh|python*|perl*)	# We want to know who wrapped it into the shell or perl.
 				pppid="$( ps -p $PPID -o ppid --no-headers | sed 's/[[:space:]]//g' )"
 				if [[ -n $pppid && -f /proc/$pppid/exe ]];then
-					irc_client_path="$( readlink /proc/$pppid/exe )"
-					irc_client_path_lower="$( tr '[:upper:]' '[:lower:]' <<< $irc_client_path )"
-					app_working_name=$( basename $irc_client_path_lower )
-					b_non_native_app='true'
+					Irc_Client_Path="$( readlink /proc/$pppid/exe )"
+					irc_client_path_lower="$( tr '[:upper:]' '[:lower:]' <<< $Irc_Client_Path )"
+					App_Working_Name=$( basename $irc_client_path_lower )
+					B_Non_Native_App='true'
 				fi
 				;;
 		esac
-
-		# replacing loose detection with tight detection, bugs will be handled with app names
-		# as they appear.
-		case $app_working_name in
-			# check for shell first
-			bash|dash|sh)
-				unset IRC_CLIENT_VERSION
-				IRC_CLIENT="Shell wrapper"
-				;;
-			# now start on irc clients, alphabetically
-			bitchx)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk '
-				/Version/ {
-					a=tolower($2)
-					gsub(/[()]|bitchx-/,"",a)
-					print a
-					exit
-				}
-				$2 == "version" {
-					a=tolower($3)
-					sub(/bitchx-/,"",a)
-					print a
-					exit
-				}' )"
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="BitchX"
-				;;
-			finch)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="Finch"
-				;;
-			gaim)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				IRC_CLIENT="Gaim"
-				;;
-			hexchat)
-				# the hexchat author decided to make --version/-v return a gtk dialogue box, lol...
-				# so we need to read the actual config file for hexchat. Note that older hexchats
-				# used xchat config file, so test first for default, then legacy. Because it's possible
-				# for this file to be use edited, doing some extra checks here.
-				if [[ -f ~/.config/hexchat/hexchat.conf ]];then
-					file_data="$( cat ~/.config/hexchat/hexchat.conf )"
-				elif [[ -f  ~/.config/hexchat/xchat.conf ]];then
-					file_data="$( cat ~/.config/hexchat/xchat.conf )"
-				fi
-				if [[ -n $file_data ]];then
-					IRC_CLIENT_VERSION=$( gawk '
-					BEGIN {
-						IGNORECASE=1
-						FS="="
-					}
-					/^[[:space:]]*version/ {
-						# get rid of the space if present
-						gsub(/[[:space:]]*/, "", $2 )
-						print $2
-						exit # usually this is the first line, no point in continuing
-					}' <<< "$file_data" )
-					
-					IRC_CLIENT_VERSION=" $IRC_CLIENT_VERSION"
-				else
-					IRC_CLIENT_VERSION=' N/A'
-				fi
-				IRC_CLIENT="HexChat"
-				;;
-			ircii)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $3
-				}' )"
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="ircII"
-				;;
-			irssi-text|irssi)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="Irssi"
-				;;
-			konversation) ## konvi < 1.2 (qt4)
-				# this is necessary to avoid the dcop errors from starting inxi as a /cmd started script
-				if [[ $b_non_native_app == 'true' ]];then  ## true negative is confusing
-					KONVI=2
-				else # if native app
-					KONVI=1
-				fi
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk '
-				/Konversation:/ {
-					for ( i=2; i<=NF; i++ ) {
-						if (i == NF) {
-							print $i
-						}
-						else {
-							printf $i" "
-						}
-					}
-					exit
-				}' )"
-
-				T=($IRC_CLIENT_VERSION)
-				if [[ ${T[0]} == *+* ]];then
-					# < Sho_> locsmif: The version numbers of SVN versions look like this:
-					#         "<version number of last release>+ #<build number", i.e. "1.0+ #3177" ...
-					#         for releases we remove the + and build number, i.e. "1.0" or soon "1.0.1"
-					IRC_CLIENT_VERSION=" CVS $IRC_CLIENT_VERSION"
-					T2="${T[0]/+/}"
-				else
-					IRC_CLIENT_VERSION=" ${T[0]}"
-					T2="${T[0]}"
-				fi
-				# Remove any dots except the first, and make sure there are no trailing zeroes,
-				T2=$( echo "$T2" | gawk '{
-					sub(/\./, " ")
-					gsub(/\./, "")
-					sub(/ /, ".")
-					printf("%g\n", $0)
-				}' )
-				# Since Konversation 1.0, the DCOP interface has changed a bit: dcop "$DCPORT" Konversation ..etc
-				# becomes : dcop "$DCPORT" default ... or dcop "$DCPORT" irc ..etc. So we check for versions smaller
-				# than 1 and change the DCOP parameter/object accordingly.
-				if [[ ${T2} -lt 1 ]];then
-					DCOPOBJ="Konversation"
-				fi
-				IRC_CLIENT="Konversation"
-				;;
-			kopete)
-				IRC_CLIENT_VERSION=" $( kopete -v | gawk '
-				/Kopete:/ {
-					print $2
-					exit
-				}' )"
-				IRC_CLIENT="Kopete"
-				;;
-			kvirc)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v 2>&1 | gawk '{
-					for ( i=2; i<=NF; i++) {
-				 		if ( i == NF ) {
-				 			print $i
-				 		}
-				 		else {
-				 			printf $i" "
-				 		}
-				 	}
-				 	exit
-				 }' )"
-				IRC_CLIENT="KVIrc"
-				;;
-			pidgin)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				IRC_CLIENT="Pidgin"
-				;;
-			quassel*)
-				# sample: quassel -v
-				# Qt: 4.5.0
-				# KDE: 4.2.65 (KDE 4.2.65 (KDE 4.3 >= 20090226))
-				# Quassel IRC: v0.4.0 [+60] (git-22effe5)
-				# note: early < 0.4.1 quassels do not have -v
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v 3>/dev/null | gawk -F ': ' '
-				BEGIN {
-					IGNORECASE=1
-					clientVersion=""
-				}
-				/Quassel IRC/ {
-					clientVersion = $2
-				}
-				END {
-					# this handles pre 0.4.1 cases with no -v
-					if ( clientVersion == "" ) {
-						clientVersion = "(pre v0.4.1)"
-					}
-					print clientVersion
-				}' )"
-				# now handle primary, client, and core. quasselcore doesn't actually
-				# handle scripts with exec, but it's here just to be complete
-				case $app_working_name in
-					quassel)
-						IRC_CLIENT="Quassel [M]"
-						;;
-					quasselclient)
-						IRC_CLIENT="Quassel"
-						;;
-					quasselcore)
-						IRC_CLIENT="Quassel (core)"
-						;;
-				esac
-				;;
-			weechat-curses)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v ) "
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="Weechat"
-				;;
-			xchat-gnome)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				IRC_CLIENT="X-Chat-Gnome"
-				;;
-			xchat)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				IRC_CLIENT="X-Chat"
-				;;
-			# then do some perl type searches, do this last since it's a wildcard search
-			perl*|ksirc|dsirc)
-				unset IRC_CLIENT_VERSION
-				# KSirc is one of the possibilities now. KSirc is a wrapper around dsirc, a perl client
-				get_cmdline $PPID
-				for (( i=0; i <= $CMDL_MAX; i++ ))
-				do
-					case ${A_CMDL[i]} in
-						*dsirc*)
-						IRC_CLIENT="KSirc"
-						# Dynamic runpath detection is too complex with KSirc, because KSirc is started from
-						# kdeinit. /proc/<pid of the grandparent of this process>/exe is a link to /usr/bin/kdeinit
-						# with one parameter which contains parameters separated by spaces(??), first param being KSirc.
-						# Then, KSirc runs dsirc as the perl irc script and wraps around it. When /exec is executed,
-						# dsirc is the program that runs inxi, therefore that is the parent process that we see.
-						# You can imagine how hosed I am if I try to make inxi find out dynamically with which path
-						# KSirc was run by browsing up the process tree in /proc. That alone is straightjacket material.
-						# (KSirc sucks anyway ;)
-						IRC_CLIENT_VERSION=" $( ksirc -v | gawk '
-						/KSirc:/ {
-							print $2
-							exit
-						}' )"
-						break
-						;;
-					esac
-				done
-				B_CONSOLE_IRC='true'
-				set_perl_python_konvi "$app_working_name"
-				;;
-			python*)
-				# B_CONSOLE_IRC='true' # are there even any python type console irc clients? check.
-				set_perl_python_konvi "$app_working_name"
-				;;
-			# then unset, set unknown data
-			*)	
-				IRC_CLIENT="Unknown : ${irc_client_path##*/}"
-				unset IRC_CLIENT_VERSION
-				;;
-		esac
-		if [[ $SHOW_IRC -lt 2 ]];then
-			unset IRC_CLIENT_VERSION
-		fi
+		# sets version number if it can find it
+		get_irc_client_version
 	else
 		## lets look to see if qt4_konvi is the parent.  There is no direct way to tell, so lets infer it.
 		## because $PPID does not work with qt4_konvi, the above case does not work
@@ -2759,13 +2509,19 @@ get_start_client()
 			# this should handle certain cases where it's ssh or some other startup tool
 			# that falls through all the other tests
 			if [[ $B_BSD != 'true' ]];then
-				ps_parent=$(ps -p $PPID --no-headers 3>/dev/null | gawk '{print $NF}' )
+				App_Working_Name=$(ps -p $PPID --no-headers 2>/dev/null | gawk '{print $NF}' )
 			else
 				# without --no-headers we need the second line
-				ps_parent=$(ps -p $PPID 3>/dev/null | gawk '/^[0-9]+/ {print $5}' )
+				App_Working_Name=$(ps -p $PPID 2>/dev/null | gawk '/^[0-9]+/ {print $5}' )
 			fi
-			if [[ -n $ps_parent ]];then
-				IRC_CLIENT=$ps_parent
+			
+			if [[ -n $App_Working_Name ]];then
+				Irc_Client_Path=$App_Working_Name
+				B_Non_Native_App='false'
+				get_irc_client_version
+				if [[ -z $IRC_CLIENT ]];then
+					IRC_CLIENT=$App_Working_Name
+				fi
 			else
 				IRC_CLIENT="PPID=\"$PPID\" - empty?"
 			fi
@@ -2776,14 +2532,270 @@ get_start_client()
 	log_function_data "IRC_CLIENT: $IRC_CLIENT :: IRC_CLIENT_VERSION: $IRC_CLIENT_VERSION :: PPID: $PPID"
 	eval $LOGFE
 }
-# args: $1 - app_working_name
+# note: all variables set in caller so no need to pass
+get_irc_client_version()
+{
+	# replacing loose detection with tight detection, bugs will be handled with app names
+	# as they appear.
+	case $App_Working_Name in
+		# check for shell first
+		bash|dash|sh)
+			unset IRC_CLIENT_VERSION
+			IRC_CLIENT="Shell wrapper"
+			;;
+		# now start on irc clients, alphabetically
+		bitchx)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk '
+			/Version/ {
+				a=tolower($2)
+				gsub(/[()]|bitchx-/,"",a)
+				print a
+				exit
+			}
+			$2 == "version" {
+				a=tolower($3)
+				sub(/bitchx-/,"",a)
+				print a
+				exit
+			}' )"
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="BitchX"
+			;;
+		finch)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="Finch"
+			;;
+		gaim)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			IRC_CLIENT="Gaim"
+			;;
+		hexchat)
+			# the hexchat author decided to make --version/-v return a gtk dialogue box, lol...
+			# so we need to read the actual config file for hexchat. Note that older hexchats
+			# used xchat config file, so test first for default, then legacy. Because it's possible
+			# for this file to be use edited, doing some extra checks here.
+			if [[ -f ~/.config/hexchat/hexchat.conf ]];then
+				file_data="$( cat ~/.config/hexchat/hexchat.conf )"
+			elif [[ -f  ~/.config/hexchat/xchat.conf ]];then
+				file_data="$( cat ~/.config/hexchat/xchat.conf )"
+			fi
+			if [[ -n $file_data ]];then
+				IRC_CLIENT_VERSION=$( gawk '
+				BEGIN {
+					IGNORECASE=1
+					FS="="
+				}
+				/^[[:space:]]*version/ {
+					# get rid of the space if present
+					gsub(/[[:space:]]*/, "", $2 )
+					print $2
+					exit # usually this is the first line, no point in continuing
+				}' <<< "$file_data" )
+				
+				IRC_CLIENT_VERSION=" $IRC_CLIENT_VERSION"
+			else
+				IRC_CLIENT_VERSION=' N/A'
+			fi
+			IRC_CLIENT="HexChat"
+			;;
+		ircii)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $3
+			}' )"
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="ircII"
+			;;
+		irssi-text|irssi)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="Irssi"
+			;;
+		konversation) ## konvi < 1.2 (qt4)
+			# this is necessary to avoid the dcop errors from starting inxi as a /cmd started script
+			if [[ $B_Non_Native_App == 'true' ]];then  ## true negative is confusing
+				KONVI=2
+			else # if native app
+				KONVI=1
+			fi
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk '
+			/Konversation:/ {
+				for ( i=2; i<=NF; i++ ) {
+					if (i == NF) {
+						print $i
+					}
+					else {
+						printf $i" "
+					}
+				}
+				exit
+			}' )"
+
+			T=($IRC_CLIENT_VERSION)
+			if [[ ${T[0]} == *+* ]];then
+				# < Sho_> locsmif: The version numbers of SVN versions look like this:
+				#         "<version number of last release>+ #<build number", i.e. "1.0+ #3177" ...
+				#         for releases we remove the + and build number, i.e. "1.0" or soon "1.0.1"
+				IRC_CLIENT_VERSION=" CVS $IRC_CLIENT_VERSION"
+				T2="${T[0]/+/}"
+			else
+				IRC_CLIENT_VERSION=" ${T[0]}"
+				T2="${T[0]}"
+			fi
+			# Remove any dots except the first, and make sure there are no trailing zeroes,
+			T2=$( echo "$T2" | gawk '{
+				sub(/\./, " ")
+				gsub(/\./, "")
+				sub(/ /, ".")
+				printf("%g\n", $0)
+			}' )
+			# Since Konversation 1.0, the DCOP interface has changed a bit: dcop "$DCPORT" Konversation ..etc
+			# becomes : dcop "$DCPORT" default ... or dcop "$DCPORT" irc ..etc. So we check for versions smaller
+			# than 1 and change the DCOP parameter/object accordingly.
+			if [[ ${T2} -lt 1 ]];then
+				DCOPOBJ="Konversation"
+			fi
+			IRC_CLIENT="Konversation"
+			;;
+		kopete)
+			IRC_CLIENT_VERSION=" $( kopete -v | gawk '
+			/Kopete:/ {
+				print $2
+				exit
+			}' )"
+			IRC_CLIENT="Kopete"
+			;;
+		kvirc)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v 2>&1 | gawk '{
+				for ( i=2; i<=NF; i++) {
+					if ( i == NF ) {
+						print $i
+					}
+					else {
+						printf $i" "
+					}
+				}
+				exit
+				}' )"
+			IRC_CLIENT="KVIrc"
+			;;
+		pidgin)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			IRC_CLIENT="Pidgin"
+			;;
+		quassel*)
+			# sample: quassel -v
+			# Qt: 4.5.0
+			# KDE: 4.2.65 (KDE 4.2.65 (KDE 4.3 >= 20090226))
+			# Quassel IRC: v0.4.0 [+60] (git-22effe5)
+			# note: early < 0.4.1 quassels do not have -v
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v 2>/dev/null | gawk -F ': ' '
+			BEGIN {
+				IGNORECASE=1
+				clientVersion=""
+			}
+			/Quassel IRC/ {
+				clientVersion = $2
+			}
+			END {
+				# this handles pre 0.4.1 cases with no -v
+				if ( clientVersion == "" ) {
+					clientVersion = "(pre v0.4.1)"
+				}
+				print clientVersion
+			}' )"
+			# now handle primary, client, and core. quasselcore doesn't actually
+			# handle scripts with exec, but it's here just to be complete
+			case $App_Working_Name in
+				quassel)
+					IRC_CLIENT="Quassel [M]"
+					;;
+				quasselclient)
+					IRC_CLIENT="Quassel"
+					;;
+				quasselcore)
+					IRC_CLIENT="Quassel (core)"
+					;;
+			esac
+			;;
+		weechat-curses)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v ) "
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="Weechat"
+			;;
+		xchat-gnome)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			IRC_CLIENT="X-Chat-Gnome"
+			;;
+		xchat)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			IRC_CLIENT="X-Chat"
+			;;
+		# then do some perl type searches, do this last since it's a wildcard search
+		perl*|ksirc|dsirc)
+			unset IRC_CLIENT_VERSION
+			# KSirc is one of the possibilities now. KSirc is a wrapper around dsirc, a perl client
+			get_cmdline $PPID
+			for (( i=0; i <= $CMDL_MAX; i++ ))
+			do
+				case ${A_CMDL[i]} in
+					*dsirc*)
+					IRC_CLIENT="KSirc"
+					# Dynamic runpath detection is too complex with KSirc, because KSirc is started from
+					# kdeinit. /proc/<pid of the grandparent of this process>/exe is a link to /usr/bin/kdeinit
+					# with one parameter which contains parameters separated by spaces(??), first param being KSirc.
+					# Then, KSirc runs dsirc as the perl irc script and wraps around it. When /exec is executed,
+					# dsirc is the program that runs inxi, therefore that is the parent process that we see.
+					# You can imagine how hosed I am if I try to make inxi find out dynamically with which path
+					# KSirc was run by browsing up the process tree in /proc. That alone is straightjacket material.
+					# (KSirc sucks anyway ;)
+					IRC_CLIENT_VERSION=" $( ksirc -v | gawk '
+					/KSirc:/ {
+						print $2
+						exit
+					}' )"
+					break
+					;;
+				esac
+			done
+			B_CONSOLE_IRC='true'
+			set_perl_python_konvi "$App_Working_Name"
+			;;
+		python*)
+			# B_CONSOLE_IRC='true' # are there even any python type console irc clients? check.
+			set_perl_python_konvi "$App_Working_Name"
+			;;
+		# then unset, set unknown data
+		*)	
+			IRC_CLIENT="Unknown : ${Irc_Client_Path##*/}"
+			unset IRC_CLIENT_VERSION
+			;;
+	esac
+	if [[ $SHOW_IRC -lt 2 ]];then
+		unset IRC_CLIENT_VERSION
+	fi
+}
+
+# args: $1 - App_Working_Name
 set_perl_python_konvi()
 {
 	if [[ -z $IRC_CLIENT_VERSION ]];then
 		# this is a hack to try to show konversation if inxi is running but started via /cmd
 		if [[ -n $( ps aux | grep -i 'konversation' | grep -v 'grep' ) && $B_RUNNING_IN_X == 'true' ]];then
 			IRC_CLIENT='Konversation'
-			IRC_CLIENT_VERSION=" $( konversation --version 3>/dev/null | gawk '/^Konversation/ {print $2}' )"
+			IRC_CLIENT_VERSION=" $( konversation --version 2>/dev/null | gawk '/^Konversation/ {print $2}' )"
 			B_CONSOLE_IRC='false'
 		else
 			IRC_CLIENT="Unknown $1 client"
@@ -2799,9 +2811,9 @@ is_this_qt4_konvi()
 	local konvi_qt4_client='' konvi_dbus_exist='' konvi_pid='' konvi_home_dir='' 
 	local konvi='' konvi_qt4_ver='' b_is_qt4=''
 	
-	# fringe cases can throw error, always if untested app, use 3>/dev/null after testing if present
+	# fringe cases can throw error, always if untested app, use 2>/dev/null after testing if present
 	if [[ $B_QDBUS == 'true' ]];then
-		konvi_dbus_exist=$( qdbus 3>/dev/null | grep "org.kde.konversation" )
+		konvi_dbus_exist=$( qdbus 2>/dev/null | grep "org.kde.konversation" )
 	fi
 	# sabayon uses /usr/share/apps/konversation as path
 	if [[ -n $konvi_dbus_exist ]] && [[ -e /usr/share/kde4/apps/konversation || -e  /usr/share/apps/konversation ]]; then
@@ -3003,7 +3015,7 @@ get_audio_usb_data()
 	IFS=$'\n'
 	lsusb_path=$( type -p lsusb )
 	if [[ -n $lsusb_path ]];then
-		lsusb_data=$( $lsusb_path 3>/dev/null )
+		lsusb_data=$( $lsusb_path 2>/dev/null )
 	fi
 	log_function_data 'raw' "usb_data:\n$lsusb_data"
 	if [[ -n $lsusb_data ]];then
@@ -3448,7 +3460,7 @@ get_desktop_environment()
 	local version='' version_data='' toolkit=''
 	
 	if [[ -n $( type -p xprop ) ]];then
-		xprop_root="$( xprop -root 3>/dev/null )"
+		xprop_root="$( xprop -root 2>/dev/null )"
 	fi
 
 	# note that cinnamon split from gnome, and and can now be id'ed via xprop,
@@ -3494,7 +3506,7 @@ get_desktop_environment()
 		desktop_environment="Gnome"
 	# assume 5 will id the same, why not, no need to update in future
 	elif [[ $KDE_SESSION_VERSION == '5' ]]; then
-		version_data=$( kded5 --version 3>/dev/null )
+		version_data=$( kded5 --version 2>/dev/null )
 		version=$( grep -si '^KDE Development Platform:' <<< "$version_data" | gawk '{print $4}' )
 		if [[ -z $version ]];then
 			version='5'
@@ -3507,7 +3519,7 @@ get_desktop_environment()
 		fi
 		desktop_environment="KDE"
 	elif [[ $KDE_SESSION_VERSION == '4' ]]; then
-		version_data=$( kded4 --version 3>/dev/null )
+		version_data=$( kded4 --version 2>/dev/null )
 		version=$( grep -si '^KDE Development Platform:' <<< "$version_data" | gawk '{print $4}' )
 		if [[ -z $version ]];then
 			version='4'
@@ -3522,7 +3534,7 @@ get_desktop_environment()
 	# KDE_FULL_SESSION property is only available since KDE 3.5.5.
 	# src: http://humanreadable.nfshost.com/files/startkde
 	elif [[ $KDE_FULL_SESSION == 'true' ]]; then
-		version_data=$( kded --version 3>/dev/null )
+		version_data=$( kded --version 2>/dev/null )
 		version=$( grep -si '^KDE:' <<< "$version_data" | gawk '{print $2}' )
 		# version=$( get_de_app_version 'kded' '^KDE:' '2' )
 		if [[ -z $version ]];then
@@ -3680,11 +3692,11 @@ get_de_app_version()
 		# quick debian/buntu hack until I find a universal way to get version for these
 		csh|dash)
 			if [[ -n $( type -p dpkg ) ]];then
-				version_data="$( dpkg -l $1 3>/dev/null )"
+				version_data="$( dpkg -l $1 2>/dev/null )"
 			fi
 			;;
 		*)
-			version_data="$( $1 $get_version 3>/dev/null )"
+			version_data="$( $1 $get_version 2>/dev/null )"
 			;;
 	esac
 	
@@ -3736,12 +3748,12 @@ get_de_gtk_data()
 	local toolkit=''
 	
 	# this is a hack, and has to be changed with every toolkit version change
-	toolkit=$( pkg-config --modversion gtk+-4.0 3>/dev/null )
+	toolkit=$( pkg-config --modversion gtk+-4.0 2>/dev/null )
 	if [[ -z $toolkit ]];then
-		toolkit=$( pkg-config --modversion gtk+-3.0 3>/dev/null )
+		toolkit=$( pkg-config --modversion gtk+-3.0 2>/dev/null )
 	fi
 	if [[ -z $toolkit ]];then
-		toolkit=$( pkg-config --modversion gtk+-2.0 3>/dev/null )
+		toolkit=$( pkg-config --modversion gtk+-2.0 2>/dev/null )
 	fi
 	echo $toolkit
 	
@@ -4083,13 +4095,13 @@ get_dmidecode_data()
 	local dmidecodePath=''
 
 	if [[ $B_DMIDECODE_SET != 'true' ]];then
-		dmidecodePath=$( type -p dmidecode 3>/dev/null )
+		dmidecodePath=$( type -p dmidecode 2>/dev/null )
 		if [[ -n $dmidecodePath ]];then
 			# note stripping out these lines: Handle 0x0016, DMI type 17, 27 bytes
 			# but NOT deleting them, in case the dmidecode data is missing empty lines which will be
 			# used to separate results. Then we remove the doubled empty lines to keep it clean and
 			# strip out all the stuff we don't want to see in the results.
-			DMIDECODE_DATA="$( $dmidecodePath 3>/dev/null \
+			DMIDECODE_DATA="$( $dmidecodePath 2>/dev/null \
 			| gawk -F ':' '
 			BEGIN {
 				IGNORECASE=1
@@ -4157,7 +4169,7 @@ N
 get_gcc_kernel_version()
 {
 	# note that we use gawk to get the last part because beta, alpha, git versions can be non-numeric
-	local gccVersion=$( grep -Eio 'gcc[[:space:]]*version[[:space:]]*([^ \t]*)' /proc/version 3>/dev/null | gawk '{print $3}' )
+	local gccVersion=$( grep -Eio 'gcc[[:space:]]*version[[:space:]]*([^ \t]*)' /proc/version 2>/dev/null | gawk '{print $3}' )
 	echo $gccVersion
 }
 
@@ -4166,7 +4178,7 @@ get_gcc_system_version()
 	eval $LOGFS
 	local separator='' gcc_installed='' gcc_list='' gcc_others='' temp_array=''
 	local gcc_version=$( 
-	gcc --version 3>/dev/null | sed -r 's/\([^\)]*\)//g' | gawk '
+	gcc --version 2>/dev/null | sed -r 's/\([^\)]*\)//g' | gawk '
 	BEGIN {
 		IGNORECASE=1
 	}
@@ -4178,7 +4190,7 @@ get_gcc_system_version()
 
 	# can't use xargs -L basename because not all systems support thats
 	if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-		gcc_others=$( ls /usr/bin/gcc-* 3>/dev/null )
+		gcc_others=$( ls /usr/bin/gcc-* 2>/dev/null )
 		if [[ -n $gcc_others ]];then
 			for item in $gcc_others
 			do
@@ -4799,7 +4811,7 @@ get_hard_drive_data_advanced()
 	if [[ -n $( grep -E 'sd[a-z]' <<< ${A_HDD_DATA[@]} ) ]];then
 		# first pack the main ls variable so we don't have to keep using ls /dev...
 		# not all systems have /dev/disk/by-id
-		ls_disk_by_id="$( ls -l /dev/disk/by-id 3>/dev/null )"
+		ls_disk_by_id="$( ls -l /dev/disk/by-id 2>/dev/null )"
 		for (( i=0; i < ${#A_HDD_DATA[@]} - 1; i++ ))
 		do
 			if [[ -n $( grep -E '^sd[a-z]' <<< ${A_HDD_DATA[$i]} ) ]];then
@@ -5105,7 +5117,7 @@ get_module_version_number()
 	fi
 
 	if [[ -n $MODINFO_PATH ]];then
-		module_version=$( $MODINFO_PATH $1 3>/dev/null | gawk '
+		module_version=$( $MODINFO_PATH $1 2>/dev/null | gawk '
 		BEGIN {
 			IGNORECASE=1
 		}
@@ -5244,12 +5256,12 @@ get_network_advanced_data()
 			working_path="/sys/bus/pci/devices/0000:${a_network_adv_working[4]}"
 			# now we want the real one, that xiin also displays, without symbolic links.
 			if [[ -e $working_path ]];then
-				working_path=$( readlink -f $working_path 3>/dev/null )
+				working_path=$( readlink -f $working_path 2>/dev/null )
 				# sometimes there is another directory between the path and /net
 				if [[ ! -e $working_path/net ]];then
 					# using find here, probably will need to also use it in usb part since the grep
 					# method seems to not be working now. Slice off the rest, which leaves the basic path
-					working_path=$( find $working_path/*/net/*/uevent 3>/dev/null | \
+					working_path=$( find $working_path/*/net/*/uevent 2>/dev/null | \
 					sed 's|/net.*||' )
 				fi
 			fi
@@ -5280,7 +5292,7 @@ get_network_advanced_data()
 			#if [[ -n $working_path ]];then
 				# now ls that directory and get the numeric starting sub directory and that should be the full path
 				# to the /net directory part
-				dir_path=$( ls ${working_path} 3>/dev/null | grep -sE '^[0-9]' )
+				dir_path=$( ls ${working_path} 2>/dev/null | grep -sE '^[0-9]' )
 				working_uevent_path="${working_path}${dir_path}"
 			fi
 		fi
@@ -5299,17 +5311,17 @@ get_network_advanced_data()
 		# from debian squeeze 2.6.32-5-686: 
 		# /sys/devices/pci0000:00/0000:00:0b.1/usb1/1-1/net/wlan0/address
 		if [[ -e $working_path/net ]];then
-			if_path=$( ls $working_path/net 3>/dev/null )
+			if_path=$( ls $working_path/net 2>/dev/null )
 			if_id=$if_path
 			working_path=$working_path/net/$if_path
 		# this is the normal usb detection if the first one didn't work
 		elif [[ -n $usb_data && -e $working_uevent_path/net ]];then
-			if_path=$( ls $working_uevent_path/net 3>/dev/null )
+			if_path=$( ls $working_uevent_path/net 2>/dev/null )
 			if_id=$if_path
 			working_path=$working_uevent_path/net/$if_path
 		# 2.6.32 debian lenny kernel shows not: /net/eth0 but /net:eth0
 		else
-			if_path=$( ls $working_path 3>/dev/null | grep 'net:' )
+			if_path=$( ls $working_path 2>/dev/null | grep 'net:' )
 			if_id=$( cut -d ':' -f 2 <<< "$if_path" )
 			working_path=$working_path/$if_path
 		fi
@@ -5317,16 +5329,16 @@ get_network_advanced_data()
 		
 		if [[ -n $if_path ]];then
 			if [[ -r $working_path/speed ]];then
-				speed=$( cat $working_path/speed 3>/dev/null )
+				speed=$( cat $working_path/speed 2>/dev/null )
 			fi
 			if [[ -r $working_path/duplex ]];then
-				duplex=$( cat $working_path/duplex 3>/dev/null )
+				duplex=$( cat $working_path/duplex 2>/dev/null )
 			fi
 			if [[ -r $working_path/address ]];then
-				mac_id=$( cat $working_path/address 3>/dev/null )
+				mac_id=$( cat $working_path/address 2>/dev/null )
 			fi
 			if [[ -r $working_path/operstate ]];then
-				oper_state=$( cat $working_path/operstate 3>/dev/null )
+				oper_state=$( cat $working_path/operstate 2>/dev/null )
 			fi
 		fi
 		
@@ -5353,7 +5365,7 @@ get_networking_usb_data()
 	# if lsusb exists, the file is a symlink, and contains an important usb exclusive file: continue
 	if [[ -n $lsusb_path ]]; then
 		# send error messages of lsusb to /dev/null as it will display a bunch if not a super user
-		lsusb_data="$( $lsusb_path 3>/dev/null )"
+		lsusb_data="$( $lsusb_path 2>/dev/null )"
 		# also, find the contents of usbid in lsusb and print everything after the 7th word on the
 		# corresponding line. Finally, strip out commas as they will change the driver :)
 		if [[ -n $lsusb_data ]];then
@@ -5549,14 +5561,14 @@ get_optical_drive_data()
 	
 	local temp_array='' sys_uevent_path='' proc_cdrom='' link_list=''
 	local separator='' linked='' disk='' item_string='' proc_info_string='' 
-	local dev_disks_links="$( ls /dev/dvd* /dev/cd* /dev/scd* 3>/dev/null  )"
+	local dev_disks_links="$( ls /dev/dvd* /dev/cd* /dev/scd* 2>/dev/null  )"
 	# get the actual disk dev location, first try default which is easier to run, need to preserve line breaks
-	local dev_disks_real="$( echo "$dev_disks_links" | xargs -L 1 readlink 3>/dev/null | sort -u )"
+	local dev_disks_real="$( echo "$dev_disks_links" | xargs -L 1 readlink 2>/dev/null | sort -u )"
 	# Some systems don't support xargs -L so we need to do it manually
 	if [[ -z $dev_disks_real ]];then
 		for linked in $dev_disks_links
 		do
-			disk=$( readlink $linked 3>/dev/null )
+			disk=$( readlink $linked 2>/dev/null )
 			if [[ -n $disk ]];then
 				disk=$( basename $disk ) # puppy shows this as /dev/sr0, not sr0
 				if [[ -z $dev_disks_real || -z $( grep $disk <<< $dev_disks_real ) ]];then
@@ -5592,7 +5604,7 @@ get_optical_drive_data()
 
 	if [[ -n $dev_disks_real ]];then
 		if [[ $B_SHOW_FULL_OPTICAL == 'true' ]];then
-			proc_cdrom="$( cat /proc/sys/dev/cdrom/info 3>/dev/null )"
+			proc_cdrom="$( cat /proc/sys/dev/cdrom/info 2>/dev/null )"
 		fi
 		IFS=$'\n'
 		A_OPTICAL_DRIVE_DATA=( $(
@@ -5618,16 +5630,16 @@ get_optical_drive_data()
 			sys_path=''
 			# this is only for new sd type paths in /sys, otherwise we'll use /proc/ide
 			if [[ -z $( grep '^hd' <<< $disk ) ]];then
-				sys_path=$( ls /sys/devices/pci*/*/host*/target*/*/block/$disk/uevent 3>/dev/null | sed "s|/block/$disk/uevent||" )
+				sys_path=$( ls /sys/devices/pci*/*/host*/target*/*/block/$disk/uevent 2>/dev/null | sed "s|/block/$disk/uevent||" )
 				# no need to test for errors yet, probably other user systems will require some alternate paths though
 				if [[ -n $sys_path ]];then
-					vendor=$( cat $sys_path/vendor 3>/dev/null )
-					model=$( cat $sys_path/model 3>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
-					state=$( cat $sys_path/state 3>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
-					rev_number=$( cat $sys_path/rev 3>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
+					vendor=$( cat $sys_path/vendor 2>/dev/null )
+					model=$( cat $sys_path/model 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
+					state=$( cat $sys_path/state 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
+					rev_number=$( cat $sys_path/rev 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
 				fi
 			elif [[ -e /proc/ide/$disk/model ]];then
-				vendor=$( cat /proc/ide/$disk/model 3>/dev/null )
+				vendor=$( cat /proc/ide/$disk/model 2>/dev/null )
 			fi
 			if [[ -n $vendor ]];then
 				vendor=$( gawk '
@@ -5906,7 +5918,7 @@ get_partition_data_advanced()
 					# handle /dev/root for / id
 					if ( partition == "root" ) {
 						# if this works, great, otherwise, just set this to null values
-						partTemp="'$( readlink /dev/root 3>/dev/null )'"
+						partTemp="'$( readlink /dev/root 2>/dev/null )'"
 						if ( partTemp != "" ) {
 							if ( partTemp ~ /[hsv]d[a-z][0-9]{1,2}/ ) {
 								partition=gensub( /^(\/dev\/)(.+)$/, "\\2", 1, partTemp )
@@ -6186,7 +6198,7 @@ get_raid_data()
 	local mdstat=''
 		
 	if [[ $B_MDSTAT_FILE == 'true' ]];then
-	 	mdstat="$( cat $FILE_MDSTAT 3>/dev/null )"
+	 	mdstat="$( cat $FILE_MDSTAT 2>/dev/null )"
 	fi
 	
 	if [[ -n $mdstat ]];then
@@ -6347,7 +6359,7 @@ get_repo_data()
 	# only the commands in terms of selecting which repos to show.
 	if [[ -d $yum_repo_dir || -f $yum_conf ]];then
 		# older redhats put their yum data in /etc/yum.conf
-		for repo_file in $( ls $yum_repo_dir*.repo $yum_conf 3>/dev/null )
+		for repo_file in $( ls $yum_repo_dir*.repo $yum_conf 2>/dev/null )
 		do
 			repo_data_working="$( gawk -v repoFile=$repo_file '
 			# construct the string for the print function to work with, file name: data
@@ -6841,7 +6853,7 @@ get_sensors_output()
 	local sensors_path=$( type -p sensors ) sensors_data=''
 	
 	if [[ -n $sensors_path ]];then
-		sensors_data="$( $sensors_path 3>/dev/null )"
+		sensors_data="$( $sensors_path 2>/dev/null )"
 		if [[ -n "$sensors_data" ]];then
 			# make sure the file ends in newlines then characters, the newlines are lost in the echo unless
 			# the data ends in some characters
@@ -6855,7 +6867,7 @@ get_shell_data()
 {
 	eval $LOGFS
 
-	local shell_type="$( ps -p $PPID -o comm= 3>/dev/null )"
+	local shell_type="$( ps -p $PPID -o comm= 2>/dev/null )"
 	local shell_version='' 
 	
 	if [[ $B_EXTRA_DATA == 'true' && -n $shell_type ]];then
@@ -6894,13 +6906,13 @@ get_shell_parent()
 	eval $LOGFS
 	local shell_parent='' script_parent=''
 	
-	script_parent=$( ps -fp $PPID --no-headers 3>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
-	shell_parent=$( ps -p $script_parent --no-headers 3>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
+	script_parent=$( ps -fp $PPID --no-headers 2>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
+	shell_parent=$( ps -p $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	# no idea why have to do script_parent action twice in su case, but you do, oh well.
 	if [[ $shell_parent == 'su' ]];then
-		script_parent=$( ps -fp $script_parent --no-headers 3>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
-		script_parent=$( ps -fp $script_parent --no-headers 3>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
-		shell_parent=$( ps -p $script_parent --no-headers 3>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
+		script_parent=$( ps -fp $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		script_parent=$( ps -fp $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		shell_parent=$( ps -p $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	fi
 	echo $shell_parent
 	
@@ -6946,7 +6958,7 @@ get_tty_number()
 {
 	eval $LOGFS
 	
-	local tty_number=$( basename "$( tty 3>/dev/null )" | sed 's/[^0-9]*//g' )
+	local tty_number=$( basename "$( tty 2>/dev/null )" | sed 's/[^0-9]*//g' )
 	
 	echo $tty_number
 	
