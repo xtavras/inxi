@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 13-bsd
+####  Patch Number: 14-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4436,9 +4436,19 @@ get_graphics_res_data()
 			}' <<< "$xdpy_data" )
 		fi
 	else
-		screen_resolution=$( stty -F $( readlink /proc/$PPID/fd/0 ) size | gawk '{
-			print $2"x"$1
-		}' )
+		if [[ $B_PROC_DIR == 'true' ]];then
+			screen_resolution=$( stty -F $( readlink /proc/$PPID/fd/0 ) size | gawk '{
+				print $2"x"$1
+			}' )
+		else
+			if [[ $B_BSD == 'true' ]];then
+				screen_resolution=$( stty -a | gawk -F ';' '
+					/^speed/ {
+						gsub(/[[:space:]](rows|columns)/,"",$0)
+						print $3"x"$2
+					}' )
+			fi
+		fi
 	fi
 	echo "$screen_resolution"
 	log_function_data "screen_resolution: $screen_resolution"
