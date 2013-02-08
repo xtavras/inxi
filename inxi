@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 23-bsd
+####  Patch Number: 24-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7081,7 +7081,7 @@ calculate_multicore_data()
 			print total
 		}' )
 	elif [[ $string_number == '' ]];then
-		string_number='Not Available'
+		string_number='N/A'
 	else
 		# I believe that the above returns 'unknown' by default so no need for extra text
 		string_number="$string_number "
