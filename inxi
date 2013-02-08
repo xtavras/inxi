@@ -3108,7 +3108,7 @@ get_cpu_core_count()
 				cpu_type='SMP'
 			fi
 		fi
-		cpu_physical_count=$cpu_core_count
+		cpu_physical_count=1
 		A_CPU_CORE_DATA=( "$cpu_physical_count" "$cpu_alpha_count" "$cpu_type" "$cpu_core_count" )
 	fi
 	temp_array=${A_CPU_CORE_DATA[@]}
