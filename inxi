@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 33-bsd
+####  Patch Number: 34-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -567,7 +567,6 @@ main()
 	fi
 
 	### Only continue if depends ok
-	SCRIPT_PATH=$( dirname $0 )
 	SCRIPT_VERSION_NUMBER=$( grep -im 1 'version:' $SCRIPT_PATH/$SCRIPT_NAME | gawk '{print $3}' )
 	SCRIPT_PATCH_NUMBER=$( grep -im 1 'Patch Number:' $SCRIPT_PATH/$SCRIPT_NAME | gawk '{print $4}' )
 	
@@ -704,7 +703,7 @@ initialize_script_data()
 	if [[ -n $( grep -i 'bsd' <<< $( uname -s 2>/dev/null ) ) ]];then
 		B_BSD='true'
 	fi
-	
+	SCRIPT_PATH=$( dirname $0 )
 	# now set the script BOOLEANS for files required to run features
 	# note that freebsd has /proc but it's empty
 	if [[ -d "/proc/" && $B_BSD != 'true' ]];then
