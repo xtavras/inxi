@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 16-bsd
+####  Patch Number: 17-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -85,7 +85,7 @@
 ####  -S   For desktop environment, user must be in X and have xprop installed (in X11-utils)
 ########################################################################
 ####  BSD Adjustments
-####  * All uses of sed -i must use -i '' form to be BSD sed compliant
+####  * All uses of sed -i '' must use -i form to be BSD sed compliant
 ####  * Note: BSD sed supports using -r instead of -E for compatibility with gnu sed
 ####  * Gnu grep options can be used if the function component is only run in linux
 ####    These are the options that bsd grep does not support that inxi uses: -m <number> -o 
