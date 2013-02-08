@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 27-bsd
+####  Patch Number: 28-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1449,7 +1449,7 @@ debug_data_collector()
 			echo 'Collecting networking data...'
 			ifconfig &> $debug_data_dir/ifconfig.txt
 			ip addr &> $debug_data_dir/ip-addr.txt
-			if [[ $b_run_xiin == 'true' ]];then
+			if [[ $b_run_xiin == 'true' && $B_BSD != 'true' ]];then
 				echo $Line
 				echo "Running $xiin_file tool now on /sys..."
 				echo "Using Python version:" && python --version
