@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 28-bsd
+####  Patch Number: 29-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1384,18 +1384,19 @@ debug_data_collector()
 		fi
 		echo 'completed'
 		cd $SCRIPT_DATA_DIR
-		if [[ -d $debug_data_dir ]];then
+		if [[ -d $SCRIPT_DATA_DIR/$debug_data_dir ]];then
 			echo 'Deleting previous xiin data directory...'
-			rm -rf $debug_data_dir
+			rm -rf $SCRIPT_DATA_DIR/$debug_data_dir
 		fi
-		mkdir $debug_data_dir
-		if [[ -f $debug_data_dir.tar.gz ]];then
+		mkdir $SCRIPT_DATA_DIR/$debug_data_dir
+		if [[ -f $SCRIPT_DATA_DIR/$debug_data_dir.tar.gz ]];then
 			echo 'Deleting previous tar.gz file...'
-			rm -f $debug_data_dir.tar.gz
+			rm -f $SCRIPT_DATA_DIR/$debug_data_dir.tar.gz
 		fi
 		
 		echo 'Collecting system info: sensors, lsusb, lspci, lspci -v data, plus /proc data'
 		echo 'also checking for dmidecode data: note, you must be root to have dmidecode work.'
+		echo "Data going into: $SCRIPT_DATA_DIR/$debug_data_dir"
 		dmidecode &> $debug_data_dir/dmidecode.txt
 		lsusb &> $debug_data_dir/lsusb.txt
 		lspci &> $debug_data_dir/lspci.txt
@@ -1418,7 +1419,7 @@ debug_data_collector()
 		check_recommends &> $debug_data_dir/check-recommends.txt
 		# first download and verify xiin
 		if [[ $B_UPLOAD_DEBUG_DATA == 'true' || $1 == 'disk' || $1 == 'sys' || $1 == 'all' ]];then
-			touch $debug_data_dir/xiin-error.txt
+			touch $SCRIPT_DATA_DIR/$debug_data_dir/xiin-error.txt
 			echo "Downloading required tree traverse tool $xiin_file..."
 			if [[ -f xiin && ! -f $xiin_file ]];then
 				mv -f xiin $xiin_file
@@ -1481,13 +1482,13 @@ debug_data_collector()
 				touch $debug_data_dir/no-xorg-log-file
 			fi
 			if [[ -e /etc/X11/xorg.conf ]];then
-				cp /etc/X11/xorg.conf $debug_data_dir
+				cp /etc/X11/xorg.conf $SCRIPT_DATA_DIR/$debug_data_dir
 			else
 				touch $debug_data_dir/no-xorg-conf-file
 			fi
 			if [[ -n $( ls /etc/X11/xorg.conf.d/ 2>/dev/null ) ]];then
 				ls /etc/X11/xorg.conf.d &> $debug_data_dir/ls-etc-x11-xorg-conf-d.txt
-				cp /etc/X11/xorg.conf.d $debug_data_dir
+				cp /etc/X11/xorg.conf.d $SCRIPT_DATA_DIR/$debug_data_dir
 			else
 				touch $debug_data_dir/no-xorg-conf-d-files
 			fi
@@ -1523,11 +1524,11 @@ debug_data_collector()
 			cat /etc/mtab &> $debug_data_dir/etc-mtab.txt
 		fi
 		echo 'Creating inxi output file now. This can take a few seconds...'
-		$SCRIPT_NAME -FRploudxxx -c 0 -@ 8 > $debug_data_dir/inxi-FRploudxxx.txt
+		$SCRIPT_NAME -FRploudxxx -c 0 -@ 8 > $SCRIPT_DATA_DIR/$debug_data_dir/inxi-FRploudxxx.txt
 		cp $LOG_FILE $SCRIPT_DATA_DIR/$debug_data_dir
-		if [[ -f $debug_data_dir.tar.gz ]];then
+		if [[ -f $SCRIPT_DATA_DIR/$debug_data_dir.tar.gz ]];then
 			echo "Found and removing previous tar.gz data file: $debug_data_dir.tar.gz"
-			rm -f $debug_data_dir.tar.gz
+			rm -f $SCRIPT_DATA_DIR/$debug_data_dir.tar.gz
 		fi
 		echo 'Creating tar.gz compressed file of this material now. Contents:'
 		echo $Line
