@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 12-bsd
+####  Patch Number: 13-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1402,6 +1402,8 @@ debug_data_collector()
 		lspci &> $debug_data_dir/lspci.txt
 		lspci -n &> $debug_data_dir/lspci-n.txt
 		lspci -v &> $debug_data_dir/lspci-v.txt
+		# bsd tool
+		pciconf -vl &> $debug_data_dir/pciconf-vl.txt
 		ps aux &> $debug_data_dir/ps-aux.txt
 		sensors &> $debug_data_dir/sensors.txt
 		sysctl -a &> $debug_data_dir/sysctl-a.txt
