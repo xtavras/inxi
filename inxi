@@ -6026,19 +6026,21 @@ get_ps_data()
 	# orders in output, pesky lack of support of +rss in old systems
 	case $1 in
 		mem)
-			head_tail='head'
 			if [[ $B_BSD != 'true' ]];then
 				sort_type='ps aux --sort -rss'
+				head_tail='head'
 			else
 				sort_type='ps aux -m'
+				head_tail='head'
 			fi
 			;;
 		cpu)
-			head_tail='tail'
 			if [[ $B_BSD != 'true' ]];then
 				sort_type='ps aux --sort %cpu'
+				head_tail='tail'
 			else
 				sort_type='ps aux -r'
+				head_tail='head'
 			fi
 			;;
 	esac
