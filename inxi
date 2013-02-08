@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 00
+####  Patch Number: 13
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1402,6 +1402,8 @@ debug_data_collector()
 		lspci &> $debug_data_dir/lspci.txt
 		lspci -n &> $debug_data_dir/lspci-n.txt
 		lspci -v &> $debug_data_dir/lspci-v.txt
+		# bsd tool
+		pciconf -vl &> $debug_data_dir/pciconf-vl.txt
 		ps aux &> $debug_data_dir/ps-aux.txt
 		sensors &> $debug_data_dir/sensors.txt
 		sysctl -a &> $debug_data_dir/sysctl-a.txt
@@ -2449,287 +2451,40 @@ print_version_info()
 get_start_client()
 {
 	eval $LOGFS
-	local irc_client_path='' irc_client_path_lower='' non_native_konvi='' i=''
-	local b_non_native_app='false' pppid='' app_working_name='' file_data=''
+	local Irc_Client_Path='' irc_client_path_lower='' non_native_konvi='' i=''
+	local B_Non_Native_App='false' pppid='' App_Working_Name=''
 	local b_qt4_konvi='false' ps_parent=''
 
 	if [[ $B_RUNNING_IN_SHELL == 'true' ]];then
 		IRC_CLIENT='Shell'
 		unset IRC_CLIENT_VERSION
+	# elif [[ -n $PPID ]];then
 	elif [[ -n $PPID && -f /proc/$PPID/exe ]];then
 		if [[ $B_OVERRIDE_FILTER != 'true' ]];then
 			B_OUTPUT_FILTER='true'
 		fi
-		irc_client_path=$( readlink /proc/$PPID/exe )
-		irc_client_path_lower=$( tr '[:upper:]' '[:lower:]' <<< $irc_client_path )
-		app_working_name=$( basename $irc_client_path_lower )
+		Irc_Client_Path=$( readlink /proc/$PPID/exe )
+		# Irc_Client_Path=$( ps -p $PPID | gawk '!/[[:space:]]*PID/ {print $5}'  )
+		# echo $( ps -p $PPID )
+		irc_client_path_lower=$( tr '[:upper:]' '[:lower:]' <<< $Irc_Client_Path )
+		App_Working_Name=$( basename $irc_client_path_lower )
 		# handles the xchat/sh/bash/dash cases, and the konversation/perl cases, where clients
 		# report themselves as perl or unknown shell. IE:  when konversation starts inxi
 		# from inside itself, as a script, the parent is konversation/xchat, not perl/bash etc
 		# note: perl can report as: perl5.10.0, so it needs wildcard handling
-		case $app_working_name in
+		case $App_Working_Name in
 			bash|dash|sh|python*|perl*)	# We want to know who wrapped it into the shell or perl.
-				pppid="$( ps -p $PPID -o ppid --no-headers | sed 's/ //g' )"
+				pppid="$( ps -p $PPID -o ppid --no-headers | sed 's/[[:space:]]//g' )"
 				if [[ -n $pppid && -f /proc/$pppid/exe ]];then
-					irc_client_path="$( readlink /proc/$pppid/exe )"
-					irc_client_path_lower="$( tr '[:upper:]' '[:lower:]' <<< $irc_client_path )"
-					app_working_name=$( basename $irc_client_path_lower )
-					b_non_native_app='true'
+					Irc_Client_Path="$( readlink /proc/$pppid/exe )"
+					irc_client_path_lower="$( tr '[:upper:]' '[:lower:]' <<< $Irc_Client_Path )"
+					App_Working_Name=$( basename $irc_client_path_lower )
+					B_Non_Native_App='true'
 				fi
 				;;
 		esac
-
-		# replacing loose detection with tight detection, bugs will be handled with app names
-		# as they appear.
-		case $app_working_name in
-			# check for shell first
-			bash|dash|sh)
-				unset IRC_CLIENT_VERSION
-				IRC_CLIENT="Shell wrapper"
-				;;
-			# now start on irc clients, alphabetically
-			bitchx)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk '
-				/Version/ {
-					a=tolower($2)
-					gsub(/[()]|bitchx-/,"",a)
-					print a
-					exit
-				}
-				$2 == "version" {
-					a=tolower($3)
-					sub(/bitchx-/,"",a)
-					print a
-					exit
-				}' )"
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="BitchX"
-				;;
-			finch)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="Finch"
-				;;
-			gaim)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				IRC_CLIENT="Gaim"
-				;;
-			hexchat)
-				# the hexchat author decided to make --version/-v return a gtk dialogue box, lol...
-				# so we need to read the actual config file for hexchat. Note that older hexchats
-				# used xchat config file, so test first for default, then legacy. Because it's possible
-				# for this file to be use edited, doing some extra checks here.
-				if [[ -f ~/.config/hexchat/hexchat.conf ]];then
-					file_data="$( cat ~/.config/hexchat/hexchat.conf )"
-				elif [[ -f  ~/.config/hexchat/xchat.conf ]];then
-					file_data="$( cat ~/.config/hexchat/xchat.conf )"
-				fi
-				if [[ -n $file_data ]];then
-					IRC_CLIENT_VERSION=$( gawk '
-					BEGIN {
-						IGNORECASE=1
-						FS="="
-					}
-					/^[[:space:]]*version/ {
-						# get rid of the space if present
-						gsub(/[[:space:]]*/, "", $2 )
-						print $2
-						exit # usually this is the first line, no point in continuing
-					}' <<< "$file_data" )
-					
-					IRC_CLIENT_VERSION=" $IRC_CLIENT_VERSION"
-				else
-					IRC_CLIENT_VERSION=' N/A'
-				fi
-				IRC_CLIENT="HexChat"
-				;;
-			ircii)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $3
-				}' )"
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="ircII"
-				;;
-			irssi-text|irssi)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="Irssi"
-				;;
-			konversation) ## konvi < 1.2 (qt4)
-				# this is necessary to avoid the dcop errors from starting inxi as a /cmd started script
-				if [[ $b_non_native_app == 'true' ]];then  ## true negative is confusing
-					KONVI=2
-				else # if native app
-					KONVI=1
-				fi
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk '
-				/Konversation:/ {
-					for ( i=2; i<=NF; i++ ) {
-						if (i == NF) {
-							print $i
-						}
-						else {
-							printf $i" "
-						}
-					}
-					exit
-				}' )"
-
-				T=($IRC_CLIENT_VERSION)
-				if [[ ${T[0]} == *+* ]];then
-					# < Sho_> locsmif: The version numbers of SVN versions look like this:
-					#         "<version number of last release>+ #<build number", i.e. "1.0+ #3177" ...
-					#         for releases we remove the + and build number, i.e. "1.0" or soon "1.0.1"
-					IRC_CLIENT_VERSION=" CVS $IRC_CLIENT_VERSION"
-					T2="${T[0]/+/}"
-				else
-					IRC_CLIENT_VERSION=" ${T[0]}"
-					T2="${T[0]}"
-				fi
-				# Remove any dots except the first, and make sure there are no trailing zeroes,
-				T2=$( echo "$T2" | gawk '{
-					sub(/\./, " ")
-					gsub(/\./, "")
-					sub(/ /, ".")
-					printf("%g\n", $0)
-				}' )
-				# Since Konversation 1.0, the DCOP interface has changed a bit: dcop "$DCPORT" Konversation ..etc
-				# becomes : dcop "$DCPORT" default ... or dcop "$DCPORT" irc ..etc. So we check for versions smaller
-				# than 1 and change the DCOP parameter/object accordingly.
-				if [[ ${T2} -lt 1 ]];then
-					DCOPOBJ="Konversation"
-				fi
-				IRC_CLIENT="Konversation"
-				;;
-			kopete)
-				IRC_CLIENT_VERSION=" $( kopete -v | gawk '
-				/Kopete:/ {
-					print $2
-					exit
-				}' )"
-				IRC_CLIENT="Kopete"
-				;;
-			kvirc)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v 2>&1 | gawk '{
-					for ( i=2; i<=NF; i++) {
-				 		if ( i == NF ) {
-				 			print $i
-				 		}
-				 		else {
-				 			printf $i" "
-				 		}
-				 	}
-				 	exit
-				 }' )"
-				IRC_CLIENT="KVIrc"
-				;;
-			pidgin)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				IRC_CLIENT="Pidgin"
-				;;
-			quassel*)
-				# sample: quassel -v
-				# Qt: 4.5.0
-				# KDE: 4.2.65 (KDE 4.2.65 (KDE 4.3 >= 20090226))
-				# Quassel IRC: v0.4.0 [+60] (git-22effe5)
-				# note: early < 0.4.1 quassels do not have -v
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v 2>/dev/null | gawk -F ': ' '
-				BEGIN {
-					IGNORECASE=1
-					clientVersion=""
-				}
-				/Quassel IRC/ {
-					clientVersion = $2
-				}
-				END {
-					# this handles pre 0.4.1 cases with no -v
-					if ( clientVersion == "" ) {
-						clientVersion = "(pre v0.4.1)"
-					}
-					print clientVersion
-				}' )"
-				# now handle primary, client, and core. quasselcore doesn't actually
-				# handle scripts with exec, but it's here just to be complete
-				case $app_working_name in
-					quassel)
-						IRC_CLIENT="Quassel [M]"
-						;;
-					quasselclient)
-						IRC_CLIENT="Quassel"
-						;;
-					quasselcore)
-						IRC_CLIENT="Quassel (core)"
-						;;
-				esac
-				;;
-			weechat-curses)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v ) "
-				B_CONSOLE_IRC='true'
-				IRC_CLIENT="Weechat"
-				;;
-			xchat-gnome)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				IRC_CLIENT="X-Chat-Gnome"
-				;;
-			xchat)
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v | gawk 'NR == 1 {
-					print $2
-				}' )"
-				IRC_CLIENT="X-Chat"
-				;;
-			# then do some perl type searches, do this last since it's a wildcard search
-			perl*|ksirc|dsirc)
-				unset IRC_CLIENT_VERSION
-				# KSirc is one of the possibilities now. KSirc is a wrapper around dsirc, a perl client
-				get_cmdline $PPID
-				for (( i=0; i <= $CMDL_MAX; i++ ))
-				do
-					case ${A_CMDL[i]} in
-						*dsirc*)
-						IRC_CLIENT="KSirc"
-						# Dynamic runpath detection is too complex with KSirc, because KSirc is started from
-						# kdeinit. /proc/<pid of the grandparent of this process>/exe is a link to /usr/bin/kdeinit
-						# with one parameter which contains parameters separated by spaces(??), first param being KSirc.
-						# Then, KSirc runs dsirc as the perl irc script and wraps around it. When /exec is executed,
-						# dsirc is the program that runs inxi, therefore that is the parent process that we see.
-						# You can imagine how hosed I am if I try to make inxi find out dynamically with which path
-						# KSirc was run by browsing up the process tree in /proc. That alone is straightjacket material.
-						# (KSirc sucks anyway ;)
-						IRC_CLIENT_VERSION=" $( ksirc -v | gawk '
-						/KSirc:/ {
-							print $2
-							exit
-						}' )"
-						break
-						;;
-					esac
-				done
-				B_CONSOLE_IRC='true'
-				set_perl_python_konvi "$app_working_name"
-				;;
-			python*)
-				# B_CONSOLE_IRC='true' # are there even any python type console irc clients? check.
-				set_perl_python_konvi "$app_working_name"
-				;;
-			# then unset, set unknown data
-			*)	
-				IRC_CLIENT="Unknown : ${irc_client_path##*/}"
-				unset IRC_CLIENT_VERSION
-				;;
-		esac
-		if [[ $SHOW_IRC -lt 2 ]];then
-			unset IRC_CLIENT_VERSION
-		fi
+		# sets version number if it can find it
+		get_irc_client_version
 	else
 		## lets look to see if qt4_konvi is the parent.  There is no direct way to tell, so lets infer it.
 		## because $PPID does not work with qt4_konvi, the above case does not work
@@ -2755,20 +2510,288 @@ get_start_client()
 		else
 			# this should handle certain cases where it's ssh or some other startup tool
 			# that falls through all the other tests
-			ps_parent=$(ps -p $PPID --no-headers 2>/dev/null | gawk '{print $NF}' )
-			if [[ -n $ps_parent ]];then
-				IRC_CLIENT=$ps_parent
+			if [[ $B_BSD != 'true' ]];then
+				App_Working_Name=$(ps -p $PPID --no-headers 2>/dev/null | gawk '{print $NF}' )
+			else
+				# without --no-headers we need the second line
+				App_Working_Name=$(ps -p $PPID 2>/dev/null | gawk '/^[0-9]+/ {print $5}' )
+			fi
+			
+			if [[ -n $App_Working_Name ]];then
+				Irc_Client_Path=$App_Working_Name
+				B_Non_Native_App='false'
+				get_irc_client_version
+				if [[ -z $IRC_CLIENT ]];then
+					IRC_CLIENT=$App_Working_Name
+				fi
 			else
 				IRC_CLIENT="PPID=\"$PPID\" - empty?"
+				unset IRC_CLIENT_VERSION
 			fi
-			unset IRC_CLIENT_VERSION
 		fi
 	fi
 
 	log_function_data "IRC_CLIENT: $IRC_CLIENT :: IRC_CLIENT_VERSION: $IRC_CLIENT_VERSION :: PPID: $PPID"
 	eval $LOGFE
 }
-# args: $1 - app_working_name
+# note: all variables set in caller so no need to pass
+get_irc_client_version()
+{
+	local file_data=''
+	# replacing loose detection with tight detection, bugs will be handled with app names
+	# as they appear.
+	case $App_Working_Name in
+		# check for shell first
+		bash|dash|sh)
+			unset IRC_CLIENT_VERSION
+			IRC_CLIENT="Shell wrapper"
+			;;
+		# now start on irc clients, alphabetically
+		bitchx)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk '
+			/Version/ {
+				a=tolower($2)
+				gsub(/[()]|bitchx-/,"",a)
+				print a
+				exit
+			}
+			$2 == "version" {
+				a=tolower($3)
+				sub(/bitchx-/,"",a)
+				print a
+				exit
+			}' )"
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="BitchX"
+			;;
+		finch)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="Finch"
+			;;
+		gaim)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			IRC_CLIENT="Gaim"
+			;;
+		hexchat)
+			# the hexchat author decided to make --version/-v return a gtk dialogue box, lol...
+			# so we need to read the actual config file for hexchat. Note that older hexchats
+			# used xchat config file, so test first for default, then legacy. Because it's possible
+			# for this file to be use edited, doing some extra checks here.
+			if [[ -f ~/.config/hexchat/hexchat.conf ]];then
+				file_data="$( cat ~/.config/hexchat/hexchat.conf )"
+			elif [[ -f  ~/.config/hexchat/xchat.conf ]];then
+				file_data="$( cat ~/.config/hexchat/xchat.conf )"
+			fi
+			if [[ -n $file_data ]];then
+				IRC_CLIENT_VERSION=$( gawk '
+				BEGIN {
+					IGNORECASE=1
+					FS="="
+				}
+				/^[[:space:]]*version/ {
+					# get rid of the space if present
+					gsub(/[[:space:]]*/, "", $2 )
+					print $2
+					exit # usually this is the first line, no point in continuing
+				}' <<< "$file_data" )
+				
+				IRC_CLIENT_VERSION=" $IRC_CLIENT_VERSION"
+			else
+				IRC_CLIENT_VERSION=' N/A'
+			fi
+			IRC_CLIENT="HexChat"
+			;;
+		ircii)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $3
+			}' )"
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="ircII"
+			;;
+		irssi-text|irssi)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="Irssi"
+			;;
+		konversation) ## konvi < 1.2 (qt4)
+			# this is necessary to avoid the dcop errors from starting inxi as a /cmd started script
+			if [[ $B_Non_Native_App == 'true' ]];then  ## true negative is confusing
+				KONVI=2
+			else # if native app
+				KONVI=1
+			fi
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk '
+			/Konversation:/ {
+				for ( i=2; i<=NF; i++ ) {
+					if (i == NF) {
+						print $i
+					}
+					else {
+						printf $i" "
+					}
+				}
+				exit
+			}' )"
+
+			T=($IRC_CLIENT_VERSION)
+			if [[ ${T[0]} == *+* ]];then
+				# < Sho_> locsmif: The version numbers of SVN versions look like this:
+				#         "<version number of last release>+ #<build number", i.e. "1.0+ #3177" ...
+				#         for releases we remove the + and build number, i.e. "1.0" or soon "1.0.1"
+				IRC_CLIENT_VERSION=" CVS $IRC_CLIENT_VERSION"
+				T2="${T[0]/+/}"
+			else
+				IRC_CLIENT_VERSION=" ${T[0]}"
+				T2="${T[0]}"
+			fi
+			# Remove any dots except the first, and make sure there are no trailing zeroes,
+			T2=$( echo "$T2" | gawk '{
+				sub(/\./, " ")
+				gsub(/\./, "")
+				sub(/ /, ".")
+				printf("%g\n", $0)
+			}' )
+			# Since Konversation 1.0, the DCOP interface has changed a bit: dcop "$DCPORT" Konversation ..etc
+			# becomes : dcop "$DCPORT" default ... or dcop "$DCPORT" irc ..etc. So we check for versions smaller
+			# than 1 and change the DCOP parameter/object accordingly.
+			if [[ ${T2} -lt 1 ]];then
+				DCOPOBJ="Konversation"
+			fi
+			IRC_CLIENT="Konversation"
+			;;
+		kopete)
+			IRC_CLIENT_VERSION=" $( kopete -v | gawk '
+			/Kopete:/ {
+				print $2
+				exit
+			}' )"
+			IRC_CLIENT="Kopete"
+			;;
+		kvirc)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v 2>&1 | gawk '{
+				for ( i=2; i<=NF; i++) {
+					if ( i == NF ) {
+						print $i
+					}
+					else {
+						printf $i" "
+					}
+				}
+				exit
+				}' )"
+			IRC_CLIENT="KVIrc"
+			;;
+		pidgin)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			IRC_CLIENT="Pidgin"
+			;;
+		quassel*)
+			# sample: quassel -v
+			# Qt: 4.5.0
+			# KDE: 4.2.65 (KDE 4.2.65 (KDE 4.3 >= 20090226))
+			# Quassel IRC: v0.4.0 [+60] (git-22effe5)
+			# note: early < 0.4.1 quassels do not have -v
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v 2>/dev/null | gawk -F ': ' '
+			BEGIN {
+				IGNORECASE=1
+				clientVersion=""
+			}
+			/Quassel IRC/ {
+				clientVersion = $2
+			}
+			END {
+				# this handles pre 0.4.1 cases with no -v
+				if ( clientVersion == "" ) {
+					clientVersion = "(pre v0.4.1)"
+				}
+				print clientVersion
+			}' )"
+			# now handle primary, client, and core. quasselcore doesn't actually
+			# handle scripts with exec, but it's here just to be complete
+			case $App_Working_Name in
+				quassel)
+					IRC_CLIENT="Quassel [M]"
+					;;
+				quasselclient)
+					IRC_CLIENT="Quassel"
+					;;
+				quasselcore)
+					IRC_CLIENT="Quassel (core)"
+					;;
+			esac
+			;;
+		weechat-curses)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v ) "
+			B_CONSOLE_IRC='true'
+			IRC_CLIENT="Weechat"
+			;;
+		xchat-gnome)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			IRC_CLIENT="X-Chat-Gnome"
+			;;
+		xchat)
+			IRC_CLIENT_VERSION=" $( $Irc_Client_Path -v | gawk 'NR == 1 {
+				print $2
+			}' )"
+			IRC_CLIENT="X-Chat"
+			;;
+		# then do some perl type searches, do this last since it's a wildcard search
+		perl*|ksirc|dsirc)
+			unset IRC_CLIENT_VERSION
+			# KSirc is one of the possibilities now. KSirc is a wrapper around dsirc, a perl client
+			get_cmdline $PPID
+			for (( i=0; i <= $CMDL_MAX; i++ ))
+			do
+				case ${A_CMDL[i]} in
+					*dsirc*)
+					IRC_CLIENT="KSirc"
+					# Dynamic runpath detection is too complex with KSirc, because KSirc is started from
+					# kdeinit. /proc/<pid of the grandparent of this process>/exe is a link to /usr/bin/kdeinit
+					# with one parameter which contains parameters separated by spaces(??), first param being KSirc.
+					# Then, KSirc runs dsirc as the perl irc script and wraps around it. When /exec is executed,
+					# dsirc is the program that runs inxi, therefore that is the parent process that we see.
+					# You can imagine how hosed I am if I try to make inxi find out dynamically with which path
+					# KSirc was run by browsing up the process tree in /proc. That alone is straightjacket material.
+					# (KSirc sucks anyway ;)
+					IRC_CLIENT_VERSION=" $( ksirc -v | gawk '
+					/KSirc:/ {
+						print $2
+						exit
+					}' )"
+					break
+					;;
+				esac
+			done
+			B_CONSOLE_IRC='true'
+			set_perl_python_konvi "$App_Working_Name"
+			;;
+		python*)
+			# B_CONSOLE_IRC='true' # are there even any python type console irc clients? check.
+			set_perl_python_konvi "$App_Working_Name"
+			;;
+		# then unset, set unknown data
+		*)	
+			IRC_CLIENT="Unknown : ${Irc_Client_Path##*/}"
+			unset IRC_CLIENT_VERSION
+			;;
+	esac
+	if [[ $SHOW_IRC -lt 2 ]];then
+		unset IRC_CLIENT_VERSION
+	fi
+}
+
+# args: $1 - App_Working_Name
 set_perl_python_konvi()
 {
 	if [[ -z $IRC_CLIENT_VERSION ]];then
@@ -4453,7 +4476,7 @@ get_graphics_glx_data()
 get_graphics_res_data()
 {
 	eval $LOGFS
-	local screen_resolution='' xdpy_data='' screens_count=0
+	local screen_resolution='' xdpy_data='' screens_count=0 tty_session=''
 
 	if [[ $B_SHOW_X_DATA == 'true' && $B_ROOT != 'true' ]];then
 		# Added the two ?'s , because the resolution is now reported without spaces around the 'x', as in
@@ -4495,20 +4518,27 @@ get_graphics_res_data()
 			}' <<< "$xdpy_data" )
 		fi
 	else
-		if [[ $B_PROC_DIR == 'true' ]];then
+		if [[ $B_PROC_DIR == 'true' && $B_BSD != 'true' ]];then
 			screen_resolution=$( stty -F $( readlink /proc/$PPID/fd/0 ) size | gawk '{
 				print $2"x"$1
 			}' )
 		# note: this works fine for all systems but keeping the above for now since
 		# the above is probably more accurate for linux systems.
 		else
-			screen_resolution=$( stty -a | gawk -F ';' '
-				/^speed/ {
-					gsub(/[[:space:]]*(rows|columns)[[:space:]]*/,"",$0)
-					gsub(/[[:space:]]*/,"",$2)
-					gsub(/[[:space:]]*/,"",$3)
-					print $3"x"$2
-				}' )
+			if [[ $B_CONSOLE_IRC != 'true' ]];then
+				screen_resolution=$( stty -a | gawk -F ';' '
+					/^speed/ {
+						gsub(/[[:space:]]*(rows|columns)[[:space:]]*/,"",$0)
+						gsub(/[[:space:]]*/,"",$2)
+						gsub(/[[:space:]]*/,"",$3)
+						print $3"x"$2
+					}' )
+			else
+				if [[ $B_BSD == 'true' ]];then
+					tty_session=$( get_tty_console_irc )
+					screen_resolution="$( tput cols -T $tty_session )x$( tput lines -T $tty_session )"
+				fi
+			fi
 		fi
 	fi
 	echo "$screen_resolution"
