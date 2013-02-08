@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 35-bsd
+####  Patch Number: 36-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1371,6 +1371,7 @@ debug_data_collector()
 	local debug_data_dir="inxi-$(tr ' ' '-' <<< $HOSTNAME | tr '[A-Z]' '[a-z]' )-$1-$(date +%Y%m%d)" 
 	local completed_gz_file='' xiin_file='xiin.py' ftp_upload='ftp.techpatterns.com/incoming'
 	local Line='-------------------------'
+	local startDir=$(pwd)
 	
 	if [[ $B_RUNNING_IN_SHELL == 'true' ]];then
 		if [[ -n $ALTERNATE_FTP ]];then
@@ -1523,12 +1524,15 @@ debug_data_collector()
 			cat /etc/mtab &> $debug_data_dir/etc-mtab.txt
 		fi
 		echo 'Creating inxi output file now. This can take a few seconds...'
+		echo "Starting $SCRIPT_NAME from: $startDir"
+		cd $startDir
 		$SCRIPT_PATH/$SCRIPT_NAME -FRploudxxx -c 0 -@ 8 > $SCRIPT_DATA_DIR/$debug_data_dir/inxi-FRploudxxx.txt
 		cp $LOG_FILE $SCRIPT_DATA_DIR/$debug_data_dir
 		if [[ -f $SCRIPT_DATA_DIR/$debug_data_dir.tar.gz ]];then
 			echo "Found and removing previous tar.gz data file: $debug_data_dir.tar.gz"
 			rm -f $SCRIPT_DATA_DIR/$debug_data_dir.tar.gz
 		fi
+		cd $SCRIPT_DATA_DIR
 		echo 'Creating tar.gz compressed file of this material now. Contents:'
 		echo $Line
 		tar -cvzf $debug_data_dir.tar.gz $debug_data_dir
