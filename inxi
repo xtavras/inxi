@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 20-bsd
+####  Patch Number: 21-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3101,7 +3101,7 @@ get_cpu_core_count()
 		# A_CPU_CORE_DATA=( "$cpu_core_count" "$cpu_alpha_count Core$cpu_type" )
 		A_CPU_CORE_DATA=( "$cpu_physical_count" "$cpu_alpha_count" "$cpu_type" "$cpu_core_count" )
 	else
-		cpu_core_count=$( grep '^hw.ncpu' <<< "$Sysctl_a_Data" | gawk '[print $NF}' )
+		cpu_core_count=$( grep '^hw.ncpu' <<< "$Sysctl_a_Data" | gawk '{print $NF}' )
 		if [[ -n $( grep -E '^[0-9]+$' <<< "$cpu_core_count" ) ]];then
 			cpu_alpha_count=$( get_cpu_core_count_alpha "$cpu_core_count" )
 			if [[ $cpu_core_count -gt 1 ]];then
