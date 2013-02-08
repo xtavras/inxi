@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 18-bsd
+####  Patch Number: 19-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6092,7 +6092,7 @@ get_ps_data()
 	# make the array ordered highest to lowest so output looks the way we expect it to
 	# this isn't necessary for -rss, and we can't make %cpu ordered the other way, so
 	# need to reverse it here. -rss is used because on older systems +rss is not supported
-	if [[ $1 == 'cpu' ]];then
+	if [[ $1 == 'cpu' && $B_BSD != 'true' ]];then
 		array_length=${#A_PS_DATA[@]}; 
 		while (( $i < $array_length/2 ))
 		do 
