@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 24-bsd
+####  Patch Number: 25-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3267,6 +3267,7 @@ get_cpu_data()
 		/^hw.model/ {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
+			sub(/[a-z]+-core/, "", $NF )
 			gsub(/^ +| +$/, "", $NF)
 			gsub(/ [ \t]+/, " ", $NF)
 			cpuModel=$NF
