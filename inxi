@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 03-bsd
+####  Patch Number: 04-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2456,11 +2456,13 @@ get_start_client()
 	if [[ $B_RUNNING_IN_SHELL == 'true' ]];then
 		IRC_CLIENT='Shell'
 		unset IRC_CLIENT_VERSION
-	elif [[ -n $PPID && -f /proc/$PPID/exe ]];then
+	elif [[ -n $PPID ]];then
+	# elif [[ -n $PPID && -f /proc/$PPID/exe ]];then
 		if [[ $B_OVERRIDE_FILTER != 'true' ]];then
 			B_OUTPUT_FILTER='true'
 		fi
-		irc_client_path=$( readlink /proc/$PPID/exe )
+		# irc_client_path=$( readlink /proc/$PPID/exe )
+		irc_client_path=$( ps -p $PPID | gawk '!/[[:space:]]*PID/ {print $6}'  )
 		irc_client_path_lower=$( tr '[:upper:]' '[:lower:]' <<< $irc_client_path )
 		app_working_name=$( basename $irc_client_path_lower )
 		# handles the xchat/sh/bash/dash cases, and the konversation/perl cases, where clients
@@ -2469,7 +2471,7 @@ get_start_client()
 		# note: perl can report as: perl5.10.0, so it needs wildcard handling
 		case $app_working_name in
 			bash|dash|sh|python*|perl*)	# We want to know who wrapped it into the shell or perl.
-				pppid="$( ps -p $PPID -o ppid --no-headers | sed 's/ //g' )"
+				pppid="$( ps -p $PPID -o ppid --no-headers | sed 's/[[:space:]]//g' )"
 				if [[ -n $pppid && -f /proc/$pppid/exe ]];then
 					irc_client_path="$( readlink /proc/$pppid/exe )"
 					irc_client_path_lower="$( tr '[:upper:]' '[:lower:]' <<< $irc_client_path )"
