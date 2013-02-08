@@ -1,9 +1,9 @@
 #!/usr/local/bin/bash
 ########################################################################
 ####  Script Name: inxi
-####  version: 1.8.34
+####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 36-bsd
+####  Patch Number: 00-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -700,7 +700,7 @@ initialize_script_data()
 {
 	eval $LOGFS
 	
-	if [[ -n $( grep -i 'bsd' <<< $( uname -s 2>/dev/null ) ) ]];then
+	if [[ -n $( grep -i 'bsd' <<< $( uname -s 3>/dev/null ) ) ]];then
 		B_BSD='true'
 	fi
 	SCRIPT_PATH=$( dirname $0 )
@@ -718,7 +718,7 @@ initialize_script_data()
 	
 	# found a case of battery existing but having nothing in it on desktop mobo
 	# not all laptops show the first, 
-	if [[ -n $( ls /proc/acpi/battery 2>/dev/null ) ]];then
+	if [[ -n $( ls /proc/acpi/battery 3>/dev/null ) ]];then
 		B_PORTABLE='true'
 	fi
 	if [[ -e $FILE_CPUINFO ]]; then
@@ -775,7 +775,7 @@ initialize_script_data()
 	else
 		# Detect location of the Xorg log file
 		if [[ -n $( type -p xset ) ]]; then
-			FILE_XORG_LOG=$( xset q 2>/dev/null | grep -i 'Log file' | gawk '{print $3}')
+			FILE_XORG_LOG=$( xset q 3>/dev/null | grep -i 'Log file' | gawk '{print $3}')
 			if [[ -e $FILE_XORG_LOG ]];then
 				B_XORG_LOG='true'
 			fi
@@ -1486,7 +1486,7 @@ debug_data_collector()
 			else
 				touch $debug_data_dir/no-xorg-conf-file
 			fi
-			if [[ -n $( ls /etc/X11/xorg.conf.d/ 2>/dev/null ) ]];then
+			if [[ -n $( ls /etc/X11/xorg.conf.d/ 3>/dev/null ) ]];then
 				ls /etc/X11/xorg.conf.d &> $debug_data_dir/ls-etc-x11-xorg-conf-d.txt
 				cp /etc/X11/xorg.conf.d $SCRIPT_DATA_DIR/$debug_data_dir
 			else
@@ -2217,7 +2217,7 @@ get_parameters()
 	## this must occur here so you can use the debugging flag to show errors
 	## Reroute all error messages to the bitbucket (if not debugging)
 	if [[ $DEBUG -eq 0 ]];then
-		exec 2>/dev/null
+		exec 3>/dev/null
 	fi
 	#((DEBUG)) && exec 2>&1 # This is for debugging konversation
 
@@ -2641,7 +2641,7 @@ get_start_client()
 				# KDE: 4.2.65 (KDE 4.2.65 (KDE 4.3 >= 20090226))
 				# Quassel IRC: v0.4.0 [+60] (git-22effe5)
 				# note: early < 0.4.1 quassels do not have -v
-				IRC_CLIENT_VERSION=" $( $irc_client_path -v 2>/dev/null | gawk -F ': ' '
+				IRC_CLIENT_VERSION=" $( $irc_client_path -v 3>/dev/null | gawk -F ': ' '
 				BEGIN {
 					IGNORECASE=1
 					clientVersion=""
@@ -2755,7 +2755,7 @@ get_start_client()
 		else
 			# this should handle certain cases where it's ssh or some other startup tool
 			# that falls through all the other tests
-			ps_parent=$(ps -p $PPID --no-headers 2>/dev/null | gawk '{print $NF}' )
+			ps_parent=$(ps -p $PPID --no-headers 3>/dev/null | gawk '{print $NF}' )
 			if [[ -n $ps_parent ]];then
 				IRC_CLIENT=$ps_parent
 			else
@@ -2775,7 +2775,7 @@ set_perl_python_konvi()
 		# this is a hack to try to show konversation if inxi is running but started via /cmd
 		if [[ -n $( ps aux | grep -i 'konversation' | grep -v 'grep' ) && $B_RUNNING_IN_X == 'true' ]];then
 			IRC_CLIENT='Konversation'
-			IRC_CLIENT_VERSION=" $( konversation --version 2>/dev/null | gawk '/^Konversation/ {print $2}' )"
+			IRC_CLIENT_VERSION=" $( konversation --version 3>/dev/null | gawk '/^Konversation/ {print $2}' )"
 			B_CONSOLE_IRC='false'
 		else
 			IRC_CLIENT="Unknown $1 client"
@@ -2791,9 +2791,9 @@ is_this_qt4_konvi()
 	local konvi_qt4_client='' konvi_dbus_exist='' konvi_pid='' konvi_home_dir='' 
 	local konvi='' konvi_qt4_ver='' b_is_qt4=''
 	
-	# fringe cases can throw error, always if untested app, use 2>/dev/null after testing if present
+	# fringe cases can throw error, always if untested app, use 3>/dev/null after testing if present
 	if [[ $B_QDBUS == 'true' ]];then
-		konvi_dbus_exist=$( qdbus 2>/dev/null | grep "org.kde.konversation" )
+		konvi_dbus_exist=$( qdbus 3>/dev/null | grep "org.kde.konversation" )
 	fi
 	# sabayon uses /usr/share/apps/konversation as path
 	if [[ -n $konvi_dbus_exist ]] && [[ -e /usr/share/kde4/apps/konversation || -e  /usr/share/apps/konversation ]]; then
@@ -2995,7 +2995,7 @@ get_audio_usb_data()
 	IFS=$'\n'
 	lsusb_path=$( type -p lsusb )
 	if [[ -n $lsusb_path ]];then
-		lsusb_data=$( $lsusb_path 2>/dev/null )
+		lsusb_data=$( $lsusb_path 3>/dev/null )
 	fi
 	log_function_data 'raw' "usb_data:\n$lsusb_data"
 	if [[ -n $lsusb_data ]];then
@@ -3440,7 +3440,7 @@ get_desktop_environment()
 	local version='' version_data='' toolkit=''
 	
 	if [[ -n $( type -p xprop ) ]];then
-		xprop_root="$( xprop -root 2>/dev/null )"
+		xprop_root="$( xprop -root 3>/dev/null )"
 	fi
 
 	# note that cinnamon split from gnome, and and can now be id'ed via xprop,
@@ -3486,7 +3486,7 @@ get_desktop_environment()
 		desktop_environment="Gnome"
 	# assume 5 will id the same, why not, no need to update in future
 	elif [[ $KDE_SESSION_VERSION == '5' ]]; then
-		version_data=$( kded5 --version 2>/dev/null )
+		version_data=$( kded5 --version 3>/dev/null )
 		version=$( grep -si '^KDE Development Platform:' <<< "$version_data" | gawk '{print $4}' )
 		if [[ -z $version ]];then
 			version='5'
@@ -3499,7 +3499,7 @@ get_desktop_environment()
 		fi
 		desktop_environment="KDE"
 	elif [[ $KDE_SESSION_VERSION == '4' ]]; then
-		version_data=$( kded4 --version 2>/dev/null )
+		version_data=$( kded4 --version 3>/dev/null )
 		version=$( grep -si '^KDE Development Platform:' <<< "$version_data" | gawk '{print $4}' )
 		if [[ -z $version ]];then
 			version='4'
@@ -3514,7 +3514,7 @@ get_desktop_environment()
 	# KDE_FULL_SESSION property is only available since KDE 3.5.5.
 	# src: http://humanreadable.nfshost.com/files/startkde
 	elif [[ $KDE_FULL_SESSION == 'true' ]]; then
-		version_data=$( kded --version 2>/dev/null )
+		version_data=$( kded --version 3>/dev/null )
 		version=$( grep -si '^KDE:' <<< "$version_data" | gawk '{print $2}' )
 		# version=$( get_de_app_version 'kded' '^KDE:' '2' )
 		if [[ -z $version ]];then
@@ -3672,11 +3672,11 @@ get_de_app_version()
 		# quick debian/buntu hack until I find a universal way to get version for these
 		csh|dash)
 			if [[ -n $( type -p dpkg ) ]];then
-				version_data="$( dpkg -l $1 2>/dev/null )"
+				version_data="$( dpkg -l $1 3>/dev/null )"
 			fi
 			;;
 		*)
-			version_data="$( $1 $get_version 2>/dev/null )"
+			version_data="$( $1 $get_version 3>/dev/null )"
 			;;
 	esac
 	
@@ -3728,12 +3728,12 @@ get_de_gtk_data()
 	local toolkit=''
 	
 	# this is a hack, and has to be changed with every toolkit version change
-	toolkit=$( pkg-config --modversion gtk+-4.0 2>/dev/null )
+	toolkit=$( pkg-config --modversion gtk+-4.0 3>/dev/null )
 	if [[ -z $toolkit ]];then
-		toolkit=$( pkg-config --modversion gtk+-3.0 2>/dev/null )
+		toolkit=$( pkg-config --modversion gtk+-3.0 3>/dev/null )
 	fi
 	if [[ -z $toolkit ]];then
-		toolkit=$( pkg-config --modversion gtk+-2.0 2>/dev/null )
+		toolkit=$( pkg-config --modversion gtk+-2.0 3>/dev/null )
 	fi
 	echo $toolkit
 	
@@ -4075,13 +4075,13 @@ get_dmidecode_data()
 	local dmidecodePath=''
 
 	if [[ $B_DMIDECODE_SET != 'true' ]];then
-		dmidecodePath=$( type -p dmidecode 2>/dev/null )
+		dmidecodePath=$( type -p dmidecode 3>/dev/null )
 		if [[ -n $dmidecodePath ]];then
 			# note stripping out these lines: Handle 0x0016, DMI type 17, 27 bytes
 			# but NOT deleting them, in case the dmidecode data is missing empty lines which will be
 			# used to separate results. Then we remove the doubled empty lines to keep it clean and
 			# strip out all the stuff we don't want to see in the results.
-			DMIDECODE_DATA="$( $dmidecodePath 2>/dev/null \
+			DMIDECODE_DATA="$( $dmidecodePath 3>/dev/null \
 			| gawk -F ':' '
 			BEGIN {
 				IGNORECASE=1
@@ -4149,7 +4149,7 @@ N
 get_gcc_kernel_version()
 {
 	# note that we use gawk to get the last part because beta, alpha, git versions can be non-numeric
-	local gccVersion=$( grep -Eio 'gcc[[:space:]]*version[[:space:]]*([^ \t]*)' /proc/version 2>/dev/null | gawk '{print $3}' )
+	local gccVersion=$( grep -Eio 'gcc[[:space:]]*version[[:space:]]*([^ \t]*)' /proc/version 3>/dev/null | gawk '{print $3}' )
 	echo $gccVersion
 }
 
@@ -4158,7 +4158,7 @@ get_gcc_system_version()
 	eval $LOGFS
 	local separator='' gcc_installed='' gcc_list='' gcc_others='' temp_array=''
 	local gcc_version=$( 
-	gcc --version 2>/dev/null | sed -r 's/\([^\)]*\)//g' | gawk '
+	gcc --version 3>/dev/null | sed -r 's/\([^\)]*\)//g' | gawk '
 	BEGIN {
 		IGNORECASE=1
 	}
@@ -4170,7 +4170,7 @@ get_gcc_system_version()
 
 	# can't use xargs -L basename because not all systems support thats
 	if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-		gcc_others=$( ls /usr/bin/gcc-* 2>/dev/null )
+		gcc_others=$( ls /usr/bin/gcc-* 3>/dev/null )
 		if [[ -n $gcc_others ]];then
 			for item in $gcc_others
 			do
@@ -4791,7 +4791,7 @@ get_hard_drive_data_advanced()
 	if [[ -n $( grep -E 'sd[a-z]' <<< ${A_HDD_DATA[@]} ) ]];then
 		# first pack the main ls variable so we don't have to keep using ls /dev...
 		# not all systems have /dev/disk/by-id
-		ls_disk_by_id="$( ls -l /dev/disk/by-id 2>/dev/null )"
+		ls_disk_by_id="$( ls -l /dev/disk/by-id 3>/dev/null )"
 		for (( i=0; i < ${#A_HDD_DATA[@]} - 1; i++ ))
 		do
 			if [[ -n $( grep -E '^sd[a-z]' <<< ${A_HDD_DATA[$i]} ) ]];then
@@ -5097,7 +5097,7 @@ get_module_version_number()
 	fi
 
 	if [[ -n $MODINFO_PATH ]];then
-		module_version=$( $MODINFO_PATH $1 2>/dev/null | gawk '
+		module_version=$( $MODINFO_PATH $1 3>/dev/null | gawk '
 		BEGIN {
 			IGNORECASE=1
 		}
@@ -5236,12 +5236,12 @@ get_network_advanced_data()
 			working_path="/sys/bus/pci/devices/0000:${a_network_adv_working[4]}"
 			# now we want the real one, that xiin also displays, without symbolic links.
 			if [[ -e $working_path ]];then
-				working_path=$( readlink -f $working_path 2>/dev/null )
+				working_path=$( readlink -f $working_path 3>/dev/null )
 				# sometimes there is another directory between the path and /net
 				if [[ ! -e $working_path/net ]];then
 					# using find here, probably will need to also use it in usb part since the grep
 					# method seems to not be working now. Slice off the rest, which leaves the basic path
-					working_path=$( find $working_path/*/net/*/uevent 2>/dev/null | \
+					working_path=$( find $working_path/*/net/*/uevent 3>/dev/null | \
 					sed 's|/net.*||' )
 				fi
 			fi
@@ -5272,7 +5272,7 @@ get_network_advanced_data()
 			#if [[ -n $working_path ]];then
 				# now ls that directory and get the numeric starting sub directory and that should be the full path
 				# to the /net directory part
-				dir_path=$( ls ${working_path} 2>/dev/null | grep -sE '^[0-9]' )
+				dir_path=$( ls ${working_path} 3>/dev/null | grep -sE '^[0-9]' )
 				working_uevent_path="${working_path}${dir_path}"
 			fi
 		fi
@@ -5291,17 +5291,17 @@ get_network_advanced_data()
 		# from debian squeeze 2.6.32-5-686: 
 		# /sys/devices/pci0000:00/0000:00:0b.1/usb1/1-1/net/wlan0/address
 		if [[ -e $working_path/net ]];then
-			if_path=$( ls $working_path/net 2>/dev/null )
+			if_path=$( ls $working_path/net 3>/dev/null )
 			if_id=$if_path
 			working_path=$working_path/net/$if_path
 		# this is the normal usb detection if the first one didn't work
 		elif [[ -n $usb_data && -e $working_uevent_path/net ]];then
-			if_path=$( ls $working_uevent_path/net 2>/dev/null )
+			if_path=$( ls $working_uevent_path/net 3>/dev/null )
 			if_id=$if_path
 			working_path=$working_uevent_path/net/$if_path
 		# 2.6.32 debian lenny kernel shows not: /net/eth0 but /net:eth0
 		else
-			if_path=$( ls $working_path 2>/dev/null | grep 'net:' )
+			if_path=$( ls $working_path 3>/dev/null | grep 'net:' )
 			if_id=$( cut -d ':' -f 2 <<< "$if_path" )
 			working_path=$working_path/$if_path
 		fi
@@ -5309,16 +5309,16 @@ get_network_advanced_data()
 		
 		if [[ -n $if_path ]];then
 			if [[ -r $working_path/speed ]];then
-				speed=$( cat $working_path/speed 2>/dev/null )
+				speed=$( cat $working_path/speed 3>/dev/null )
 			fi
 			if [[ -r $working_path/duplex ]];then
-				duplex=$( cat $working_path/duplex 2>/dev/null )
+				duplex=$( cat $working_path/duplex 3>/dev/null )
 			fi
 			if [[ -r $working_path/address ]];then
-				mac_id=$( cat $working_path/address 2>/dev/null )
+				mac_id=$( cat $working_path/address 3>/dev/null )
 			fi
 			if [[ -r $working_path/operstate ]];then
-				oper_state=$( cat $working_path/operstate 2>/dev/null )
+				oper_state=$( cat $working_path/operstate 3>/dev/null )
 			fi
 		fi
 		
@@ -5345,7 +5345,7 @@ get_networking_usb_data()
 	# if lsusb exists, the file is a symlink, and contains an important usb exclusive file: continue
 	if [[ -n $lsusb_path ]]; then
 		# send error messages of lsusb to /dev/null as it will display a bunch if not a super user
-		lsusb_data="$( $lsusb_path 2>/dev/null )"
+		lsusb_data="$( $lsusb_path 3>/dev/null )"
 		# also, find the contents of usbid in lsusb and print everything after the 7th word on the
 		# corresponding line. Finally, strip out commas as they will change the driver :)
 		if [[ -n $lsusb_data ]];then
@@ -5541,14 +5541,14 @@ get_optical_drive_data()
 	
 	local temp_array='' sys_uevent_path='' proc_cdrom='' link_list=''
 	local separator='' linked='' disk='' item_string='' proc_info_string='' 
-	local dev_disks_links="$( ls /dev/dvd* /dev/cd* /dev/scd* 2>/dev/null  )"
+	local dev_disks_links="$( ls /dev/dvd* /dev/cd* /dev/scd* 3>/dev/null  )"
 	# get the actual disk dev location, first try default which is easier to run, need to preserve line breaks
-	local dev_disks_real="$( echo "$dev_disks_links" | xargs -L 1 readlink 2>/dev/null | sort -u )"
+	local dev_disks_real="$( echo "$dev_disks_links" | xargs -L 1 readlink 3>/dev/null | sort -u )"
 	# Some systems don't support xargs -L so we need to do it manually
 	if [[ -z $dev_disks_real ]];then
 		for linked in $dev_disks_links
 		do
-			disk=$( readlink $linked 2>/dev/null )
+			disk=$( readlink $linked 3>/dev/null )
 			if [[ -n $disk ]];then
 				disk=$( basename $disk ) # puppy shows this as /dev/sr0, not sr0
 				if [[ -z $dev_disks_real || -z $( grep $disk <<< $dev_disks_real ) ]];then
@@ -5584,7 +5584,7 @@ get_optical_drive_data()
 
 	if [[ -n $dev_disks_real ]];then
 		if [[ $B_SHOW_FULL_OPTICAL == 'true' ]];then
-			proc_cdrom="$( cat /proc/sys/dev/cdrom/info 2>/dev/null )"
+			proc_cdrom="$( cat /proc/sys/dev/cdrom/info 3>/dev/null )"
 		fi
 		IFS=$'\n'
 		A_OPTICAL_DRIVE_DATA=( $(
@@ -5610,16 +5610,16 @@ get_optical_drive_data()
 			sys_path=''
 			# this is only for new sd type paths in /sys, otherwise we'll use /proc/ide
 			if [[ -z $( grep '^hd' <<< $disk ) ]];then
-				sys_path=$( ls /sys/devices/pci*/*/host*/target*/*/block/$disk/uevent 2>/dev/null | sed "s|/block/$disk/uevent||" )
+				sys_path=$( ls /sys/devices/pci*/*/host*/target*/*/block/$disk/uevent 3>/dev/null | sed "s|/block/$disk/uevent||" )
 				# no need to test for errors yet, probably other user systems will require some alternate paths though
 				if [[ -n $sys_path ]];then
-					vendor=$( cat $sys_path/vendor 2>/dev/null )
-					model=$( cat $sys_path/model 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
-					state=$( cat $sys_path/state 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
-					rev_number=$( cat $sys_path/rev 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
+					vendor=$( cat $sys_path/vendor 3>/dev/null )
+					model=$( cat $sys_path/model 3>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
+					state=$( cat $sys_path/state 3>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
+					rev_number=$( cat $sys_path/rev 3>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/,//g' )
 				fi
 			elif [[ -e /proc/ide/$disk/model ]];then
-				vendor=$( cat /proc/ide/$disk/model 2>/dev/null )
+				vendor=$( cat /proc/ide/$disk/model 3>/dev/null )
 			fi
 			if [[ -n $vendor ]];then
 				vendor=$( gawk '
@@ -5898,7 +5898,7 @@ get_partition_data_advanced()
 					# handle /dev/root for / id
 					if ( partition == "root" ) {
 						# if this works, great, otherwise, just set this to null values
-						partTemp="'$( readlink /dev/root 2>/dev/null )'"
+						partTemp="'$( readlink /dev/root 3>/dev/null )'"
 						if ( partTemp != "" ) {
 							if ( partTemp ~ /[hsv]d[a-z][0-9]{1,2}/ ) {
 								partition=gensub( /^(\/dev\/)(.+)$/, "\\2", 1, partTemp )
@@ -6178,7 +6178,7 @@ get_raid_data()
 	local mdstat=''
 		
 	if [[ $B_MDSTAT_FILE == 'true' ]];then
-	 	mdstat="$( cat $FILE_MDSTAT 2>/dev/null )"
+	 	mdstat="$( cat $FILE_MDSTAT 3>/dev/null )"
 	fi
 	
 	if [[ -n $mdstat ]];then
@@ -6339,7 +6339,7 @@ get_repo_data()
 	# only the commands in terms of selecting which repos to show.
 	if [[ -d $yum_repo_dir || -f $yum_conf ]];then
 		# older redhats put their yum data in /etc/yum.conf
-		for repo_file in $( ls $yum_repo_dir*.repo $yum_conf 2>/dev/null )
+		for repo_file in $( ls $yum_repo_dir*.repo $yum_conf 3>/dev/null )
 		do
 			repo_data_working="$( gawk -v repoFile=$repo_file '
 			# construct the string for the print function to work with, file name: data
@@ -6833,7 +6833,7 @@ get_sensors_output()
 	local sensors_path=$( type -p sensors ) sensors_data=''
 	
 	if [[ -n $sensors_path ]];then
-		sensors_data="$( $sensors_path 2>/dev/null )"
+		sensors_data="$( $sensors_path 3>/dev/null )"
 		if [[ -n "$sensors_data" ]];then
 			# make sure the file ends in newlines then characters, the newlines are lost in the echo unless
 			# the data ends in some characters
@@ -6847,7 +6847,7 @@ get_shell_data()
 {
 	eval $LOGFS
 
-	local shell_type="$( ps -p $PPID -o comm= 2>/dev/null )"
+	local shell_type="$( ps -p $PPID -o comm= 3>/dev/null )"
 	local shell_version='' 
 	
 	if [[ $B_EXTRA_DATA == 'true' && -n $shell_type ]];then
@@ -6886,13 +6886,13 @@ get_shell_parent()
 	eval $LOGFS
 	local shell_parent='' script_parent=''
 	
-	script_parent=$( ps -fp $PPID --no-headers 2>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
-	shell_parent=$( ps -p $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
+	script_parent=$( ps -fp $PPID --no-headers 3>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
+	shell_parent=$( ps -p $script_parent --no-headers 3>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	# no idea why have to do script_parent action twice in su case, but you do, oh well.
 	if [[ $shell_parent == 'su' ]];then
-		script_parent=$( ps -fp $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
-		script_parent=$( ps -fp $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
-		shell_parent=$( ps -p $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
+		script_parent=$( ps -fp $script_parent --no-headers 3>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		script_parent=$( ps -fp $script_parent --no-headers 3>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		shell_parent=$( ps -p $script_parent --no-headers 3>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	fi
 	echo $shell_parent
 	
@@ -6938,7 +6938,7 @@ get_tty_number()
 {
 	eval $LOGFS
 	
-	local tty_number=$( basename "$( tty 2>/dev/null )" | sed 's/[^0-9]*//g' )
+	local tty_number=$( basename "$( tty 3>/dev/null )" | sed 's/[^0-9]*//g' )
 	
 	echo $tty_number
 	
