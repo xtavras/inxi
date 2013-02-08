@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 25-bsd
+####  Patch Number: 26-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8217,6 +8217,10 @@ print_networking_data()
 				print_network_advanced_data
 			fi
 		done
+	else
+		network_data="${C1}Card:${C2} Failed to Detect Network Card! "
+		network_data=$( create_print_line "$line_starter" "$network_data" )
+		print_screen_output "$network_data"
 	fi
 	if [[ $B_SHOW_IP == 'true' ]];then
 		print_networking_ip_data
