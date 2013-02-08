@@ -1,9 +1,9 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 ########################################################################
 ####  Script Name: inxi
-####  version: 1.8.35
-####  Date: February 7 2013
-####  Patch Number: 13
+####  Version: 1.8.35
+####  Date: February 8 2013
+####  Patch Number: 16
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -83,6 +83,16 @@
 ####       Note: requires setup of lm-sensors (sensors-detect and adding modules/modprobe/reboot,
 ####       and ideally, pwmconfig) prior to full output being available. 
 ####  -S   For desktop environment, user must be in X and have xprop installed (in X11-utils)
+########################################################################
+####  BSD Adjustments
+####  * All uses of sed -i must use -i '' form to be BSD sed compliant
+####  * Note: BSD sed supports using -r instead of -E for compatibility with gnu sed
+####  * Gnu grep options can be used if the function component is only run in linux
+####    These are the options that bsd grep does not support that inxi uses: -m <number> -o 
+####    so make sure if you use those to have them in gnu/linux only sections.
+####    It appears that freebsd uses gnu grep but openbsd uses bsd grep, however.
+####  * BSD ps does not support --without-headers option, and also does not support --sort <option>
+####    Tests show that -m fails to sort memory as expected, but -r does sort cpu percentage.
 ########################################################################
 ####  CONVENTIONS:
 ####  * Character Encoding: UTF-8 - this file contains special characters that must be opened and saved as UTF8
@@ -556,19 +566,19 @@ main()
 	local color_scheme=''
 	
 	# This function just initializes variables
-	initialize_script_data
+	initialize_data
 
 	# Check for dependencies BEFORE running ANYTHING else except above functions
 	# Not all distro's have these depends installed by default. Don't want to run
 	# this if the user is requesting to see this information in the first place
+	# Only continue if required apps tests ok
 	if [[ $1 != '--recommends' ]];then
-		check_script_depends
-		check_script_suggested_apps
+		check_required_apps
+		check_recommended_apps
 	fi
 
-	### Only continue if depends ok
-	SCRIPT_VERSION_NUMBER=$( grep -im 1 'version:' $SCRIPT_PATH/$SCRIPT_NAME | gawk '{print $3}' )
-	SCRIPT_PATCH_NUMBER=$( grep -im 1 'Patch Number:' $SCRIPT_PATH/$SCRIPT_NAME | gawk '{print $4}' )
+	SCRIPT_VERSION_NUMBER=$( parse_version_data 'main' )
+	SCRIPT_PATCH_NUMBER=$( parse_version_data 'patch' )
 	
 	### Source global config overrides
 	if [[ -s /etc/$SCRIPT_NAME.conf ]];then
@@ -688,7 +698,7 @@ main()
 }
 
 #### -------------------------------------------------------------------
-#### basic tests: set script data, booleans, PATH
+#### basic tests: set script data, booleans, PATH, version numbers
 #### -------------------------------------------------------------------
 
 # Set PATH data so we can access all programs as user. Set BAN lists.
@@ -696,14 +706,13 @@ main()
 # some apps are used for extended functions any directory used, should be
 # checked here first.
 # No args taken.
-initialize_script_data()
+initialize_data()
 {
 	eval $LOGFS
 	
 	if [[ -n $( grep -i 'bsd' <<< $( uname -s 2>/dev/null ) ) ]];then
 		B_BSD='true'
 	fi
-	SCRIPT_PATH=$( dirname $0 )
 	# now set the script BOOLEANS for files required to run features
 	# note that freebsd has /proc but it's empty
 	if [[ -d "/proc/" && $B_BSD != 'true' ]];then
@@ -714,7 +723,7 @@ initialize_script_data()
 		error_handler 6
 	fi
 	
-	initialize_script_paths
+	initialize_paths
 	
 	# found a case of battery existing but having nothing in it on desktop mobo
 	# not all laptops show the first, 
@@ -788,11 +797,43 @@ initialize_script_data()
 	eval $LOGFE
 }
 
-initialize_script_paths()
+# arg: $1 - version number: main/patch/date
+parse_version_data()
+{
+	local version_data=''
+
+	# note, using ####[[:space:]]+ to avoid having this function also trip the version datas
+	case $1 in
+		date)
+			version_data="$( gawk -F ': ' '
+			/####[[:space:]]+Date:/ {
+				print $NF
+			}' $SCRIPT_PATH/$SCRIPT_NAME )"
+			;;
+		main)
+			version_data="$( gawk '
+			/####[[:space:]]+Version:/ {
+				print $3
+			}' $SCRIPT_PATH/$SCRIPT_NAME )"
+			;;
+		patch)
+			version_data="$( gawk '
+			/####[[:space:]]+Patch Number:/ {
+				print $4
+			}' $SCRIPT_PATH/$SCRIPT_NAME )"
+			;;
+	esac
+	echo $version_data
+}
+
+initialize_paths()
 {
 	local path='' added_path='' b_path_found='' sys_path=''
 	# Extra path variable to make execute failures less likely, merged below
 	local extra_paths="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+	
+	# this needs to be set here because various options call the parent initialize function directly.
+	SCRIPT_PATH=$( dirname $0 )
 
 	# Fallback paths put into $extra_paths; This might, among others, help on gentoo.
 	# Now, create a difference of $PATH and $extra_paths and add that to $PATH:
@@ -818,7 +859,7 @@ initialize_script_paths()
 }
 
 # No args taken.
-check_script_suggested_apps()
+check_recommended_apps()
 {
 	eval $LOGFS
 	local bash_array_test=( "one" "two" )
@@ -855,7 +896,7 @@ check_script_suggested_apps()
 
 # Determine if any of the absolutely necessary tools are absent
 # No args taken.
-check_script_depends()
+check_required_apps()
 {
 	eval $LOGFS
 	local app_name='' app_path=''
@@ -922,7 +963,7 @@ sanitize_characters()
 set_color_scheme()
 {
 	eval $LOGFS
-	local i='' a_script_colors='' a_color_codes=''
+	local i='' a_output_colors='' a_color_codes=''
 
 	if [[ $1 -ge ${#A_COLOR_SCHEMES[@]} ]];then
 		set -- 1
@@ -939,12 +980,12 @@ set_color_scheme()
 		eval "${A_COLORS_AVAILABLE[i]}=\"${a_color_codes[i]}\""
 	done
 	IFS=","
-	a_script_colors=( ${A_COLOR_SCHEMES[$1]} )
+	a_output_colors=( ${A_COLOR_SCHEMES[$1]} )
 	IFS="$ORIGINAL_IFS"
 	# then assign the colors globally
-	C1="${!a_script_colors[0]}"
-	C2="${!a_script_colors[1]}"
-	CN="${!a_script_colors[2]}"
+	C1="${!a_output_colors[0]}"
+	C2="${!a_output_colors[1]}"
+	CN="${!a_output_colors[2]}"
 	# ((COLOR_SCHEME++)) ## note: why is this? ##
 	eval $LOGFE
 }
@@ -1061,21 +1102,21 @@ select_default_color_scheme()
 				echo "$config_variable=$user_selection" >> $config_file
 			else
 				print_screen_output "Updating config file for $COLOR_SELECTION color scheme now..."
-				sed -i "s/$config_variable=.*/$config_variable=$user_selection/" $config_file
+				sed -i '' "s/$config_variable=.*/$config_variable=$user_selection/" $config_file
 			fi
 			# file exists now so we can go on to cleanup
 			case $COLOR_SELECTION in
 				irc|irc-console|irc-virtual-terminal|console|virtual-terminal)
-					sed -i '/GLOBAL_COLOR_SCHEME=/d' $config_file
+					sed -i '' '/GLOBAL_COLOR_SCHEME=/d' $config_file
 					;;
 				global)
-					sed -i -e '/VIRT_TERM_COLOR_SCHEME=/d' -e '/CONSOLE_COLOR_SCHEME=/d' -e '/IRC_COLOR_SCHEME=/d' \
+					sed -i '' -e '/VIRT_TERM_COLOR_SCHEME=/d' -e '/CONSOLE_COLOR_SCHEME=/d' -e '/IRC_COLOR_SCHEME=/d' \
 					-e '/IRC_CONS_COLOR_SCHEME=/d' -e '/IRC_X_TERM_COLOR_SCHEME=/d' $config_file
 					;;
 			esac
 		elif [[ $user_selection == $i ]];then
 			print_screen_output "Removing all color settings from config file now..."
-			sed -i -e '/VIRT_TERM_COLOR_SCHEME=/d' -e '/GLOBAL_COLOR_SCHEME=/d' -e '/CONSOLE_COLOR_SCHEME=/d' \
+			sed -i '' -e '/VIRT_TERM_COLOR_SCHEME=/d' -e '/GLOBAL_COLOR_SCHEME=/d' -e '/CONSOLE_COLOR_SCHEME=/d' \
 			-e '/IRC_COLOR_SCHEME=/d' -e '/IRC_CONS_COLOR_SCHEME=/d' -e '/IRC_X_TERM_COLOR_SCHEME=/d' $config_file
 			set_color_scheme $DEFAULT_COLOR_SCHEME
 		elif [[ $user_selection == $(( $i+1 )) ]];then
@@ -1309,8 +1350,8 @@ script_self_updater()
 		if [[ -n $( grep '###\*\*EOF\*\*###' <<< "$file_contents" ) ]];then
 			echo "$file_contents" > $SCRIPT_PATH/$SCRIPT_NAME || error_handler 14 "$?"
 			chmod +x $SCRIPT_PATH/$SCRIPT_NAME || error_handler 15 "$?"
-			SCRIPT_VERSION_NUMBER=$( grep -im 1 'version:' $SCRIPT_PATH/$SCRIPT_NAME | gawk '{print $3}' )
-			SCRIPT_PATCH_NUMBER=$( grep -im 1 'Patch Number:' $SCRIPT_PATH/$SCRIPT_NAME | gawk '{print $4}' )
+			SCRIPT_VERSION_NUMBER=$( parse_version_data 'main' )
+			SCRIPT_PATCH_NUMBER=$( parse_version_data 'patch' )
 			print_screen_output "Successfully updated to $2 version: $SCRIPT_VERSION_NUMBER"
 			print_screen_output "New $2 version patch number: $SCRIPT_PATCH_NUMBER"
 			print_screen_output "To run the new version, just start $SCRIPT_NAME again."
@@ -1371,7 +1412,7 @@ debug_data_collector()
 	local debug_data_dir="inxi-$(tr ' ' '-' <<< $HOSTNAME | tr '[A-Z]' '[a-z]' )-$1-$(date +%Y%m%d)" 
 	local completed_gz_file='' xiin_file='xiin.py' ftp_upload='ftp.techpatterns.com/incoming'
 	local Line='-------------------------'
-	local startDir=$(pwd)
+	local start_directory=$( pwd )
 	
 	if [[ $B_RUNNING_IN_SHELL == 'true' ]];then
 		if [[ -n $ALTERNATE_FTP ]];then
@@ -1418,7 +1459,7 @@ debug_data_collector()
 		cat $FILE_MEMINFO &> $debug_data_dir/proc-meminfo.txt
 		cat $FILE_MODULES &> $debug_data_dir/proc-modules.txt
 		cat /proc/net/arp &> $debug_data_dir/proc-net-arp.txt 
-		check_recommends &> $debug_data_dir/check-recommends.txt
+		check_recommends_user_output &> $debug_data_dir/check-recommends-user-output.txt
 		# first download and verify xiin
 		if [[ $B_UPLOAD_DEBUG_DATA == 'true' || $1 == 'disk' || $1 == 'sys' || $1 == 'all' ]];then
 			touch $SCRIPT_DATA_DIR/$debug_data_dir/xiin-error.txt
@@ -1526,8 +1567,8 @@ debug_data_collector()
 			cat /etc/mtab &> $debug_data_dir/etc-mtab.txt
 		fi
 		echo 'Creating inxi output file now. This can take a few seconds...'
-		echo "Starting $SCRIPT_NAME from: $startDir"
-		cd $startDir
+		echo "Starting $SCRIPT_NAME from: $start_directory"
+		cd $start_directory
 		$SCRIPT_PATH/$SCRIPT_NAME -FRploudxxx -c 0 -@ 8 > $SCRIPT_DATA_DIR/$debug_data_dir/inxi-FRploudxxx.txt
 		cp $LOG_FILE $SCRIPT_DATA_DIR/$debug_data_dir
 		if [[ -f $SCRIPT_DATA_DIR/$debug_data_dir.tar.gz ]];then
@@ -1577,7 +1618,7 @@ debug_data_collector()
 	exit 0
 }
 
-check_recommends()
+check_recommends_user_output()
 {
 	local Line='-----------------------------------------------------------------------------------------'
 	local gawk_version='N/A' sed_version='N/A' sudo_version='N/A' python_version='N/A'
@@ -1587,7 +1628,7 @@ check_recommends()
 		exit 1
 	fi
 	
-	initialize_script_paths
+	initialize_paths
 	
 	echo "$SCRIPT_NAME will now begin checking for the programs it needs to operate. First a check of"
 	echo "the main languages and tools $SCRIPT_NAME uses. Python is only for debugging data collection."
@@ -1598,6 +1639,10 @@ check_recommends()
 	fi
 	if [[ -n $( type -p sed ) ]];then
 		sed_version=$( sed --version 2>&1 | awk 'BEGIN {IGNORECASE=1} /^GNU sed version/ {print $4}' )
+		if [[ -z $sed_version ]];then
+			# note: bsd sed shows error with --version flag
+			sed_version=$( sed --version 2>&1 | awk 'BEGIN {IGNORECASE=1} /^sed: illegal option/ {print "BSD sed"}' )
+		fi
 	fi
 	if [[ -n $( type -p sudo ) ]];then
 		sudo_version=$( sudo -V 2>&1 | awk 'BEGIN {IGNORECASE=1} /^Sudo version/ {print $3}' )
@@ -1892,7 +1937,7 @@ get_parameters()
 		show_options
 		exit 0
 	elif [[ $1 == '--recommends' ]];then
-		check_recommends
+		check_recommends_user_output
 		exit 0
 	# the short form only runs if no args output args are used
 	# no need to run through these if there are no args
@@ -2038,7 +2083,7 @@ get_parameters()
 			t)	if [[ -n $( grep -E '^(c|m|cm|mc)([1-9]|1[0-9]|20)?$' <<< $OPTARG ) ]];then
 					use_short='false'
 					if [[ -n $( grep -E '[0-9]+' <<< $OPTARG ) ]];then
-						PS_COUNT=$( grep -Eo '[0-9]+' <<< $OPTARG )
+						PS_COUNT=$( sed 's/[^0-9]//g' <<< $OPTARG )
 					fi
 					if [[ -n $( grep 'c' <<< $OPTARG ) ]];then
 						B_SHOW_PS_CPU_DATA='true'
@@ -2163,7 +2208,7 @@ get_parameters()
 									debug_data_type='all'
 									;;
 							esac
-							initialize_script_data
+							initialize_data
 							debug_data_collector $debug_data_type
 							;;
 					esac
@@ -2413,7 +2458,7 @@ print_version_info()
 		script_path=$( readlink $script_path/$SCRIPT_NAME )
 		script_path=$( dirname $script_path )
 	fi
-	local last_modified=$( grep -m 1 '^####  Date:' $SCRIPT_PATH/$SCRIPT_NAME | gawk -F ': ' '{print $NF}' ) 
+	local last_modified=$( parse_version_data 'date' ) 
 	local year_modified=$( gawk '{print $NF}' <<< "$last_modified" )
 	
 	print_screen_output "$SCRIPT_NAME $SCRIPT_VERSION_NUMBER-$SCRIPT_PATCH_NUMBER ($last_modified)"
@@ -4172,7 +4217,11 @@ N
 get_gcc_kernel_version()
 {
 	# note that we use gawk to get the last part because beta, alpha, git versions can be non-numeric
-	local gccVersion=$( grep -Eio 'gcc[[:space:]]*version[[:space:]]*([^ \t]*)' /proc/version 2>/dev/null | gawk '{print $3}' )
+	local gccVersion=''
+	
+	if [[ -e /proc/version ]];then
+		gccVersion=$( grep -Eio 'gcc[[:space:]]*version[[:space:]]*([^ \t]*)' /proc/version 2>/dev/null | gawk '{print $3}' )
+	fi
 	echo $gccVersion
 }
 
@@ -6097,12 +6146,16 @@ get_dev_processed_item()
 
 get_patch_version_string()
 {
-	local script_patch_number=$( sed 's/^[0]\+//' <<< $SCRIPT_PATCH_NUMBER )
+	local patch_version_number=$( sed 's/^[0]\+//' <<< $SCRIPT_PATCH_NUMBER )
 	
-	if [[ -n $script_patch_number ]];then
-		script_patch_number="-$script_patch_number"
+	if [[ -n $patch_version_number ]];then
+		patch_version_number="-$patch_version_number"
+		# for cases where it was for example: 00-bsd cleaned to --bsd trim out one -
+		if [[ -n $( grep '\--' <<< $patch_version_number ) ]];then
+			patch_version_number=$( sed 's/--/-/' <<< $patch_version_number )
+		fi
 	fi
-	echo $script_patch_number
+	echo $patch_version_number
 }
 
 # args: $1 - type cpu/mem 
@@ -7062,6 +7115,7 @@ get_unmounted_partition_filesystem()
 		# this will fail if regular user and no sudo present, but that's fine, it will just return null
 		# note the hack that simply slices out the first line if > 1 items found in string
 		# also, if grub/lilo is on partition boot sector, no file system data is available
+		# BSD fix: -Eio -Em 1
 		partition_filesystem=$( eval $sudo_command $FILE_PATH -s $1 | grep -Eio '(ext2|ext3|ext4|ext5|ext[[:space:]]|ntfs|fat32|fat16|fat[[:space:]]\(.*\)|vfat|fatx|tfat|swap|btrfs|ffs[[:space:]]|hfs\+|hfs[[:space:]]plus|hfs[[:space:]]extended[[:space:]]version[[:space:]][1-9]|hfsj|hfs[[:space:]]|jfs[[:space:]]|nss[[:space:]]|reiserfs|reiser4|ufs2|ufs[[:space:]]|xfs[[:space:]]|zfs[[:space:]])' | grep -Em 1 '.*' )
 		if [[ -n $partition_filesystem ]];then
 			echo $partition_filesystem
@@ -7311,7 +7365,7 @@ print_short_data()
 	if [[ "$min_max_clock" == 'N/A' && ${a_cpu_working[1]} != '' ]];then
 		min_max_clock="${a_cpu_working[1]} MHz"
 	fi
-	local script_patch_number=$( get_patch_version_string )
+	local patch_version_number=$( get_patch_version_string )
 
 	#set_color_scheme 12
 	if [[ $B_RUNNING_IN_SHELL == 'false' ]];then
@@ -7341,7 +7395,7 @@ print_short_data()
 	if [[ $SHOW_IRC -gt 0 ]];then
 		short_data="${short_data}${C1}Client${C2}${SEP1}${IRC_CLIENT}${IRC_CLIENT_VERSION}${SEP2}"
 	fi
-	short_data="${short_data}${C1}$SCRIPT_NAME${C2}${SEP1}$SCRIPT_VERSION_NUMBER$script_patch_number${SEP2}${CN}"
+	short_data="${short_data}${C1}$SCRIPT_NAME${C2}${SEP1}$SCRIPT_VERSION_NUMBER$patch_version_number${SEP2}${CN}"
 	if [[ $SCHEME -gt 0 ]];then
 		short_data="${short_data} $NORMAL"
 	fi
@@ -7910,7 +7964,7 @@ print_info_data()
 	local memory="$( get_memory_data )"
 	local processes="$(( $( ps aux | wc -l ) - 1 ))"
 	local up_time="$( get_uptime )"
-	local script_patch_number=$( get_patch_version_string )
+	local patch_version_number=$( get_patch_version_string )
 	local gcc_string='' gcc_installed='' gcc_others='' closing_data='' 
 	
 	if [[ $B_EXTRA_DATA == 'true' ]];then
@@ -7962,7 +8016,7 @@ print_info_data()
 		client_data="${C1}Client$SEP3${C2} ${IRC_CLIENT}${IRC_CLIENT_VERSION} "
 	fi
 	info_data="${info_data}$gcc_installed"
-	closing_data="$client_data${C1}$SCRIPT_NAME$SEP3${C2} $SCRIPT_VERSION_NUMBER$script_patch_number${CN}"
+	closing_data="$client_data${C1}$SCRIPT_NAME$SEP3${C2} $SCRIPT_VERSION_NUMBER$patch_version_number${CN}"
 	if [[ -n $info_data && $( calculate_line_length "$info_data$closing_data" ) -gt $LINE_MAX ]];then
 		info_data=$( create_print_line "$line_starter" "$info_data" )
 		print_screen_output "$info_data"
@@ -9003,6 +9057,20 @@ print_raid_data()
 	eval $LOGFE
 }
 
+print_program_version()
+{
+	local patch_version_number=$( get_patch_version_string )
+	local program_version="${C1}$SCRIPT_NAME$SEP3${C2} $SCRIPT_VERSION_NUMBER$patch_version_number${CN}"
+	# great trick from: http://ideatrash.net/2011/01/bash-string-padding-with-sed.html
+	# left pad: sed -e :a -e 's/^.\{1,80\}$/& /;ta'
+	# right pad: sed -e :a -e 's/^.\{1,80\}$/ &/;ta'
+	# center pad: sed -e :a -e 's/^.\{1,80\}$/ & /;ta'
+	#local line_max=$(( $LINE_MAX - 10 ))
+	#program_version="$( sed -e :a -e "s/^.\{1,$line_max\}$/ &/;ta" <<< $program_version )" # use to create padding if needed
+	# program_version=$( create_print_line "Version:" "$program_version" )
+	print_screen_output "$program_version"
+}
+
 # currently only apt using distros support this feature, but over time we can add others
 print_repo_data()
 {
@@ -9059,20 +9127,6 @@ print_repo_data()
 		print_screen_output "$repo_full"
 	fi
 	eval $LOGFE
-}
-
-print_script_version()
-{
-	local script_patch_number=$( get_patch_version_string )
-	local script_version="${C1}$SCRIPT_NAME$SEP3${C2} $SCRIPT_VERSION_NUMBER$script_patch_number${CN}"
-	# great trick from: http://ideatrash.net/2011/01/bash-string-padding-with-sed.html
-	# left pad: sed -e :a -e 's/^.\{1,80\}$/& /;ta'
-	# right pad: sed -e :a -e 's/^.\{1,80\}$/ &/;ta'
-	# center pad: sed -e :a -e 's/^.\{1,80\}$/ & /;ta'
-	#local line_max=$(( $LINE_MAX - 10 ))
-	#script_version="$( sed -e :a -e "s/^.\{1,$line_max\}$/ &/;ta" <<< $script_version )" # use to create padding if needed
-	# script_version=$( create_print_line "Version:" "$script_version" )
-	print_screen_output "$script_version"
 }
 
 print_sensors_data()
