@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 21-bsd
+####  Patch Number: 22-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3100,7 +3100,7 @@ get_cpu_core_count()
 		# create array, core count integer; core count string
 		# A_CPU_CORE_DATA=( "$cpu_core_count" "$cpu_alpha_count Core$cpu_type" )
 		A_CPU_CORE_DATA=( "$cpu_physical_count" "$cpu_alpha_count" "$cpu_type" "$cpu_core_count" )
-	else
+	elif [[ $B_BSD == 'true' ]];then
 		cpu_core_count=$( grep '^hw.ncpu' <<< "$Sysctl_a_Data" | gawk '{print $NF}' )
 		if [[ -n $( grep -E '^[0-9]+$' <<< "$cpu_core_count" ) ]];then
 			cpu_alpha_count=$( get_cpu_core_count_alpha "$cpu_core_count" )
@@ -3251,6 +3251,32 @@ get_cpu_data()
 		}
  		' $FILE_CPUINFO ) )
 		log_function_data 'cat' "$FILE_CPUINFO"
+	elif [[ $B_BSD == 'true' ]];then
+		IFS=$'\n'
+		A_CPU_DATA=( $( 
+		gawk -F': ' '
+		BEGIN {
+			IGNORECASE=1
+			cpuModel=""
+			cpuClock=""
+			cpuCache=""
+			cpuFlags=""
+			cpuBogomips=""
+			cpuVendor=""
+		}
+		/^hw.model/ {
+			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
+			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
+			cpuModel=$NF
+		}
+		/^hw.clock/ {
+			cpuClock=$NF
+		}
+		END {
+			print cpuModel "," cpuClock "," cpuCache "," cpuFlags "," cpuBogomips ","  cpuVendor
+			print "N/A"
+		}' <<< "$Sysctl_a_Data" ) )
+		
 	fi
 	IFS="$ORIGINAL_IFS"
 	temp_array=${A_CPU_DATA[@]}
