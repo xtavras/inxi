@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 16-gnubsd
+####  Patch Number: 17-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -85,7 +85,7 @@
 ####  -S   For desktop environment, user must be in X and have xprop installed (in X11-utils)
 ########################################################################
 ####  BSD Adjustments
-####  * All uses of sed -i must use -i '' form to be BSD sed compliant
+####  * All uses of sed -i must use -i form to be BSD sed compliant
 ####  * Note: BSD sed supports using -r instead of -E for compatibility with gnu sed
 ####  * Gnu grep options can be used if the function component is only run in linux
 ####    These are the options that bsd grep does not support that inxi uses: -m <number> -o 
@@ -1102,21 +1102,21 @@ select_default_color_scheme()
 				echo "$config_variable=$user_selection" >> $config_file
 			else
 				print_screen_output "Updating config file for $COLOR_SELECTION color scheme now..."
-				sed -i '' "s/$config_variable=.*/$config_variable=$user_selection/" $config_file
+				sed -i "s/$config_variable=.*/$config_variable=$user_selection/" $config_file
 			fi
 			# file exists now so we can go on to cleanup
 			case $COLOR_SELECTION in
 				irc|irc-console|irc-virtual-terminal|console|virtual-terminal)
-					sed -i '' '/GLOBAL_COLOR_SCHEME=/d' $config_file
+					sed -i '/GLOBAL_COLOR_SCHEME=/d' $config_file
 					;;
 				global)
-					sed -i '' -e '/VIRT_TERM_COLOR_SCHEME=/d' -e '/CONSOLE_COLOR_SCHEME=/d' -e '/IRC_COLOR_SCHEME=/d' \
+					sed -i -e '/VIRT_TERM_COLOR_SCHEME=/d' -e '/CONSOLE_COLOR_SCHEME=/d' -e '/IRC_COLOR_SCHEME=/d' \
 					-e '/IRC_CONS_COLOR_SCHEME=/d' -e '/IRC_X_TERM_COLOR_SCHEME=/d' $config_file
 					;;
 			esac
 		elif [[ $user_selection == $i ]];then
 			print_screen_output "Removing all color settings from config file now..."
-			sed -i '' -e '/VIRT_TERM_COLOR_SCHEME=/d' -e '/GLOBAL_COLOR_SCHEME=/d' -e '/CONSOLE_COLOR_SCHEME=/d' \
+			sed -i -e '/VIRT_TERM_COLOR_SCHEME=/d' -e '/GLOBAL_COLOR_SCHEME=/d' -e '/CONSOLE_COLOR_SCHEME=/d' \
 			-e '/IRC_COLOR_SCHEME=/d' -e '/IRC_CONS_COLOR_SCHEME=/d' -e '/IRC_X_TERM_COLOR_SCHEME=/d' $config_file
 			set_color_scheme $DEFAULT_COLOR_SCHEME
 		elif [[ $user_selection == $(( $i+1 )) ]];then
