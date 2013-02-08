@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2462,8 +2462,8 @@ get_start_client()
 			B_OUTPUT_FILTER='true'
 		fi
 		# irc_client_path=$( readlink /proc/$PPID/exe )
-		irc_client_path=$( ps -p $PPID | gawk '!/[[:space:]]*PID/ {print $6}'  )
-		echo $( ps -p $PPID )
+		irc_client_path=$( ps -p $PPID | gawk '!/[[:space:]]*PID/ {print $5}'  )
+		# echo $( ps -p $PPID )
 		irc_client_path_lower=$( tr '[:upper:]' '[:lower:]' <<< $irc_client_path )
 		app_working_name=$( basename $irc_client_path_lower )
 		# handles the xchat/sh/bash/dash cases, and the konversation/perl cases, where clients
