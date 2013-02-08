@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 00-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2755,7 +2755,11 @@ get_start_client()
 		else
 			# this should handle certain cases where it's ssh or some other startup tool
 			# that falls through all the other tests
-			ps_parent=$(ps -p $PPID --no-headers 3>/dev/null | gawk '{print $NF}' )
+			if [[ $B_BSD != 'true' ]];then
+				ps_parent=$(ps -p $PPID --no-headers 3>/dev/null | gawk '{print $NF}' )
+			else
+				ps_parent=$(ps -p $PPID 3>/dev/null | gawk '{print $5}' )
+			fi
 			if [[ -n $ps_parent ]];then
 				IRC_CLIENT=$ps_parent
 			else
