@@ -2450,7 +2450,7 @@ get_start_client()
 {
 	eval $LOGFS
 	local Irc_Client_Path='' irc_client_path_lower='' non_native_konvi='' i=''
-	local B_Non_Native_App='false' pppid='' App_Working_Name='' file_data=''
+	local B_Non_Native_App='false' pppid='' App_Working_Name=''
 	local b_qt4_konvi='false' ps_parent=''
 
 	if [[ $B_RUNNING_IN_SHELL == 'true' ]];then
@@ -2535,6 +2535,7 @@ get_start_client()
 # note: all variables set in caller so no need to pass
 get_irc_client_version()
 {
+	local file_data=''
 	# replacing loose detection with tight detection, bugs will be handled with app names
 	# as they appear.
 	case $App_Working_Name in
