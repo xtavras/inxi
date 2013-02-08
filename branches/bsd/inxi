@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 08-bsd
+####  Patch Number: 10-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4515,7 +4515,7 @@ get_graphics_res_data()
 			}' <<< "$xdpy_data" )
 		fi
 	else
-		if [[ $B_PROC_DIR == 'true' ]];then
+		if [[ $B_PROC_DIR == 'true' && $B_BSD != 'true' ]];then
 			screen_resolution=$( stty -F $( readlink /proc/$PPID/fd/0 ) size | gawk '{
 				print $2"x"$1
 			}' )
