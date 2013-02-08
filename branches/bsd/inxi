@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 31-bsd
+####  Patch Number: 32-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7276,7 +7276,7 @@ print_short_data()
 	# look for that and use the speed from the first array array, same where we got 
 	# model from
 	if [[ "$min_max_clock" == 'N/A' && ${a_cpu_working[1]} != '' ]];then
-		min_max_clock="${a_cpu_working[1]}"
+		min_max_clock="${a_cpu_working[1]} MHz"
 	fi
 	local script_patch_number=$( get_patch_version_string )
 
