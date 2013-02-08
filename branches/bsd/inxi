@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 15-bsd
+####  Patch Number: 16-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4436,19 +4436,21 @@ get_graphics_res_data()
 			}' <<< "$xdpy_data" )
 		fi
 	else
-# 		if [[ $B_PROC_DIR == 'true' ]];then
-# 			screen_resolution=$( stty -F $( readlink /proc/$PPID/fd/0 ) size | gawk '{
-# 				print $2"x"$1
-# 			}' )
-# 		else
-# 			if [[ $B_BSD == 'true' ]];then
-				screen_resolution=$( stty -a | gawk -F ';' '
-					/^speed/ {
-						gsub(/[[:space:]]*(rows|columns)[[:space:]]*/,"",$0)
-						print $3"x"$2
-					}' )
-# 			fi
-# 		fi
+		if [[ $B_PROC_DIR == 'true' ]];then
+			screen_resolution=$( stty -F $( readlink /proc/$PPID/fd/0 ) size | gawk '{
+				print $2"x"$1
+			}' )
+		# note: this works fine for all systems but keeping the above for now since
+		# the above is probably more accurate for linux systems.
+		else
+			screen_resolution=$( stty -a | gawk -F ';' '
+				/^speed/ {
+					gsub(/[[:space:]]*(rows|columns)[[:space:]]*/,"",$0)
+					gsub(/[[:space:]]*/,"",$2)
+					gsub(/[[:space:]]*/,"",$3)
+					print $3"x"$2
+				}' )
+		fi
 	fi
 	echo "$screen_resolution"
 	log_function_data "screen_resolution: $screen_resolution"
