@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 07-bsd
+####  Patch Number: 08-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2524,8 +2524,8 @@ get_start_client()
 				fi
 			else
 				IRC_CLIENT="PPID=\"$PPID\" - empty?"
+				unset IRC_CLIENT_VERSION
 			fi
-			unset IRC_CLIENT_VERSION
 		fi
 	fi
 
