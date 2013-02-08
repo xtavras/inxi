@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.34
 ####  Date: February 7 2013
-####  Patch Number: 19-bsd
+####  Patch Number: 20-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3084,35 +3084,60 @@ get_audio_alsa_data()
 get_cpu_core_count()
 {
 	eval $LOGFS
+	local cpu_physical_count='' cpu_core_count='' cpu_type='' cpu_alpha_count=''
 	if [[ $B_CPUINFO_FILE == 'true' ]]; then
 		# load the A_CPU_TYPE_PCNT_CCNT core data array
 		get_cpu_ht_multicore_smp_data
 		## Because of the upcoming release of cpus with core counts over 6, a count of cores is given after Deca (10)
 		# count the number of processors given
-		local cpu_physical_count=${A_CPU_TYPE_PCNT_CCNT[1]}
-		local cpu_core_count=${A_CPU_TYPE_PCNT_CCNT[2]}
-		local cpu_type=${A_CPU_TYPE_PCNT_CCNT[0]}
+		cpu_physical_count=${A_CPU_TYPE_PCNT_CCNT[1]}
+		cpu_core_count=${A_CPU_TYPE_PCNT_CCNT[2]}
+		cpu_type=${A_CPU_TYPE_PCNT_CCNT[0]}
 
 		# match the numberic value to an alpha value
-		case $cpu_core_count in
-			1) cpu_alpha_count='Single';;
-			2) cpu_alpha_count='Dual';;
-			3) cpu_alpha_count='Triple';;
-			4) cpu_alpha_count='Quad';;
-			5) cpu_alpha_count='Penta';;
-			6) cpu_alpha_count='Hexa';;
-			7) cpu_alpha_count='Hepta';;
-			8) cpu_alpha_count='Octa';;
-			9) cpu_alpha_count='Ennea';;
-			10) cpu_alpha_count='Deca';;
-			*) cpu_alpha_count='Multi';;
-		esac
+		cpu_alpha_count=$( get_cpu_core_count_alpha "$cpu_core_count" )
+		
 		# create array, core count integer; core count string
 		# A_CPU_CORE_DATA=( "$cpu_core_count" "$cpu_alpha_count Core$cpu_type" )
+		A_CPU_CORE_DATA=( "$cpu_physical_count" "$cpu_alpha_count" "$cpu_type" "$cpu_core_count" )
+	else
+		cpu_core_count=$( grep '^hw.ncpu' <<< "$Sysctl_a_Data" | gawk '[print $NF}' )
+		if [[ -n $( grep -E '^[0-9]+$' <<< "$cpu_core_count" ) ]];then
+			cpu_alpha_count=$( get_cpu_core_count_alpha "$cpu_core_count" )
+			if [[ $cpu_core_count -gt 1 ]];then
+				cpu_type='SMP'
+			fi
+		fi
+		cpu_physical_count=$cpu_core_count
 		A_CPU_CORE_DATA=( "$cpu_physical_count" "$cpu_alpha_count" "$cpu_type" "$cpu_core_count" )
 	fi
 	temp_array=${A_CPU_CORE_DATA[@]}
 	log_function_data "A_CPU_CORE_DATA: $temp_array"
+	eval $LOGFE
+}
+
+# args: $1 - integer core count
+get_cpu_core_count_alpha()
+{
+	eval $LOGFS
+	local cpu_alpha_count=''
+	
+	case $1 in
+		1) cpu_alpha_count='Single';;
+		2) cpu_alpha_count='Dual';;
+		3) cpu_alpha_count='Triple';;
+		4) cpu_alpha_count='Quad';;
+		5) cpu_alpha_count='Penta';;
+		6) cpu_alpha_count='Hexa';;
+		7) cpu_alpha_count='Hepta';;
+		8) cpu_alpha_count='Octa';;
+		9) cpu_alpha_count='Ennea';;
+		10) cpu_alpha_count='Deca';;
+		*) cpu_alpha_count='Multi';;
+	esac
+	
+	echo $cpu_alpha_count
+	
 	eval $LOGFE
 }
 
