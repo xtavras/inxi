@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  version: 1.8.35
 ####  Date: February 7 2013
-####  Patch Number: 02-bsd
+####  Patch Number: 03-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2758,7 +2758,8 @@ get_start_client()
 			if [[ $B_BSD != 'true' ]];then
 				ps_parent=$(ps -p $PPID --no-headers 3>/dev/null | gawk '{print $NF}' )
 			else
-				ps_parent=$(ps -p $PPID 3>/dev/null | gawk '{print $5}' )
+				# without --no-headers we need the second line
+				ps_parent=$(ps -p $PPID 3>/dev/null | gawk '/^[0-9]+/ {print $5}' )
 			fi
 			if [[ -n $ps_parent ]];then
 				IRC_CLIENT=$ps_parent
