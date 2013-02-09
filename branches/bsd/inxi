@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 22-bsd
+####  Patch Number: 23-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5838,12 +5838,16 @@ get_partition_data()
 	# $NF = partition name; $(NF - 4) = partition size; $(NF - 3) = used, in gB; $(NF - 1) = percent used
 	## note: by subtracting from the last field number NF, we avoid a subtle issue with LVM df output, where if
 	## the first field is too long, it will occupy its own line, this way we are getting only the needed data
-	A_PARTITION_DATA=( $( echo "$main_partition_data" | gawk '
+	A_PARTITION_DATA=( $( echo "$main_partition_data" | gawk -v bsdType=$BSD_TYPE '
 	BEGIN {
 		IGNORECASE=1
 	}
 	# this has to be nulled for every iteration so it does not retain value from last iteration
 	devBase=""
+	# skipping these file systems because bsds do not support df --exclude-type=<fstype>
+	( bsdType != "" ) && $2 ~ /^(type|aufs|squashfs|unionfs|devtmpfs|tmpfs|iso9660|devfs|linprocfs|sysfs|fdescfs)$/ {
+		getline
+	}
 	# this is required because below we are subtracting from NF, so it has to be > 5
 	# the real issue is long file system names that force the wrap of df output: //fileserver/main
 	# but we still need to handle more dynamically long space containing file names, but later.
@@ -5855,6 +5859,7 @@ get_partition_data()
 		}
 		getline
 	}
+	
 	# next set devBase if it didn not get set above here
 	( $1 ~ /^\/dev\// ) && ( devBase == "" ) {
 		devBase=gensub( /^(\/dev\/)(.+)$/, "\\2", 1, $1 )
