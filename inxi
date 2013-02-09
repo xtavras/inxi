@@ -913,7 +913,7 @@ check_required_apps()
 	if [[ -z $BSD_TYPE  ]];then
 		depends="$depends lspci"
 	elif [[ $BSD_TYPE == 'bsd' ]];then
-		depends="$depends sysctl pciconf"
+		depends="$depends sysctl"
 		# dgbsd has lspci but you must be root to run it
 	elif [[ $BSD_TYPE == 'dgbsd' ]];then
 		depends="$depends sysctl lspci"
