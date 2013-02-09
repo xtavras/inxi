@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 25-bsd
+####  Patch Number: 26-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5818,7 +5818,8 @@ get_partition_data()
 		df_string='df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs'
 	else
 		swap_data="$( swapctl -l 3>/dev/null )"
-		df_string='df -h -T -P'
+		# default size is 512, need -g to get gigabytes
+		df_string='df -h -T -P -g'
 	fi
 	main_partition_data="$( eval $df_string )"
 	# set dev disk label/mapper/uuid data globals
