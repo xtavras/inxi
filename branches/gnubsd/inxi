@@ -1566,11 +1566,11 @@ debug_data_collector()
 			ls -l /dev/mapper &> $debug_data_dir/dev-disk-mapper-data.txt
 			readlink /dev/root &> $debug_data_dir/dev-root.txt
 			df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs &> $debug_data_dir/df-h-T-excludes.txt
-			df -h -T -P -g &> $debug_data_dir/df-h-T-g-no-excludes.txt
+			df -H -T &> $debug_data_dir/df-H-T-no-excludes.txt
 			swapctl -l &> $debug_data_dir/swapctl-l.txt
 			swapon -s &> $debug_data_dir/swapon-s.txt
-			df -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 &> $debug_data_dir/df-p-excludes.txt
-			df -P &> $debug_data_dir/df-p-no-excludes.txt
+			df -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 &> $debug_data_dir/df-P-excludes.txt
+			df -P &> $debug_data_dir/df-P-no-excludes.txt
 			cat /proc/mdstat &> $debug_data_dir/proc-mdstat.txt
 			cat $FILE_PARTITIONS &> $debug_data_dir/proc-partitions.txt
 			cat $FILE_SCSI &> $debug_data_dir/proc-scsi.txt
