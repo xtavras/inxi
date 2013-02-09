@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 24-bsd
+####  Patch Number: 25-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5847,8 +5847,9 @@ get_partition_data()
 	# this has to be nulled for every iteration so it does not retain value from last iteration
 	devBase=""
 	# skipping these file systems because bsds do not support df --exclude-type=<fstype>
-	( bsdType != "" ) && ( $2 ~ /^(type|aufs|squashfs|unionfs|devtmpfs|tmpfs|iso9660|devfs|linprocfs|sysfs|fdescfs)$/ ) {
-		getline
+	( bsdType != "" ) && $2 ~ /^(type|aufs|squashfs|unionfs|devtmpfs|tmpfs|iso9660|devfs|linprocfs|sysfs|fdescfs)$/ {
+		# note use next, not getline or it does not work right
+		next 
 	}
 	# this is required because below we are subtracting from NF, so it has to be > 5
 	# the real issue is long file system names that force the wrap of df output: //fileserver/main
