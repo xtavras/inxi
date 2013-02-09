@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 23-gnubsd
+####  Patch Number: 24-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1566,9 +1566,11 @@ debug_data_collector()
 			ls -l /dev/mapper &> $debug_data_dir/dev-disk-mapper-data.txt
 			readlink /dev/root &> $debug_data_dir/dev-root.txt
 			df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs &> $debug_data_dir/df-h-T-excludes.txt
+			df -h -T -P &> $debug_data_dir/df-h-T-no-excludes.txt
 			swapctl -l &> $debug_data_dir/swapctl-l.txt
 			swapon -s &> $debug_data_dir/swapon-s.txt
-			df -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 &> $debug_data_dir/df-excludes.txt
+			df -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 &> $debug_data_dir/df-p-excludes.txt
+			df -P &> $debug_data_dir/df-p-no-excludes.txt
 			cat /proc/mdstat &> $debug_data_dir/proc-mdstat.txt
 			cat $FILE_PARTITIONS &> $debug_data_dir/proc-partitions.txt
 			cat $FILE_SCSI &> $debug_data_dir/proc-scsi.txt
@@ -5845,7 +5847,7 @@ get_partition_data()
 	# this has to be nulled for every iteration so it does not retain value from last iteration
 	devBase=""
 	# skipping these file systems because bsds do not support df --exclude-type=<fstype>
-	( bsdType != "" ) && $2 ~ /^(type|aufs|squashfs|unionfs|devtmpfs|tmpfs|iso9660|devfs|linprocfs|sysfs|fdescfs)$/ {
+	( bsdType != "" ) && ( $2 ~ /^(type|aufs|squashfs|unionfs|devtmpfs|tmpfs|iso9660|devfs|linprocfs|sysfs|fdescfs)$/ ) {
 		getline
 	}
 	# this is required because below we are subtracting from NF, so it has to be > 5
