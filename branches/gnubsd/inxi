@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 29-gnubsd
+####  Patch Number: 30-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4605,7 +4605,8 @@ get_graphics_res_data()
 			else
 				if [[ -n $BSD_TYPE ]];then
 					tty_session=$( get_tty_console_irc )
-					screen_resolution="$( tput cols -T $tty_session )x$( tput lines -T $tty_session )"
+					# getting information for tty that owns the irc client
+					screen_resolution="$( stty -f /dev/pts/$tty_session size | gawk '{print $2"x"$1}' )"
 				fi
 			fi
 		fi
@@ -4819,7 +4820,6 @@ get_hdd_data_basic()
 			}
 		}' $FILE_PARTITIONS 
 		) )
-
 		log_function_data 'cat' "$FILE_PARTITIONS"
 	fi
 	IFS="$ORIGINAL_IFS"
