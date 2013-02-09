@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 20-gnubsd
+####  Patch Number: 21-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1566,6 +1566,7 @@ debug_data_collector()
 			ls -l /dev/mapper &> $debug_data_dir/dev-disk-mapper-data.txt
 			readlink /dev/root &> $debug_data_dir/dev-root.txt
 			df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs &> $debug_data_dir/df-h-T-excludes.txt
+			swapctl -l &> $debug_data_dir/swapctl-l.txt
 			swapon -s &> $debug_data_dir/swapon-s.txt
 			df -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 &> $debug_data_dir/df-excludes.txt
 			cat /proc/mdstat &> $debug_data_dir/proc-mdstat.txt
@@ -5810,7 +5811,12 @@ get_partition_data()
 	# df doesn't seem to work in script with variables like at the command line
 	# added devfs linprocfs sysfs fdescfs which show on debian kfreebsd kernel output
 	local main_partition_data="$( df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs )"
-	local swap_data="$( swapon -s )"
+	local swap_data=''
+	if [[ -z $BSD_TYPE ]];then
+		swap_data="$( swapon -s 3>/dev/null )"
+	else
+		swap_data="$( swapctl -l 3>/dev/null )"
+	fi
 	# set dev disk label/mapper/uuid data globals
 	get_partition_dev_data 'label'
 	get_partition_dev_data 'mapper'
@@ -5878,15 +5884,25 @@ get_partition_data()
 	# now add the swap partition data, don't want to show swap files, just partitions,
 	# though this can include /dev/ramzswap0. Note: you can also use /proc/swaps for this
 	# data, it's the same exact output as swapon -s
-	$( echo "$swap_data" | gawk '
+	$( echo "$swap_data" | gawk -v bsdType=$BSD_TYPE '
 	BEGIN {
 		swapCounter = 1
+		usedHolder=""
+		sizeHolder=""
 	}
 	/^\/dev/ {
-		size = sprintf( "%.2f", $3*1024/1000**3 )
+		if ( bsdType == "" ) {
+			usedHolder=$4
+			sizeHolder=$3
+		}
+		else {
+			usedHolder=$3
+			sizeHolder=$2
+		}
+		size = sprintf( "%.2f", sizeHolder*1024/1000**3 )
 		devBase = gensub( /^(\/dev\/)(.+)$/, "\\2", 1, $1 )
-		used = sprintf( "%.2f", $4*1024/1000**3 )
-		percentUsed = sprintf( "%.0f", ( $4/$3 )*100 )
+		used = sprintf( "%.2f", usedHolder*1024/1000**3 )
+		percentUsed = sprintf( "%.0f", ( usedHolder/sizeHolder )*100 )
 		print "swap-" swapCounter "," size "GB," used "GB," percentUsed "%,main," "swap," devBase
 		swapCounter = ++swapCounter
 	}' ) )
