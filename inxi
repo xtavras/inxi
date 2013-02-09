@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 21-gnubsd
+####  Patch Number: 22-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5806,17 +5806,19 @@ get_partition_data()
 {
 	eval $LOGFS
 	
-	local a_partition_working='' dev_item='' temp_array='' dev_working_item=''
+	local a_partition_working='' dev_item='' temp_array='' dev_working_item='' 
+	local swap_data='' df_string='' main_partition_data
 	#local excluded_file_types='--exclude-type=aufs --exclude-type=tmpfs --exclude-type=iso9660'
 	# df doesn't seem to work in script with variables like at the command line
 	# added devfs linprocfs sysfs fdescfs which show on debian kfreebsd kernel output
-	local main_partition_data="$( df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs )"
-	local swap_data=''
 	if [[ -z $BSD_TYPE ]];then
 		swap_data="$( swapon -s 3>/dev/null )"
+		df_string='df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs'
 	else
 		swap_data="$( swapctl -l 3>/dev/null )"
+		df_string='df -h -T -P'
 	fi
+	main_partition_data="$( eval $df_string )"
 	# set dev disk label/mapper/uuid data globals
 	get_partition_dev_data 'label'
 	get_partition_dev_data 'mapper'
