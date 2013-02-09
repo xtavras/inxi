@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 19-bsd
+####  Patch Number: 20-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2571,7 +2571,7 @@ get_start_client()
 		else
 			# this should handle certain cases where it's ssh or some other startup tool
 			# that falls through all the other tests
-			if [[ $BSD_TYPE == 'bsd' ]];then
+			if [[ $BSD_TYPE != 'bsd' ]];then
 				App_Working_Name=$(ps -p $PPID --no-headers 3>/dev/null | gawk '{print $NF}' )
 			else
 				# without --no-headers we need the second line
