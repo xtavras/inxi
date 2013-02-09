@@ -1,9 +1,9 @@
 #!/bin/bash
 ########################################################################
 ####  Script Name: inxi
-####  Version: 1.8.35
+####  Version: 1.8.36
 ####  Date: February 8 2013
-####  Patch Number: 31-gnubsd
+####  Patch Number: 00-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7068,6 +7068,7 @@ get_tty_console_irc()
 			/.*'$PPID'.*'${IRC_CLIENT}'/ {
 				gsub(/[^0-9]/, "", $7)
 				print $7
+				exit
 			}' )
 	fi
 	log_function_data "tty_number: $tty_number"
