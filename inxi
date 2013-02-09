@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 30-bsd
+####  Patch Number: 31-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7063,7 +7063,9 @@ get_tty_console_irc()
 			BEGIN {
 				IGNORECASE=1
 			}
-			/'${IRC_CLIENT}'/ {
+			# if multiple irc clients open, can give wrong results
+			# so make sure to also use the PPID number to get the right tty
+			/.*'$PPID'.*'${IRC_CLIENT}'/ {
 				gsub(/[^0-9]/, "", $7)
 				print $7
 			}' )
