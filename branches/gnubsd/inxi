@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.35
 ####  Date: February 8 2013
-####  Patch Number: 28-gnubsd
+####  Patch Number: 29-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4726,30 +4726,42 @@ get_graphics_x_version()
 get_hdd_data_basic()
 {
 	eval $LOGFS
-	local hdd_used='' temp_array=''
-	local hdd_data="$( df -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 )"
+	local hdd_used='' temp_array='' df_string=''
+	local hdd_data=''
+	
+	if [[ -z $BSD_TYPE ]];then
+		df_string='df -P -T --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660'
+	else
+		# default size is 512, so use -k for 1024
+		df_string='df -P -T -k'
+	fi
+	hdd_data="$( eval $df_string )"
 	log_function_data 'raw' "hdd_data:\n$hdd_data"
 	
-	hdd_used=$( echo "$hdd_data" | gawk '
+	hdd_used=$( echo "$hdd_data" | gawk -v bsdType=$BSD_TYPE '
+	( bsdType != "" ) && $2 ~ /^(type|aufs|squashfs|unionfs|devtmpfs|tmpfs|iso9660|devfs|linprocfs|sysfs|fdescfs)$/ {
+		# note use next, not getline or it does not work right
+		next 
+	}
 	# also handles odd dm-1 type, from lvm
-	/^\/dev\/(mapper\/|[hsv]d[a-z][0-9]+|dm[-]?[0-9]+)/ {
+	/^\/dev\/(mapper\/|[hsv]d[a-z][0-9]+|dm[-]?[0-9]+|ada[0-9]+p[0-9]+)/ {
 		# this handles the case where the first item is too long
 		# and makes df wrap output to next line, so here we advance
 		# it to the next line for that single case. Using df -P should
 		# make this unneeded but leave it in just in case
-		if ( NF < 5 && $0 !~ /.*%/ ) {
+		if ( NF < 6 && $0 !~ /.*%/ ) {
 			getline
 		}
 		# if the first item caused a wrap, use one less than standard
 		# testing for the field with % in it, ie: 34%, then go down from there
 		# this also protects against cases where the mount point has a space in the
 		# file name, thus breaking going down from $NF directly.
-		if ( $4 ~ /.*%/ ) {
-			used += $2
+		if ( $5 ~ /.*%/ ) {
+			used += $3
 		}
 		# otherwise use standard
-		else if ( $5 ~ /.*%/ ) {
-			used += $3
+		else if ( $6 ~ /.*%/ ) {
+			used += $4
 		}
 		# and if this is not detected, give up, we need user data to debug
 		else {
@@ -5818,7 +5830,7 @@ get_partition_data()
 		df_string='df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs'
 	else
 		swap_data="$( swapctl -l 3>/dev/null )"
-		# default size is 512, need -g to get gigabytes
+		# default size is 512, -H only for size in human readable format
 		df_string='df -H -T'
 	fi
 	main_partition_data="$( eval $df_string )"
@@ -5844,10 +5856,6 @@ get_partition_data()
 	A_PARTITION_DATA=( $( echo "$main_partition_data" | gawk -v bsdType=$BSD_TYPE '
 	BEGIN {
 		IGNORECASE=1
-		unit=""
-		if ( bsdType != "" ) {
-			unit="GB"
-		}
 	}
 	# this has to be nulled for every iteration so it does not retain value from last iteration
 	devBase=""
