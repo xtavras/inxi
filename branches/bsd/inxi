@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 01-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6219,7 +6219,7 @@ get_patch_version_string()
 }
 
 # args: $1 - type cpu/mem 
-get_ps_data()
+get_ps_tcm_data()
 {
 	eval $LOGFS
 	local array_length='' reorder_temp='' i=0 head_tail='' sort_type='' ps_data=''
@@ -7027,19 +7027,24 @@ get_shell_data()
 get_shell_parent()
 {
 	eval $LOGFS
-	local shell_parent='' script_parent=''
+	local shell_parent='' script_parent='' gawkPrint='3'
+	
+	if [[ $BSD_TYPE == 'bsd' ]];then
+		gawkPrint='2'
+	fi
 	
 	# removed --no-headers to make bsd safe
-	script_parent=$( ps -fp $PPID 2>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
+	script_parent=$( ps -fp $PPID 2>/dev/null | gawk '/'"$PPID"'/ { print $'$gawkPrint' }' )
+	log_function_data "script parent: $shell_parent"
 	shell_parent=$( ps -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	# no idea why have to do script_parent action twice in su case, but you do, oh well.
 	if [[ $shell_parent == 'su' ]];then
-		script_parent=$( ps -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
-		script_parent=$( ps -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		script_parent=$( ps -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $'$gawkPrint' }' )
+		script_parent=$( ps -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $'$gawkPrint' }' )
 		shell_parent=$( ps -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	fi
 	echo $shell_parent
-	
+	log_function_data "shell parent final: $shell_parent"
 	eval $LOGFE
 }
 
@@ -8760,12 +8765,12 @@ print_ps_data()
 	local b_print_first='true' 
 
 	if [[ $B_SHOW_PS_CPU_DATA == 'true' ]];then
-		get_ps_data 'cpu'
+		get_ps_tcm_data 'cpu'
 		print_ps_item 'cpu' "$b_print_first"
 		b_print_first='false' 
 	fi
 	if [[ $B_SHOW_PS_MEM_DATA == 'true' ]];then
-		get_ps_data 'mem'
+		get_ps_tcm_data 'mem'
 		print_ps_item 'mem' "$b_print_first"
 	fi
 	
