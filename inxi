@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 11-bsd
+####  Patch Number: 12-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5243,26 +5243,27 @@ get_memory_data()
 		}' $FILE_MEMINFO )
 		log_function_data 'cat' "$FILE_MEMINFO"
 	elif [[ $B_SYSCTL == 'true' && -n $Sysctl_a_Data ]];then
-		# note: on the test freebsd system, sysctrl reports totally wrong real memory. Weird.
-		if [[ -n $Dmesg_Boot_Data ]];then
-			real_memory=$( gawk -F '=' '
-			/^real memory/ {
-				sub(/\([^\)]+\)/,"", $2 )
-				gsub(/^[[:space:]]*|[[:space:]]*$/,"", $2)
-				print $2
-			}' 	<<< "$Dmesg_Boot_Data" )
-		fi
+# 		# note: on the test freebsd system, sysctrl reports totally wrong real memory. Weird.
+# 		if [[ -n $Dmesg_Boot_Data ]];then
+# 			real_memory=$( gawk -F '=' '
+# 			/^real memory/ {
+# 				sub(/\([^\)]+\)/,"", $2 )
+# 				gsub(/^[[:space:]]*|[[:space:]]*$/,"", $2)
+# 				print $2
+# 			}' 	<<< "$Dmesg_Boot_Data" )
+# 		fi
 		memory=$( grep -i 'memory' <<< "$Sysctl_a_Data" | gawk -v realMemory=$real_memory '
 		BEGIN {
 			# freebsd seems to use bytes?
-			if ( realMemory != "" ) {
-				realMemory = realMemory/1024
-			}
+# 			if ( realMemory != "" ) {
+# 				realMemory = realMemory/1024
+# 			}
 		}
-		( realMemory == "" ) && /^Real Memory:/ {
-			gsub(/[^0-9]/,"",$4)
-			realMemory = $4
+		/^hw.physmem:/ {
+			gsub(/[^0-9]/,"",$2)
+			realMemory = $2/1024
 		}
+		# hopefully this always comes after realmem?
 		/^Free Memory:/ {
 			gsub(/[^0-9]/,"",$3)
 			notused = $3
