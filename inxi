@@ -2,8 +2,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 1.8.36
-####  Date: February 8 2013
-####  Patch Number: 00-bsd
+####  Date: February 9 2013
+####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -566,6 +566,8 @@ main()
 	eval $LOGFS
 	
 	local color_scheme=''
+	# this will be used by all functions following
+	local Ps_aux_Data="$( ps aux )"
 	
 	# This function just initializes variables
 	initialize_data
@@ -590,6 +592,8 @@ main()
 	if [[ -s $HOME/.$SCRIPT_NAME/$SCRIPT_NAME.conf ]];then
 		source $HOME/.$SCRIPT_NAME/$SCRIPT_NAME.conf
 	fi
+	
+	
 
 	## this needs to run before the KONVI stuff is set below
 	## Konversation 1.2 apparently does not like the $PPID test in get_start_client
@@ -734,7 +738,7 @@ initialize_data()
 	
 	# found a case of battery existing but having nothing in it on desktop mobo
 	# not all laptops show the first, 
-	if [[ -n $( ls /proc/acpi/battery 2>/dev/null ) ]];then
+	if [[ -e /proc/acpi/battery ]];then
 		B_PORTABLE='true'
 	fi
 	if [[ -e $FILE_CPUINFO ]]; then
@@ -2537,6 +2541,7 @@ get_start_client()
 		# from inside itself, as a script, the parent is konversation/xchat, not perl/bash etc
 		# note: perl can report as: perl5.10.0, so it needs wildcard handling
 		case $App_Working_Name in
+			# bsd will never use this section
 			bash|dash|sh|python*|perl*)	# We want to know who wrapped it into the shell or perl.
 				pppid="$( ps -p $PPID -o ppid --no-headers | sed 's/[[:space:]]//g' )"
 				if [[ -n $pppid && -f /proc/$pppid/exe ]];then
@@ -2860,7 +2865,7 @@ set_perl_python_konvi()
 {
 	if [[ -z $IRC_CLIENT_VERSION ]];then
 		# this is a hack to try to show konversation if inxi is running but started via /cmd
-		if [[ -n $( ps aux | grep -i 'konversation' | grep -v 'grep' ) && $B_RUNNING_IN_X == 'true' ]];then
+		if [[ -n $( grep -i 'konversation' <<< "$Ps_aux_Data" | grep -v 'grep' ) && $B_RUNNING_IN_X == 'true' ]];then
 			IRC_CLIENT='Konversation'
 			IRC_CLIENT_VERSION=" $( konversation --version 2>/dev/null | gawk '/^Konversation/ {print $2}' )"
 			B_CONSOLE_IRC='false'
@@ -3523,7 +3528,7 @@ get_desktop_environment()
 	eval $LOGFS
 	
 	# set the default, this function only runs in X, if null, don't print data out
-	local desktop_environment='' xprop_root='' ps_aux='' 
+	local desktop_environment='' xprop_root='' 
 	local version='' version_data='' toolkit=''
 	
 	if [[ -n $( type -p xprop ) ]];then
@@ -3617,7 +3622,6 @@ get_desktop_environment()
 	# now that the primary ones have been handled, next is to find the ones with unique
 	# xprop detections possible
 	else
-		ps_aux="$( ps aux )"
 		if [[ -n $xprop_root ]];then
 			# String: "This is xfdesktop version 4.2.12"
 			if [[ -n $( grep -Eis '\"xfce4\"' <<< "$xprop_root" ) ]];then
@@ -3646,7 +3650,7 @@ get_desktop_environment()
 				fi
 				desktop_environment="Xfce"
 			elif [[ -n $( grep -is 'BLACKBOX_PID' <<< "$xprop_root" ) ]];then
-				if [[ -n $( grep -is 'fluxbox' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+				if [[ -n $( grep -is 'fluxbox' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 					version=$( get_de_app_version 'fluxbox' '^fluxbox' '2' )
 					desktop_environment='Fluxbox'
 				else
@@ -3654,12 +3658,12 @@ get_desktop_environment()
 				fi
 			elif [[ -n $( grep -is 'OPENBOX_PID' <<< "$xprop_root" ) ]];then
 				version=$( get_de_app_version 'openbox' '^openbox' '2' )
-				if [[ -n $( grep -is 'lxde' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+				if [[ -n $( grep -is 'lxde' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 					if [[ -n $version ]];then
 						version="(Openbox $version)"
 					fi
 					desktop_environment='LXDE'
-				elif [[ -n $( grep -is 'razor-desktop' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+				elif [[ -n $( grep -is 'razor-desktop' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 					if [[ -n $version ]];then
 						version="(Openbox $version)"
 					fi
@@ -3698,34 +3702,34 @@ get_desktop_environment()
 		# a few manual hacks for things that don't id with xprop, these are just good guesses
 		# note that gawk is going to exit after first occurance of search string, so no need for extra
 		if [[ -z $desktop_environment ]];then
-			if [[ -n $( grep -is 'fvwm-crystal'  <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			if [[ -n $( grep -is 'fvwm-crystal'  <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'fvwm' '^fvwm' '2' )
 				desktop_environment='FVWM-Crystal'
-			elif [[ -n $( grep -is 'fvwm'  <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -is 'fvwm'  <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'fvwm' '^fvwm' '2' )
 				desktop_environment='FVWM'
-			elif [[ -n $( grep -is 'pekwm'  <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -is 'pekwm'  <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'pekwm' '^pekwm' '3' )
 				desktop_environment='pekwm'
-			elif [[ -n $( grep -is 'awesome' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -is 'awesome' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'awesome' '^awesome' '2' )
 				desktop_environment='Awesome'
-			elif [[ -n $( grep -is 'scrotwm' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -is 'scrotwm' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'scrotwm' '^welcome.*scrotwm' '4' )
 				desktop_environment='Scrotwm' # no --version for this one
-			elif [[ -n $( grep -Eis '([[:space:]]|/)twm' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -Eis '([[:space:]]|/)twm' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				desktop_environment='Twm' # no --version for this one
-			elif [[ -n $( grep -Eis '([[:space:]]|/)dwm' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -Eis '([[:space:]]|/)dwm' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'dwm' '^dwm' '1' )
 				desktop_environment='dwm'
-			elif [[ -n $( grep -is 'wmii2' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -is 'wmii2' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'wmii2' '^wmii2' '1' )
 				desktop_environment='wmii2'
 			# note: in debian at least, wmii is actuall wmii3
-			elif [[ -n $( grep -is 'wmii' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -is 'wmii' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'wmii' '^wmii' '1' )
 				desktop_environment='wmii'
-			elif [[ -n $( grep -Eis '([[:space:]]|/)jwm' <<< "$ps_aux" | grep -v 'grep' ) ]];then
+			elif [[ -n $( grep -Eis '([[:space:]]|/)jwm' <<< "$Ps_aux_Data" | grep -v 'grep' ) ]];then
 				version=$( get_de_app_version 'jwm' '^jwm' '2' )
 				desktop_environment='JWM'
 			fi
@@ -3835,8 +3839,7 @@ get_display_manager()
 	local dm_id_list='entranced.pid entrance/entranced.pid gdm.pid gdm3.pid kdm.pid ldm.pid lightdm.pid lxdm.pid mdm.pid nodm.pid slim.lock tint2.pid wdm.pid xdm.pid' 
 	local dm_id='' dm='' separator=''
 	# note we don't need to filter grep if we do it this way
-	local ps_aux="$( ps aux )"
-	local x_is_running=$( grep '/usr.*/X' <<< "$ps_aux" | grep -iv '/Xprt' )
+	local x_is_running=$( grep '/usr.*/X' <<< "$Ps_aux_Data" | grep -iv '/Xprt' )
 
 	for dm_id in $dm_id_list
 	do
@@ -3849,7 +3852,7 @@ get_display_manager()
 	# might add this in, but the rate of new dm's makes it more likely it's an unknown dm, so
 	# we'll keep output to N/A
 	if [[ -n $x_is_running && -z $dm ]];then
-		if [[ -n $( grep 'startx$' <<< "$ps_aux" ) ]];then
+		if [[ -n $( grep 'startx$' <<< "$Ps_aux_Data" ) ]];then
 			dm='(startx)'
 		fi
 	fi
@@ -4234,6 +4237,7 @@ N
 	eval $LOGFE
 }
 # get_dmidecode_data;echo "$DMIDECODE_DATA";exit
+
 get_gcc_kernel_version()
 {
 	# note that we use gawk to get the last part because beta, alpha, git versions can be non-numeric
@@ -7025,13 +7029,14 @@ get_shell_parent()
 	eval $LOGFS
 	local shell_parent='' script_parent=''
 	
-	script_parent=$( ps -fp $PPID --no-headers 2>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
-	shell_parent=$( ps -p $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
+	# removed --no-headers to make bsd safe
+	script_parent=$( ps -fp $PPID 2>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
+	shell_parent=$( ps -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	# no idea why have to do script_parent action twice in su case, but you do, oh well.
 	if [[ $shell_parent == 'su' ]];then
-		script_parent=$( ps -fp $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
-		script_parent=$( ps -fp $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
-		shell_parent=$( ps -p $script_parent --no-headers 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
+		script_parent=$( ps -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		script_parent=$( ps -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		shell_parent=$( ps -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	fi
 	echo $shell_parent
 	
@@ -7059,7 +7064,7 @@ get_tty_console_irc()
 	eval $LOGFS
 	local tty_number=''
 	if [[ -n ${IRC_CLIENT} ]];then
-		tty_number=$( ps aux | gawk '
+		tty_number=$( gawk '
 			BEGIN {
 				IGNORECASE=1
 			}
@@ -7069,7 +7074,7 @@ get_tty_console_irc()
 				gsub(/[^0-9]/, "", $7)
 				print $7
 				exit
-			}' )
+			}' <<< "$Ps_aux_Data" )
 	fi
 	log_function_data "tty_number: $tty_number"
 	echo $tty_number
@@ -7372,7 +7377,7 @@ print_short_data()
 {
 	eval $LOGFS
 	local current_kernel=$( uname -rm ) # | gawk '{print $1,$3,$(NF-1)}' )
-	local processes="$(( $( ps aux | wc -l ) - 1 ))"
+	local processes=$(( $( wc -l <<< "$Ps_aux_Data" ) - 1 ))
 	local short_data='' i='' b_background_black='false'
 	local memory=$( get_memory_data )
 	local up_time="$( get_uptime )"
@@ -8021,7 +8026,7 @@ print_info_data()
 	local info_data='' line_starter='Info:'
 	local runlvl='' client_data='' shell_data='' shell_parent='' tty_session=''
 	local memory="$( get_memory_data )"
-	local processes="$(( $( ps aux | wc -l ) - 1 ))"
+	local processes=$(( $( wc -l <<< "$Ps_aux_Data" ) - 1 ))
 	local up_time="$( get_uptime )"
 	local patch_version_number=$( get_patch_version_string )
 	local gcc_string='' gcc_installed='' gcc_others='' closing_data='' 
