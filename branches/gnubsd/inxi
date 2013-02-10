@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 05-gnubsd
+####  Patch Number: 07-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -260,6 +260,7 @@ B_LOG_FULL_DATA='false'
 B_MAPPER_SET='false'
 B_OUTPUT_FILTER='false'
 B_OVERRIDE_FILTER='false'
+B_PCICONF='false'
 # kde qdbus
 B_QDBUS='false'
 B_PORTABLE='false'
@@ -327,6 +328,7 @@ B_ASOUND_DEVICE_FILE='false'
 B_ASOUND_VERSION_FILE='false'
 B_BASH_ARRAY='false'
 B_CPUINFO_FILE='false'
+B_DMESG_BOOT_FILE='false' # bsd only
 B_LSB_FILE='false'
 B_MDSTAT_FILE='false'
 B_MEMINFO_FILE='false'
@@ -342,6 +344,7 @@ FILE_ASOUND_DEVICE='/proc/asound/cards'
 FILE_ASOUND_MODULES='/proc/asound/modules' # not used but maybe for -A?
 FILE_ASOUND_VERSION='/proc/asound/version'
 FILE_CPUINFO='/proc/cpuinfo'
+FILE_DMESG_BOOT='/var/run/dmesg.boot'
 FILE_LSB_RELEASE='/etc/lsb-release'
 FILE_MDSTAT='/proc/mdstat'
 FILE_MEMINFO='/proc/meminfo'
@@ -736,11 +739,19 @@ initialize_data()
 	
 	initialize_paths
 	
-	# found a case of battery existing but having nothing in it on desktop mobo
-	# not all laptops show the first, 
-	if [[ -e /proc/acpi/battery ]];then
-		B_PORTABLE='true'
+	if [[ -n $BSD_TYPE ]];then
+		if [[ -e $FILE_DMESG_BOOT ]];then
+			B_DMESG_BOOT_FILE='true'
+		fi
+	else
+		# found a case of battery existing but having nothing in it on desktop mobo
+		# not all laptops show the first, 
+		if [[ -n $( ls /proc/acpi/battery 2>/dev/null ) ]];then
+			B_PORTABLE='true'
+		fi
 	fi
+	
+	
 	if [[ -e $FILE_CPUINFO ]]; then
 		B_CPUINFO_FILE='true'
 	fi
@@ -893,6 +904,9 @@ check_recommended_apps()
 	if [[ -n $BSD_TYPE ]];then
 		if [[ -n $( type -p sysctl ) ]];then
 			B_SYSCTL='true'
+		fi
+		if [[ -n $( type -p pciconf ) ]];then
+			B_PCICONF='true'
 		fi
 	fi
 	# now setting qdbus/dcop for first run, some systems can have both by the way
@@ -1475,6 +1489,7 @@ debug_data_collector()
 		cat $FILE_MEMINFO &> $debug_data_dir/proc-meminfo.txt
 		cat $FILE_MODULES &> $debug_data_dir/proc-modules.txt
 		cat /proc/net/arp &> $debug_data_dir/proc-net-arp.txt 
+		cat /var/run/dmesg.boot &> $debug_data_dir/var-run-dmesg.boot.txt 
 		check_recommends_user_output &> $debug_data_dir/check-recommends-user-output.txt
 		# first download and verify xiin
 		if [[ $B_UPLOAD_DEBUG_DATA == 'true' || $1 == 'disk' || $1 == 'sys' || $1 == 'all' ]];then
@@ -1742,6 +1757,7 @@ check_recommends_items()
 	/dev:-l,-u,-o,-p,-P,-D_disk_partition_data
 	/dev/disk/by-label:-l,-o,-p,-P_partition_labels
 	/dev/disk/by-uuid:-u,-o,-p,-P_partition_uuid
+	/var/run/dmesg.boot:-C,-f_(BSD_only)
 	'
 	
 	case $1 in
@@ -3242,6 +3258,7 @@ get_cpu_data()
 {
 	eval $LOGFS
 	local i='' j='' cpu_array_nu='' a_cpu_working='' multi_cpu='' bits='' temp_array=''
+	local bsd_cpu_flags=''
 
 	if [[ $B_CPUINFO_FILE == 'true' ]];then
 		# stop script for a bit to let cpu slow down before parsing cpu /proc file
@@ -3348,15 +3365,15 @@ get_cpu_data()
  		' $FILE_CPUINFO ) )
 		log_function_data 'cat' "$FILE_CPUINFO"
 	elif [[ -n $BSD_TYPE ]];then
+		bsd_cpu_flags=$( get_cpu_flags_bsd )
 		IFS=$'\n'
 		A_CPU_DATA=( $( 
-		gawk -F': ' '
+		gawk -F': ' -v cpuFlags="$bsd_cpu_flags" '
 		BEGIN {
 			IGNORECASE=1
 			cpuModel=""
 			cpuClock=""
 			cpuCache=""
-			cpuFlags=""
 			cpuBogomips=""
 			cpuVendor=""
 		}
@@ -3383,6 +3400,34 @@ get_cpu_data()
 # 	echo ta: ${temp_array[@]}
 	eval $LOGFE
 # 	echo getMainCpu: ${[@]}
+}
+
+get_cpu_flags_bsd()
+{
+	eval $LOGFS
+	
+	local cpu_flags=$( gawk -F '=' '
+	BEGIN {
+		IGNORECASE=1
+		cpuFlags=""
+	}
+	/^CPU:/ {
+		while ( getline && !/memory/  ) {
+			if ( $1 ~ /Features/ ) {
+				# clean up odd stuff like <b23>
+				gsub(/<[a-z0-9]+>/,"", $2)
+				gsub(/.*<|>.*/,"", $2)
+				gsub(/,/," ", $2)
+				cpuFlags = cpuFlags " " $2
+			}
+		}
+		print cpuFlags
+		exit
+	}' <<< "$Dmsg_Boot_Data" )
+	
+	echo "$cpu_flags"
+	log_function_data "$cpu_flags"
+	eval $LOGFE
 }
 
 ## this is for counting processors and finding HT types
@@ -4236,6 +4281,22 @@ N
 	eval $LOGFE
 }
 # get_dmidecode_data;echo "$DMIDECODE_DATA";exit
+
+# BSD only
+get_dmesg_boot_data()
+{
+	eval $LOGFS
+	
+	local dmsg_boot_data=''
+	
+	if [[ $B_DMESG_BOOT_FILE == 'true' ]];then
+		# replace all indented items with ~ so we can id them easily while processing
+		dmsg_boot_data="$( cat $FILE_DMESG_BOOT | sed -r 's/"//g' )"
+	fi
+	echo "$dmsg_boot_data"
+	# log_function_data "$dmsg_boot_data"
+	eval $LOGFE
+}
 
 get_gcc_kernel_version()
 {
@@ -7311,10 +7372,11 @@ print_it_out()
 	# note that print_it_out passes local variable values on to its children,
 	# and in some cases, their children, with Lspci_v_Data
 	local Lspci_v_Data='' Lspci_n_Data='' # only for verbose
-	local Sysctl_a_Data=''
+	local Sysctl_a_Data='' Dmsg_Boot_Data=''
 	
 	if [[ -n $BSD_TYPE ]];then
 		Sysctl_a_Data="$( get_sysctl_data 'a' )"
+		Dmsg_Boot_Data="$( get_dmesg_boot_data )"
 	fi
 
 	if [[ $B_SHOW_SHORT_OUTPUT == 'true' ]];then
