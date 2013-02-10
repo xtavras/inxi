@@ -7059,7 +7059,7 @@ get_sysctl_data()
 	if [[ $B_SYSCTL ]];then
 		sysctl_data="$( sysctl -$1 )"
 	fi
-	log_function_data "sysctl_data: $sysctl_data"
+	# log_function_data "sysctl_data: $sysctl_data"
 	echo "$sysctl_data"
 	eval $LOGFE
 }
