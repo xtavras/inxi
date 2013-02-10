@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 08-bsd
+####  Patch Number: 09-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5228,7 +5228,7 @@ get_machine_data()
 get_memory_data()
 {
 	eval $LOGFS
-	local memory='' memory_full=''
+	local memory='' memory_full='' real_memory=''
 	if [[ $B_MEMINFO_FILE == 'true' ]];then
 		memory=$( gawk '
 		/^MemTotal:/ {
@@ -5243,18 +5243,32 @@ get_memory_data()
 		}' $FILE_MEMINFO )
 		log_function_data 'cat' "$FILE_MEMINFO"
 	elif [[ $B_SYSCTL == 'true' && -n $Sysctl_a_Data ]];then
-		memory=$( grep -i 'memory' <<< "$Sysctl_a_Data" | gawk '
-		/^Real Memory:/ {
+		# note: on the test freebsd system, sysctrl reports totally wrong real memory. Weird.
+		real_memory=$( gawk -F '"' '
+		/^real memory/ {
+			sub(/\([^\)]+\)/,"", $2 )
+			gsub(/^[[:space:]]*|[[:space:]]*$/,"", $2)
+			print $2
+		}' 	<<< "$Dmesg_Boot_Data" )
+		memory=$( grep -i 'memory' <<< "$Sysctl_a_Data" | gawk -v realMemory=$real_memory '
+		BEGIN {
+			# freebsd seems to use bytes?
+			if ( realMemory != "" ) {
+				realMemory = realMemory/1024
+			}
+		}
+		( realMemory == "" ) && /^Real Memory:/ {
 			gsub(/[^0-9]/,"",$4)
-			tot = $4
+			realMemory = $4
 		}
 		/^Free Memory:/ {
 			gsub(/[^0-9]/,"",$3)
 			notused = $3
+			exit
 		}
 		END {
-			used = tot - notused
-			printf("%.1f/%.1fMB\n", used/1024, tot/1024)
+			used = realMemory - notused
+			printf("%.1f/%.1fMB\n", used/1024, realMemory/1024)
 		}' )
 	fi
 	echo "$memory"
