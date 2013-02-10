@@ -3421,7 +3421,7 @@ get_cpu_flags_bsd()
 				cpuFlags = cpuFlags " " $2
 			}
 		}
-		print cpuFlags
+		print tolower( cpuFlags )
 		exit
 	}' <<< "$Dmsg_Boot_Data" )
 	
