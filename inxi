@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 07-bsd
+####  Patch Number: 08-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3416,6 +3416,7 @@ get_cpu_flags_bsd()
 			if ( $1 ~ /Features/ ) {
 				# clean up odd stuff like <b23>
 				gsub(/<[a-z0-9]+>/,"", $2)
+				# all the flags are contained within < ... > on freebsd at least
 				gsub(/.*<|>.*/,"", $2)
 				gsub(/,/," ", $2)
 				cpuFlags = cpuFlags " " $2
@@ -3426,7 +3427,7 @@ get_cpu_flags_bsd()
 		exit
 	}' <<< "$Dmsg_Boot_Data" )
 	
-	echo "$cpu_flags"
+	echo $cpu_flags
 	log_function_data "$cpu_flags"
 	eval $LOGFE
 }
