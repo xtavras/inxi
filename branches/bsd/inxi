@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 09-bsd
+####  Patch Number: 10-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3425,7 +3425,7 @@ get_cpu_flags_bsd()
 		cpuFlags=tolower(cpuFlags)
 		print cpuFlags
 		exit
-	}' <<< "$Dmsg_Boot_Data" )
+	}' <<< "$Dmesg_Boot_Data" )
 	
 	echo $cpu_flags
 	log_function_data "$cpu_flags"
@@ -7388,11 +7388,11 @@ print_it_out()
 	# note that print_it_out passes local variable values on to its children,
 	# and in some cases, their children, with Lspci_v_Data
 	local Lspci_v_Data='' Lspci_n_Data='' # only for verbose
-	local Sysctl_a_Data='' Dmsg_Boot_Data=''
+	local Sysctl_a_Data='' Dmesg_Boot_Data=''
 	
 	if [[ -n $BSD_TYPE ]];then
 		Sysctl_a_Data="$( get_sysctl_data 'a' )"
-		Dmsg_Boot_Data="$( get_dmesg_boot_data )"
+		Dmesg_Boot_Data="$( get_dmesg_boot_data )"
 	fi
 
 	if [[ $B_SHOW_SHORT_OUTPUT == 'true' ]];then
