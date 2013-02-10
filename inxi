@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8050,10 +8050,11 @@ print_info_data()
 		if [[ -n $shell_data ]];then
 			# note, if you start this in tty, it will give 'login' as the parent, which we don't want.
 			if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-				shell_parent=$( get_shell_parent )
 				if [[ $B_RUNNING_IN_X != 'true' ]];then
 					shell_parent=$( get_tty_number )
 					shell_parent="tty $shell_parent"
+				else
+					shell_parent=$( get_shell_parent )
 				fi
 				if [[ $shell_parent == 'login' ]];then
 					shell_parent=''
