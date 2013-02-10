@@ -7030,7 +7030,7 @@ get_shell_parent()
 	
 	# removed --no-headers to make bsd safe, adding in -j to make output the same
 	script_parent=$( ps -j -fp $PPID 2>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
-	log_function_data "script parent: $shell_parent"
+	log_function_data "script parent: $script_parent"
 	shell_parent=$( ps -j -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	# no idea why have to do script_parent action twice in su case, but you do, oh well.
 	if [[ $shell_parent == 'su' ]];then
