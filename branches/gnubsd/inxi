@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 03-gnubsd
+####  Patch Number: 04-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2889,8 +2889,7 @@ is_this_qt4_konvi()
 	fi
 	# sabayon uses /usr/share/apps/konversation as path
 	if [[ -n $konvi_dbus_exist ]] && [[ -e /usr/share/kde4/apps/konversation || -e  /usr/share/apps/konversation ]]; then
-		konvi_pid=$( ps -A | grep -i 'konversation' )
-		konvi_pid=$( echo $konvi_pid | gawk '{ print $1 }' ) 
+		konvi_pid=$( ps -A | gawk 'BEGIN{IGNORECASE=1} /konversation/ { print $1 }' ) 
 		konvi_home_dir=$( readlink /proc/$konvi_pid/exe )
 		konvi=$( echo $konvi_home_dir | sed "s/\// /g" )
 		konvi=($konvi)
@@ -7027,21 +7026,17 @@ get_shell_data()
 get_shell_parent()
 {
 	eval $LOGFS
-	local shell_parent='' script_parent='' gawkPrint='3'
+	local shell_parent='' script_parent='' 
 	
-	if [[ $BSD_TYPE == 'bsd' ]];then
-		gawkPrint='2'
-	fi
-	
-	# removed --no-headers to make bsd safe
-	script_parent=$( ps -fp $PPID 2>/dev/null | gawk '/'"$PPID"'/ { print $'$gawkPrint' }' )
+	# removed --no-headers to make bsd safe, adding in -j to make output the same
+	script_parent=$( ps -j -fp $PPID 2>/dev/null | gawk '/'"$PPID"'/ { print $3 }' )
 	log_function_data "script parent: $shell_parent"
-	shell_parent=$( ps -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
+	shell_parent=$( ps -j -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	# no idea why have to do script_parent action twice in su case, but you do, oh well.
 	if [[ $shell_parent == 'su' ]];then
-		script_parent=$( ps -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $'$gawkPrint' }' )
-		script_parent=$( ps -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $'$gawkPrint' }' )
-		shell_parent=$( ps -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
+		script_parent=$( ps -j -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		script_parent=$( ps -j -fp $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $3 }' )
+		shell_parent=$( ps -j -p $script_parent 2>/dev/null | gawk '/'"$script_parent"'/ { print $NF}' )
 	fi
 	echo $shell_parent
 	log_function_data "shell parent final: $shell_parent"
