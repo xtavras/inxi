@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 10-gnubsd
+####  Patch Number: 11-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5244,12 +5244,14 @@ get_memory_data()
 		log_function_data 'cat' "$FILE_MEMINFO"
 	elif [[ $B_SYSCTL == 'true' && -n $Sysctl_a_Data ]];then
 		# note: on the test freebsd system, sysctrl reports totally wrong real memory. Weird.
-		real_memory=$( gawk -F '"' '
-		/^real memory/ {
-			sub(/\([^\)]+\)/,"", $2 )
-			gsub(/^[[:space:]]*|[[:space:]]*$/,"", $2)
-			print $2
-		}' 	<<< "$Dmesg_Boot_Data" )
+		if [[ -n $Dmesg_Boot_Data ]];then
+			real_memory=$( gawk -F '=' '
+			/^real memory/ {
+				sub(/\([^\)]+\)/,"", $2 )
+				gsub(/^[[:space:]]*|[[:space:]]*$/,"", $2)
+				print $2
+			}' 	<<< "$Dmesg_Boot_Data" )
+		fi
 		memory=$( grep -i 'memory' <<< "$Sysctl_a_Data" | gawk -v realMemory=$real_memory '
 		BEGIN {
 			# freebsd seems to use bytes?
