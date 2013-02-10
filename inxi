@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 9 2013
-####  Patch Number: 14-gnubsd
+####  Patch Number: 15-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5245,10 +5245,11 @@ get_memory_data()
 	elif [[ $B_SYSCTL == 'true' && -n $Sysctl_a_Data ]];then
 		memory=$( grep -i 'mem' <<< "$Sysctl_a_Data" | gawk  '
 		BEGIN {
-			# freebsd seems to use bytes?
+			
 			realMemory=""
 			freeMemory=""
 		}
+		# freebsd seems to use bytes here
 		/^hw.physmem:/ {
 			gsub(/^[^0-9]+|[^0-9]+$/,"",$2)
 			realMemory = $2/1024
@@ -5256,6 +5257,7 @@ get_memory_data()
 				exit
 			}
 		}
+		# But, it uses K here
 		/^Free Memory:/ {
 			gsub(/[^0-9]/,"",$3)
 			freeMemory = $3
@@ -6543,6 +6545,7 @@ get_repo_data()
 	local repo_file='' repo_data_working='' repo_data_working2='' repo_line='' 
 	local apt_file='/etc/apt/sources.list' yum_repo_dir='/etc/yum.repos.d/' yum_conf='/etc/yum.conf'
 	local pacman_conf='/etc/pacman.conf' pacman_repo_dir='/etc/pacman.d/' pisi_dir='/etc/pisi/'
+	local freebsd_conf='/etc/portsnap.conf'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
@@ -6689,6 +6692,15 @@ $repo_data_working"
 		done
 		# execute line breaks
 		REPO_DATA="$( echo -e $repo_data_working2 )"
+	elif [[ -f $freebsd_conf ]];then
+		REPO_DATA="$( gawk -F '=' -v repoFile=$freebsd_conf '
+		BEGIN {
+			IGNORECASE=1
+		}
+		/^SERVERNAME/ {
+			print "BSD repo servers:" repoFile ":" $2
+		}
+		' $freebsd_conf )"
 	fi
 	eval $LOGFE
 }
