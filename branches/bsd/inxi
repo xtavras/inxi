@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 11 2013
-####  Patch Number: 19-bsd
+####  Patch Number: 20-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -85,7 +85,7 @@
 ####  -S   For desktop environment, user must be in X and have xprop installed (in X11-utils)
 ########################################################################
 ####  BSD Adjustments
-####  * sed -i '' '' form supported by using SED_I="-i ''".
+####  * sed -i '' form supported by using SED_I="-i ''".
 ####  * Note: BSD sed supports using -r instead of -E for compatibility with gnu sed
 ####  * Gnu grep options can be used if the function component is only run in linux
 ####    These are the options that bsd grep does not support that inxi uses: -m <number> -o 
@@ -6718,7 +6718,7 @@ $repo_data_working"
 			IGNORECASE=1
 		}
 		/^SERVERNAME/ {
-			print "BSD repo servers:" repoFile ":" $2
+			print "BSD ports servers:" repoFile ":" $2
 		}
 		' $freebsd_conf )"
 	fi
