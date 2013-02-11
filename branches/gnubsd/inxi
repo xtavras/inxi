@@ -2,8 +2,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 1.8.36
-####  Date: February 9 2013
-####  Patch Number: 15-gnubsd
+####  Date: February 11 2013
+####  Patch Number: 16-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1439,10 +1439,16 @@ script_self_updater()
 debug_data_collector()
 {
 	local xiin_app='' xiin_data_file='' xiin_download='' error='' b_run_xiin='false'
-	local debug_data_dir="inxi-$(tr ' ' '-' <<< $HOSTNAME | tr '[A-Z]' '[a-z]' )-$1-$(date +%Y%m%d)" 
+	local debug_data_dir='' bsd_string=''
 	local completed_gz_file='' xiin_file='xiin.py' ftp_upload='ftp.techpatterns.com/incoming'
 	local Line='-------------------------'
 	local start_directory=$( pwd )
+	
+	if [[ -n $BSD_TYPE ]];then
+		bsd_string="$BSD_TYPE-"
+	fi
+	
+	debug_data_dir="inxi-$bsd_string$(tr ' ' '-' <<< $HOSTNAME | tr '[A-Z]' '[a-z]' )-$1-$(date +%Y%m%d)" 
 	
 	if [[ $B_RUNNING_IN_SHELL == 'true' ]];then
 		if [[ -n $ALTERNATE_FTP ]];then
@@ -1468,16 +1474,18 @@ debug_data_collector()
 		echo 'Collecting system info: sensors, lsusb, lspci, lspci -v data, plus /proc data'
 		echo 'also checking for dmidecode data: note, you must be root to have dmidecode work.'
 		echo "Data going into: $SCRIPT_DATA_DIR/$debug_data_dir"
+		# bsd tools
+		pciconf -vl &> $debug_data_dir/bsd-pciconf-vl.txt
+		sysctl -a &> $debug_data_dir/bsd-sysctl-a.txt
+		
 		dmidecode &> $debug_data_dir/dmidecode.txt
 		lsusb &> $debug_data_dir/lsusb.txt
 		lspci &> $debug_data_dir/lspci.txt
 		lspci -n &> $debug_data_dir/lspci-n.txt
 		lspci -v &> $debug_data_dir/lspci-v.txt
-		# bsd tool
-		pciconf -vl &> $debug_data_dir/pciconf-vl.txt
 		ps aux &> $debug_data_dir/ps-aux.txt
 		sensors &> $debug_data_dir/sensors.txt
-		sysctl -a &> $debug_data_dir/sysctl-a.txt
+		
 		ls /usr/bin/gcc* &> $debug_data_dir/gcc-sys-versions.txt
 		gcc --version &> $debug_data_dir/gcc-version.txt
 		cat /etc/issue &> $debug_data_dir/etc-issue.txt
@@ -1489,7 +1497,9 @@ debug_data_collector()
 		cat $FILE_MEMINFO &> $debug_data_dir/proc-meminfo.txt
 		cat $FILE_MODULES &> $debug_data_dir/proc-modules.txt
 		cat /proc/net/arp &> $debug_data_dir/proc-net-arp.txt 
-		cat /var/run/dmesg.boot &> $debug_data_dir/var-run-dmesg.boot.txt 
+		# bsd data
+		cat /var/run/dmesg.boot &> $debug_data_dir/bsd-var-run-dmesg.boot.txt 
+		
 		check_recommends_user_output &> $debug_data_dir/check-recommends-user-output.txt
 		# first download and verify xiin
 		if [[ $B_UPLOAD_DEBUG_DATA == 'true' || $1 == 'disk' || $1 == 'sys' || $1 == 'all' ]];then
@@ -1586,7 +1596,8 @@ debug_data_collector()
 			readlink /dev/root &> $debug_data_dir/dev-root.txt
 			df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs &> $debug_data_dir/df-h-T-excludes.txt
 			df -H -T &> $debug_data_dir/df-H-T-no-excludes.txt
-			swapctl -l &> $debug_data_dir/swapctl-l.txt
+			# bsd tool
+			swapctl -l &> $debug_data_dir/bsd-swapctl-l.txt
 			swapon -s &> $debug_data_dir/swapon-s.txt
 			df -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 &> $debug_data_dir/df-P-excludes.txt
 			df -P &> $debug_data_dir/df-P-no-excludes.txt
@@ -2327,25 +2338,30 @@ get_parameters()
 show_options()
 {
 	local color_scheme_count=$(( ${#A_COLOR_SCHEMES[@]} - 1 ))
+	local partition_string='partition' partition_string_u='Partition'
 	
 	if [[ $B_RUNNING_IN_SHELL != 'true' ]];then
 		print_screen_output "Sorry, you can't run the help option in an IRC client."
 		exit 1
 	fi
+	if [[ -n $BSD_TYPE ]];then
+		partition_string='slice'
+		partition_string_u='Slice'
+	fi
 	print_screen_output "$SCRIPT_NAME supports the following options. You can combine them, or list them"
 	print_screen_output "one by one: Examples: $SCRIPT_NAME -v4 -c6 OR $SCRIPT_NAME -bDc 6"
 	print_screen_output " "
 	print_screen_output "If you start $SCRIPT_NAME with no arguments, it will show the short form."
-	print_screen_output "The following options if used without -F, -b, or -v will show just the complete line(s):"
-	print_screen_output "A,C,D,G,I,M,N,P,S,f,i,n,o,p,l,u,r,s,t - you can use these alone or together to show"
+	print_screen_output "The following options if used without -F, -b, or -v will show just option line(s):"
+	print_screen_output "A,C,D,G,I,M,N,P,R,S,f,i,n,o,p,l,u,r,s,t - you can use these alone or together to show"
 	print_screen_output "just the line(s) you want to see."
 	print_screen_output "If you use them with -v [level], -b or -F, it will show the full output for that line "
 	print_screen_output "along with the output for the chosen verbosity level."
 	print_screen_output "- - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 	print_screen_output "Output Control Options:"
-	print_screen_output "-A  Show Audio/sound card information."
-	print_screen_output "-b  Shows basic output, short form. Like $SCRIPT_NAME -v 2, only minus hard disk names."
-	print_screen_output "-c  Available color schemes. Scheme number is required. Color selectors run a color selector option"
+	print_screen_output "-A  Audio/sound card information."
+	print_screen_output "-b  Basic output, short form. Like $SCRIPT_NAME -v 2, only minus hard disk names."
+	print_screen_output "-c  Color schemes. Scheme number is required. Color selectors run a color selector option"
 	print_screen_output "    prior to $SCRIPT_NAME starting which lets you set the config file value for the selection."
 	print_screen_output "    Supported color schemes: 0-$color_scheme_count Example: $SCRIPT_NAME -c 11"
 	print_screen_output "    Color selectors for each type display (NOTE: irc and global only show safe color set):"
@@ -2355,81 +2371,82 @@ show_options()
 	print_screen_output "    97 - Console IRC running in X - like irssi in xTerm"
 	print_screen_output "    98 - Console IRC not in  X"
 	print_screen_output "    99 - Global - Overrides/removes all settings. Setting specific removes global."
-	print_screen_output "-C  Show full CPU output, including per CPU clockspeed."
-	print_screen_output "-d  Shows optical drive data. Same as -Dd. With -x, adds features line to output. -xx adds a few more features."
-	print_screen_output "-D  Show full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB. See also -x and -xx."
-	print_screen_output "-f  Show all cpu flags used, not just the short list. Not shown with -F to avoid spamming."
-	print_screen_output "-F  Show Full output for $SCRIPT_NAME. Includes all Upper Case line letters, plus -s and -n."
-	print_screen_output "    Does not show extra verbose options like -x -d -f -u -l -o -p -t -r unless you use that argument."
-	print_screen_output "-G  Show Graphic card information (card, x type, resolution, glx renderer, version)."
-	print_screen_output "-i  Show Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni"
+	print_screen_output "-C  Full CPU output, including per CPU clockspeed (if available)."
+	print_screen_output "-d  Optical drive data. Same as -Dd. See also -x and -xx."
+	print_screen_output "-D  Full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB. See also -x and -xx."
+	print_screen_output "-f  All cpu flags, triggers -C. Not shown with -F to avoid spamming."
+	print_screen_output "-F  Full output for $SCRIPT_NAME. Includes all Upper Case line letters, plus -s and -n."
+	print_screen_output "    Does not show extra verbose options like -x -d -f -u -l -o -p -t -r"
+	print_screen_output "-G  Graphic card information (card, x type, resolution, glx renderer, version)."
+	print_screen_output "-i  Wan IP address, and shows local interfaces (requires ifconfig network tool). Same as -Nni"
 	print_screen_output "    Not shown with -F for user security reasons, you shouldn't paste your local/wan IP."
-	print_screen_output "-I  Show Information: processes, uptime, memory, irc client (or shell type), inxi version."
-	print_screen_output "-l  Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu)."
-	print_screen_output "-M  Show machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo)."
+	print_screen_output "-I  Information: processes, uptime, memory, irc client (or shell type), $SCRIPT_NAME version."
+	print_screen_output "-l  ${partition_string_u} labels. Default: short partition -P. For full -p output, use: -pl (or -plu)."
+	print_screen_output "-M  Machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo)."
 	print_screen_output "    Older systems/kernels without the required /sys data can use dmidecode instead, run as root."
-	print_screen_output "-n  Show Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state, etc."
-	print_screen_output "-N  Show Network card information. With -x, shows PCI BusID, Port number."
-	print_screen_output "-o  Show unmounted partition information (includes UUID and LABEL if available)."
+	print_screen_output "-n  Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state, etc."
+	print_screen_output "-N  Network card information. With -x, shows PCI BusID, Port number."
+	print_screen_output "-o  Unmounted partition information (includes UUID and LABEL if available)."
 	print_screen_output "    Shows file system type if you have file installed, if you are root OR if you have"
 	print_screen_output "    added to /etc/sudoers (sudo v. 1.7 or newer): <username> ALL = NOPASSWD: /usr/bin/file (sample)"
-	print_screen_output "-p  Show full partition information (-P plus all other detected partitions)."
-	print_screen_output "-P  Show Partition information (shows what -v 4 would show, but without extra data)."
-	print_screen_output "    Shows, if detected: / /boot /home /tmp /usr /var. Use -p to see all mounted partitions."
-	print_screen_output "-r  Show distro repository data. Currently supported repo types: APT; PACMAN; PISI; YUM."
-	print_screen_output "-R  Show RAID data. Shows RAID devices, states, levels, and components, and extra data with -x/-xx"
+	print_screen_output "-p  Full ${partition_string} information (-P plus all other detected ${partition_string}s)."
+	print_screen_output "-P  Basic ${partition_string} information (shows what -v 4 would show, but without extra data)."
+	print_screen_output "    Shows, if detected: / /boot /home /tmp /usr /var. Use -p to see all mounted ${partition_string}s."
+	print_screen_output "-r  Distro repository data. Currently supported repo types: APT; PACMAN; PISI; YUM, Ports."
+	print_screen_output "-R  RAID data. Shows RAID devices, states, levels, and components, and extra data with -x/-xx"
 	print_screen_output "    If device is resyncing, shows resync progress line as well."
-	print_screen_output "-s  Show sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds."
+	print_screen_output "-s  Sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds."
 	print_screen_output "    Gpu temp only for Fglrx/Nvidia drivers. Nvidia shows screen number for > 1 screens."
-	print_screen_output "-S  Show System information: host name, kernel, desktop environment (if in X), distro"
-	print_screen_output "-t  Show processes. Requires extra options: c (cpu) m (memory) cm (cpu+memory). If followed by numbers 1-20,"
+	print_screen_output "-S  System information: host name, kernel, desktop environment (if in X), distro"
+	print_screen_output "-t  Processes. Requires extra options: c (cpu) m (memory) cm (cpu+memory). If followed by numbers 1-20,"
 	print_screen_output "    shows that number of processes for each type (default: $PS_COUNT; if in irc, max: 5): -t cm10"
 	print_screen_output "    Make sure to have no space between letters and numbers (-t cm10 - right, -t cm 10 - wrong)."
-	print_screen_output "-u  Show partition UUIDs. Default: short partition -P. For full -p output, use: -pu (or -plu)."
+	print_screen_output "-u  ${partition_string_u} UUIDs. Default: short ${partition_string} -P. For full -p output, use: -pu (or -plu)."
 	print_screen_output "-v  Script verbosity levels. Verbosity level number is required. Should not be used with -b or -F"
 	print_screen_output "    Supported levels: 0-${VERBOSITY_LEVELS} Example: $SCRIPT_NAME -v 4"
 	print_screen_output "    0 - Short output, same as: $SCRIPT_NAME"
 	print_screen_output "    1 - Basic verbose, -S + basic CPU + -G + basic Disk + -I."
-	print_screen_output "    2 - Adds networking card (-N), Machine (-M) data, shows basic hard disk data (names only),"
+	print_screen_output "    2 - Networking card (-N), Machine (-M) data, shows basic hard disk data (names only),"
 	print_screen_output "        and, if present, basic raid (devices only, and if inactive, notes that). similar to: $SCRIPT_NAME -b"
-	print_screen_output "    3 - Adds advanced CPU (-C), network (-n) data, and switches on -x advanced data option."
-	print_screen_output "    4 - Adds partition size/filled data (-P) for (if present):/, /home, /var/, /boot"
+	print_screen_output "    3 - Advanced CPU (-C), network (-n) data, and switches on -x advanced data option."
+	print_screen_output "    4 - ${partition_string_u} size/filled data (-P) for (if present):/, /home, /var/, /boot"
 	print_screen_output "        Shows full disk data (-D)."
-	print_screen_output "    5 - Adds audio card (-A); sensors (-s), partition label (-l) and UUID (-u), short form of optical drives,"
+	print_screen_output "    5 - Audio card (-A); sensors (-s), ${partition_string} label (-l) and UUID (-u), short form of optical drives,"
 	print_screen_output "        standard raid data (-R)."
-	print_screen_output "    6 - Adds data types: full partition (-p), unmounted partition (-o), optical drive (-d), full raid; triggers -xx."
-	print_screen_output "    7 - Adds network IP data (-i); triggers -xxx."
-	print_screen_output "-x  Show extra data (only works with verbose or line output, not short form): "
-	print_screen_output "    -C - bogomips on Cpu;"
-	print_screen_output "    -d - Adds items to features line of optical drive; adds rev version to optical drive."
+	print_screen_output "    6 - Full ${partition_string} (-p), unmounted ${partition_string} (-o), optical drive (-d), full raid; triggers -xx."
+	print_screen_output "    7 - Network IP data (-i); triggers -xxx."
+	print_screen_output "-x  Adds the following extra data (only works with verbose or line output, not short form): "
+	print_screen_output "    -C - Bogomips on Cpu;"
+	print_screen_output "    -d - Extra optical drive data; adds rev version to optical drive."
 	print_screen_output "    -D - Hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to"
 	print_screen_output "         /etc/sudoers (sudo v. 1.7 or newer): <username> ALL = NOPASSWD: /usr/sbin/hddtemp (sample)"
 	print_screen_output "    -G - Direct rendering status for Graphics (in X)."
 	print_screen_output "    -G - (for single gpu, nvidia driver) screen number gpu is running on."
-	print_screen_output "    -i - Show IPv6 as well for LAN interface (IF) devices."
-	print_screen_output "    -I - Show system GCC, default. With -xx, also show other installed GCC versions."
+	print_screen_output "    -i - IPv6 as well for LAN interface (IF) devices."
+	print_screen_output "    -I - System GCC, default. With -xx, also show other installed GCC versions."
 	print_screen_output "       - If running in console, not in IRC client, shows shell version number if detected."
-	print_screen_output "    -N -A - Adds version/port(s)/driver version (if available) for Network/Audio;"
+	print_screen_output "    -N -A - Version/port(s)/driver version (if available) for Network/Audio;"
 	print_screen_output "    -N -A -G - Network, audio, graphics, shows PCI Bus ID/Usb ID number of card;"
-	print_screen_output "    -R - Shows component raid id. Adds second RAID Info line: raid level; report on drives (like 5/5);"
+	print_screen_output "    -R - Show component raid id. Adds second RAID Info line: raid level; report on drives (like 5/5);"
 	print_screen_output "         blocks; chunk size; bitmap (if present). Resync line, shows blocks synced/total blocks."
 	print_screen_output "    -S - Desktop toolkit if avaliable (GNOME/XFCE/KDE only); Kernel gcc version"
 	print_screen_output "    -t - Adds memory use output to cpu (-xt c), and cpu use to memory (-xt m)."
 	print_screen_output "-xx Show extra, extra data (only works with verbose or line output, not short form): "
-	print_screen_output "    -A - Adds chip vendor:product ID for each audio device."
-	print_screen_output "    -D - Adds disk serial number."
-	print_screen_output "    -G - Adds chip vendor:product ID for each video card."
-	print_screen_output "    -I - Adds other detected installed gcc versions to primary gcc output (if present)."
+	print_screen_output "    -A - Chip vendor:product ID for each audio device."
+	print_screen_output "    -D - Disk serial number."
+	print_screen_output "    -G - Chip vendor:product ID for each video card."
+	print_screen_output "    -I - Other detected installed gcc versions (if present)."
 	print_screen_output "         Adds parent program (or tty) for shell info if not in IRC (like Konsole or Gterm)."
-	print_screen_output "    -M - Adds chassis information, if any data for that is available."
-	print_screen_output "    -N - Adds chip vendor:product ID for each nic."
-	print_screen_output "    -R - Adds superblock (if present); algorythm, U data. Adds system info line (kernel support,"
-	print_screen_output "         read ahead, raid events). Adds if present, unused device line. Resync line, shows progress bar."
-	print_screen_output "    -S - Adds display manager (dm) to desktop output, if in X (like kdm, gdm3, lightdm)."
+	print_screen_output "    -M - Chassis information, if any data for that is available."
+	print_screen_output "    -N - Chip vendor:product ID for each nic."
+	print_screen_output "    -R - Superblock (if present); algorythm, U data. Adds system info line (kernel support,"
+	print_screen_output "         read ahead, raid events). If present, adds unused device line. Resync line, shows"
+	print_screen_output "         progress bar."
+	print_screen_output "    -S - Display manager (dm) in desktop output, if in X (like kdm, gdm3, lightdm)."
 	print_screen_output "    -xx -@ <11-14> - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com."
 	print_screen_output "-xxx Show extra, extra, extra data (only works with verbose or line output, not short form): "
-	print_screen_output "    -S - Adds panel/shell information to desktop output, if in X (like gnome-shell, cinnamon, mate-panel)."
-	print_screen_output "-z  Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients."
+	print_screen_output "    -S - Panel/shell information in desktop output, if in X (like gnome-shell, cinnamon, mate-panel)."
+	print_screen_output "-z  Security filters for IP/Mac addresses, and user home directory name. Default on for irc clients."
 	print_screen_output "-Z  Absolute override for output filters. Useful for debugging networking issues in irc for example."
 	print_screen_output " "
 	print_screen_output "Additional Options:"
