@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 11 2013
-####  Patch Number: 16-gnubsd
+####  Patch Number: 17-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1356,6 +1356,7 @@ create_rotate_logfiles()
 }
 
 # args: $1 - download url, not including file name; $2 - string to print out
+# $3 - update type option
 # note that $1 must end in / to properly construct the url path
 script_self_updater()
 {
@@ -1415,7 +1416,7 @@ script_self_updater()
 					fi
 				else
 					print_screen_output "Updating / Installing the Man page requires root user, writing to: $MAN_FILE_LOCATION"
-					print_screen_output "If you want the man page, you'll have to run $SCRIPT_NAME -U as root."
+					print_screen_output "If you want the man page, you'll have to run $SCRIPT_NAME -$3 as root."
 				fi
 			fi
 			exit 0
@@ -2192,7 +2193,7 @@ get_parameters()
 					error_handler 4 "$OPTARG"
 				fi
 				;;
-			U)	script_self_updater "$SCRIPT_DOWNLOAD" 'svn server'
+			U)	script_self_updater "$SCRIPT_DOWNLOAD" 'svn server' "$opt"
 				;;
 			V)	print_version_info
 				exit 0
@@ -2272,25 +2273,25 @@ get_parameters()
 						B_TESTING_2='true'
 						;;
 					10)
-						script_self_updater "$SCRIPT_DOWNLOAD_DEV" 'dev server'
+						script_self_updater "$SCRIPT_DOWNLOAD_DEV" 'dev server' "$opt $OPTARG"
 						;;
 					11)
-						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_1" 'svn: branch one server'
+						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_1" 'svn: branch one server' "$opt $OPTARG"
 						;;
 					12)
-						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_2" 'svn: branch two server'
+						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_2" 'svn: branch two server' "$opt $OPTARG"
 						;;
 					13)
-						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_3" 'svn: branch three server'
+						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_3" 'svn: branch three server' "$opt $OPTARG"
 						;;
 					14)
-						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_4" 'svn: branch four server'
+						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_4" 'svn: branch four server' "$opt $OPTARG"
 						;;
 					15)
-						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_BSD" 'svn: branch bsd server'
+						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_BSD" 'svn: branch bsd server' "$opt $OPTARG"
 						;;
 					16)
-						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_GNUBSD" 'svn: branch gnubsd server'
+						script_self_updater "$SCRIPT_DOWNLOAD_BRANCH_GNUBSD" 'svn: branch gnubsd server' "$opt $OPTARG"
 						;;
 					30)
 						B_RUNNING_IN_SHELL='true'
@@ -2299,7 +2300,7 @@ get_parameters()
 						ALTERNATE_FTP="$OPTARG"
 						;;
 					http*)
-						script_self_updater "$OPTARG" 'alt server'
+						script_self_updater "$OPTARG" 'alt server' "$opt <http...>"
 						;;
 					*)	error_handler 11 "$OPTARG"
 						;;
