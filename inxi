@@ -1365,7 +1365,7 @@ script_self_updater()
 	local man_file_path="$MAN_FILE_LOCATION/inxi.1.gz"
 	
 	if [[ $B_RUNNING_IN_SHELL != 'true' ]];then
-		print_screen_output "Sorry, you can't run the $SCRIPT_NAME self updater option (-U) in an IRC client."
+		print_screen_output "Sorry, you can't run the $SCRIPT_NAME self updater option (-$3) in an IRC client."
 		exit 1
 	fi
 
