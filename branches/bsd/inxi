@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 11 2013
-####  Patch Number: 21-bsd
+####  Patch Number: 23-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2448,7 +2448,7 @@ show_options()
 	print_screen_output "    -G - Chip vendor:product ID for each video card."
 	print_screen_output "    -I - Other detected installed gcc versions (if present)."
 	print_screen_output "         Adds parent program (or tty) for shell info if not in IRC (like Konsole or Gterm)."
-	print_screen_output "    -M - Chassis information, if any data for that is available."
+	print_screen_output "    -M - Chassis information, bios rom size (dmidecode only), if data for either is available."
 	print_screen_output "    -N - Chip vendor:product ID for each nic."
 	print_screen_output "    -R - Superblock (if present); algorythm, U data. Adds system info line (kernel support,"
 	print_screen_output "         read ahead, raid events). If present, adds unused device line. Resync line, shows"
@@ -4273,6 +4273,8 @@ get_dmidecode_data()
 				# Chassis Manufacturer|Chassis Version|Chassis Serial Number
 				# System manufacturer|System Product Name|System Version
 				# To Be Filled By O.E.M.
+				# strip out starting white space so that the following stuff will clear properly
+				sub(/^[[:space:]]+/, "", $2)
 				sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*/, "", $2) 
 				gsub(/bios|acpi/, "", $2)
 				sub(/http:\/\/www.abit.com.tw\//, "Abit", $2)
@@ -5154,23 +5156,16 @@ get_machine_data()
 {
 	eval $LOGFS
 	local temp_array='' separator='' id_file='' file_data='' array_string=''
-	local id_dir='/sys/class/dmi/id/' dmi_name='' dmi_data='' 
+	local id_dir='/sys/class/dmi/id/' dmi_data='' 
 	local machine_files="
 	sys_vendor product_name product_version product_serial product_uuid 
 	board_vendor board_name board_version board_serial 
 	bios_vendor bios_version bios_date 
 	"
-	local dmi_names="
-	system-manufacturer system-product-name system-version system-serial-number system-uuid 
-	baseboard-manufacturer baseboard-product-name baseboard-version baseboard-serial-number 
-	bios-vendor bios-version bios-release-date 
-	"
+
 	if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
 		machine_files="$machine_files
 		chassis_vendor chassis_type chassis_version chassis_serial
-		"
-		dmi_names="$dmi_names
-		chassis-manufacturer chassis-type chassis-version chassis-serial-number
 		"
 	fi
 	if [[ -d $id_dir ]];then
@@ -5211,32 +5206,103 @@ get_machine_data()
 					array_string='dmidecode-no-smbios-dmi-data'
 				# please note: only dmidecode version 2.11 or newer supports consistently the -s flag
 				else
-					for dmi_name in $dmi_names
-					do
-			# 			echo "$dmi_name" >&2
-						dmi_data=''
-						dmi_data=$( dmidecode -s $dmi_name | gawk '
-							BEGIN {
-								IGNORECASE=1
-							}
-							{
-								gsub(/'"$BAN_LIST_NORMAL"'/, "", $0)
-								gsub(/,/, " ", $0)
-								# yes, there is a typo in a user data set, unknow
-								# Base Board Version|Base Board Serial Number
-								# Chassis Manufacturer|Chassis Version|Chassis Serial Number
-								# System manufacturer|System Product Name|System Version
-								# To Be Filled By O.E.M.
-								sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*/, "", $0) 
-								gsub(/bios|acpi/, "", $0)
-								sub(/http:\/\/www.abit.com.tw\//, "Abit", $0)
-								gsub(/^ +| +$/, "", $0)
-								gsub(/ [ \t]+/, " ", $0)
-								print $0
-							}' )
-						array_string="$array_string$separator$dmi_data"
-						separator=','
-					done
+					array_string=$( gawk -F ':' '
+					BEGIN {
+						IGNORECASE=1
+						baseboardManufacturer=""
+						baseboardProductName=""
+						baseboardSerialNumber=""
+						baseboardVersion=""
+						biosReleaseDate=""
+						biosRevision="" # only available from dmidecode
+						biosRomSize="" # only available from dmidecode
+						biosVendor=""
+						biosVersion=""
+						chassisManufacturer=""
+						chassisSerialNumber=""
+						chassisType=""
+						chassisVersion=""
+						systemManufacturer=""
+						systemProductName=""
+						systemVersion=""
+						systemSerialNumber=""
+						systemUuid=""
+						bItemFound="" # we will only output if at least one item was found
+						fullString=""
+						testString=""
+						bSys=""
+						bCha=""
+						bBio=""
+						bBas=""
+					}
+					/^Bios Information/ {
+						while ( getline && !/^$/ ) {
+							if ( $1 ~ /^Release Date/ ) { biosReleaseDate=$2 }
+							if ( $1 ~ /^BIOS Revision/ ) { biosRevision=$2 }
+							if ( $1 ~ /^ROM Size/ ) { biosRomSize=$2 }
+							if ( $1 ~ /^Vendor/ ) { biosVendor=$2 }
+							if ( $1 ~ /^Version/ ) { biosVersion=$2 }
+						}
+						testString=biosReleaseDate biosRevision biosRomSize biosVendor biosVersion
+						if ( testString != ""  ) {
+							bItemFound="true"
+						}
+						bBio="true"
+					}
+					/^Base Board Information/ {
+						while ( getline && !/^$/ ) {
+							if ( $1 ~ /^Manufacturer/ ) { baseboardManufacturer=$2 }
+							if ( $1 ~ /^Product Name/ ) { baseboardProductName=$2 }
+							if ( $1 ~ /^Serial Number/ ) { baseboardSerialNumber=$2 }
+						}
+						testString=baseboardManufacturer baseboardProductName baseboardSerialNumber
+						if ( testString != ""  ) {
+							bItemFound="true"
+						}
+						bBas="true"
+					}
+					/^Chassis Information/ {
+						while ( getline && !/^$/ ) {
+							if ( $1 ~ /^Manufacturer/ ) { chassisManufacturer=$2 }
+							if ( $1 ~ /^Serial Number/ ) { chassisSerialNumber=$2 }
+							if ( $1 ~ /^Type/ ) { chassisType=$2 }
+							if ( $1 ~ /^Version/ ) { chassisVersion=$2 }
+						}
+						testString=chassisManufacturer chassisSerialNumber chassisType chassisVersion
+						if ( testString != ""  ) {
+							bItemFound="true"
+						}
+						bCha="true"
+					}
+					/^System Information/ {
+						while ( getline && !/^$/ ) {
+							if ( $1 ~ /^Manufacturer/ ) { systemManufacturer=$2 }
+							if ( $1 ~ /^Product Name/ ) { systemProductName=$2 }
+							if ( $1 ~ /^Version/ ) { systemVersion=$2 }
+							if ( $1 ~ /^Serial Number/ ) { systemSerialNumber=$2 }
+							if ( $1 ~ /^UUID/ ) { systemUuid=$2 }
+						}
+						testString=systemManufacturer systemProductName systemVersion systemSerialNumber systemUuid
+						if ( testString != ""  ) {
+							bItemFound="true"
+						}
+						bSys="true"
+					}
+					( bSys == "true" && bCha="true" && bBio == "true" && bBas == "true" ) {
+						exit # stop the loop
+					}
+					END {
+						if ( bItemFound == "true" ) {
+							fullString = systemManufacturer "," systemProductName "," systemVersion "," systemSerialNumber 
+							fullString = fullString "," systemUuid "," baseboardManufacturer "," baseboardProductName 
+							fullString = fullString "," baseboardVersion "," baseboardSerialNumber "," biosVendor
+							fullString = fullString "," biosVersion "," biosReleaseDate "," chassisManufacturer
+							fullString = fullString "," chassisType "," chassisVersion "," chassisSerialNumber 
+							fullString = fullString ","  biosRevision "," biosRomSize
+							
+							print fullString
+						}
+					}' <<< "$DMIDECODE_DATA" )
 				fi
 			else
 				array_string='dmidecode-non-root-user'
@@ -5247,11 +5313,11 @@ get_machine_data()
 	A_MACHINE_DATA=( $array_string )
 	IFS="$ORIGINAL_IFS"
 	temp_array=${A_MACHINE_DATA[@]}
-	# echo ${temp_array[@]}
+# 	echo ${temp_array[@]}
 	log_function_data "A_MACHINE_DATA: $temp_array"
 	eval $LOGFE
 }
-
+# B_ROOT='true';get_machine_data;exit
 ## return memory used/installed
 get_memory_data()
 {
@@ -8219,12 +8285,19 @@ print_machine_data()
 	
 	local system_line='' mobo_line='' bios_line='' chassis_line=''
 	local mobo_vendor='' mobo_model='' mobo_version='' mobo_serial=''
-	local bios_vendor='' bios_version='' bios_date=''
+	local bios_vendor='' bios_version='' bios_date='' bios_rom=''
 	local system_vendor='' product_name='' product_version='' product_serial='' product_uuid=''
-	local chassis_vendor='' chassis_type='' chassis_version='' chassis_serial=''
+	local chassis_vendor='' chassis_type='' chassis_version='' chassis_serial='' 
 	local b_skip_system='false' b_skip_chassis='false'
+	local sysDmiError='No /sys/class/dmi, using '
+	local sysDmiNull='No /sys/class/dmi machine data: try newer kernel, or install dmidecode'
 	# set A_MACHINE_DATA
 	get_machine_data
+	
+	if [[ -n $BSD_TYPE ]];then
+		sysDmiError=''
+		sysDmiNull='No machine data available. Is dmidecode installed?'
+	fi
 
 	IFS=','
 	## keys for machine data are:
@@ -8300,6 +8373,9 @@ print_machine_data()
 		fi
 		if [[ -n ${A_MACHINE_DATA[10]} ]];then
 			bios_version=${A_MACHINE_DATA[10]}
+			if [[ -n ${A_MACHINE_DATA[16]} ]];then
+				bios_version="$bios_version rv ${A_MACHINE_DATA[16]}"
+			fi
 		else
 			bios_version='N/A'
 		fi
@@ -8308,8 +8384,11 @@ print_machine_data()
 		else
 			bios_date='N/A'
 		fi
+		if [[ $B_EXTRA_EXTRA_DATA == 'true' && -n ${A_MACHINE_DATA[17]} ]];then
+			bios_rom=" ${C1}rom size$SEP3${C2} ${A_MACHINE_DATA[17]}"
+		fi
 		mobo_line="${C1}Mobo$SEP3${C2} $mobo_vendor ${C1}model$SEP3${C2} $mobo_model$mobo_version$mobo_serial"
-		bios_line="${C1}Bios$SEP3${C2} $bios_vendor ${C1}version$SEP3${C2} $bios_version ${C1}date$SEP3${C2} $bios_date"
+		bios_line="${C1}Bios$SEP3${C2} $bios_vendor ${C1}version$SEP3${C2} $bios_version ${C1}date$SEP3${C2} $bios_date$bios_rom"
 		if [[ $( calculate_line_length "$mobo_line$bios_line" ) -lt $LINE_MAX ]];then
 			mobo_line="$mobo_line $bios_line"
 			bios_line=''
@@ -8342,14 +8421,14 @@ print_machine_data()
 		fi
 		IFS="$ORIGINAL_IFS"
 	else
-		system_line="${C2}No /sys/class/dmi machine data - try newer kernel, or install dmidecode${CN}"
+		system_line="${C2}$sysDmiNull${CN}"
 	fi
 	# patch to dump all of above if dmidecode was data source and non root user
 	if [[ ${A_MACHINE_DATA[0]} == 'dmidecode-non-root-user' || ${A_MACHINE_DATA[0]} == 'dmidecode-no-smbios-dmi-data' ]];then
 		if [[ ${A_MACHINE_DATA[0]} == 'dmidecode-non-root-user' ]];then
-			system_line="${C2}No /sys/class/dmi, using dmidecode: you must be root to run dmidecode${CN}"
+			system_line="${C2}${sysDmiError}dmidecode: you must be root to run dmidecode${CN}"
 		elif [[ ${A_MACHINE_DATA[0]} == 'dmidecode-no-smbios-dmi-data' ]];then
-			system_line="${C2}No /sys/class/dmi, using dmidecode: no machine data available${CN}"
+			system_line="${C2}${sysDmiError}dmidecode: no machine data available${CN}"
 		fi
 		mobo_line=''
 		bios_line=''
