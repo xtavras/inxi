@@ -2,8 +2,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 1.8.37
-####  Date: February 11 2013
-####  Patch Number: 00-gnubsd
+####  Date: February 12 2013
+####  Patch Number: 01-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9051,6 +9051,17 @@ print_raid_data()
 	local basic_raid='' basic_raid_separator='' basic_raid_plural='' inactive=''
 	local component_separator='' device_id='' print_string='' loop_limit=0 array_count_unused=''
 	local array_count='' raid_event='' b_print_lines='true'
+	local no_raid_detected=""
+	local empty_raid_data=""
+	
+	if [[ -n $BSD_TYPE ]];then
+		no_raid_detected='No RAID data available - not yet configured for BSD systems.'
+		empty_raid_data='No RAID data available - not yet configured for BSD systems.'
+	else
+		no_raid_detected="No RAID data available - $FILE_MDSTAT is missing - is md_mod kernel module loaded?"
+		empty_raid_data="No RAID devices detected - $FILE_MDSTAT and md_mod kernel raid module present"
+	fi
+	
 
 	get_raid_data
 
@@ -9261,14 +9272,14 @@ print_raid_data()
 
 	if [[ $B_MDSTAT_FILE != 'true' ]];then
 		if [[ $B_SHOW_RAID_R == 'true' ]];then
-			a_raid_data[0]="No RAID data available - $FILE_MDSTAT is missing - is md_mod kernel module loaded?"
+			a_raid_data[0]="$no_raid_detected"
 		else
 			b_print_lines='false'
 		fi
 	else
 		if [[ ${a_raid_data[0]} == '' ]];then
 			if [[ $B_SHOW_BASIC_RAID != 'true' ]];then
-				a_raid_data[0]="No RAID devices detected - /proc/mdstat and md_mod kernel raid module present"
+				a_raid_data[0]="$empty_raid_data"
 			else
 				b_print_lines='false'
 			fi
@@ -9394,8 +9405,13 @@ print_sensors_data()
 	local mobo_temp='' cpu_temp='' psu_temp='' cpu_fan='' mobo_fan='' ps_fan='' sys_fans='' sys_fans2='' 
 	local temp_data='' fan_data='' fan_data2='' b_is_error='false' fan_count=0 gpu_temp=''
 	local a_sensors_working=''
+	local no_sensors_message='None detected - is lm-sensors installed and configured?'
 	local Sensors_Data="$( get_sensors_output )"
 	get_sensors_data
+	
+	if [[ $BSD_TYPE == 'bsd' ]];then
+		no_sensors_message='This feature is not yet supported for BSD systems.'
+	fi
 	
 	IFS=","
 	a_sensors_working=( ${A_SENSORS_DATA[0]} )
@@ -9404,7 +9420,7 @@ print_sensors_data()
 	# always has at least 3 items, cpu/mobo/psu temp in it. If the count is 0, then
 	# no sensors are installed/configured
 	if [[ ${#a_sensors_working[@]} -eq 0 ]];then
-		cpu_temp="None detected - is lm-sensors installed and configured?"
+		cpu_temp=$no_sensors_message
 		b_is_error='true'
 	else
 		for (( i=0; i < ${#A_SENSORS_DATA[@]}; i++ ))
