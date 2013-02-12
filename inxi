@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.36
 ####  Date: February 11 2013
-####  Patch Number: 20-bsd
+####  Patch Number: 21-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1600,8 +1600,16 @@ debug_data_collector()
 			df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs &> $debug_data_dir/df-h-T-excludes.txt
 			df -H -T &> $debug_data_dir/bsd-df-H-T-no-excludes.txt
 			# bsd tool
+			gpart list &> $debug_data_dir/bsd-gpart-list.txt
+			gpart show &> $debug_data_dir/bsd-gpart-show.txt
+			gpart status &> $debug_data_dir/bsd-gpart-status.txt
 			swapctl -l &> $debug_data_dir/bsd-swapctl-l.txt
 			swapon -s &> $debug_data_dir/swapon-s.txt
+			sysctl -b kern.geom.conftxt  &> $debug_data_dir/bsd-sysctl-b-kern.geom.conftxt.txt
+			sysctl -b kern.geom.confxml &> $debug_data_dir/bsd-sysctl-b-kern.geom.confxml.txt
+			zfs list &> $debug_data_dir/bsd-zfs-list.txt
+			zpool list &> $debug_data_dir/bsd-zpool-list.txt
+			zpool list -v &> $debug_data_dir/bsd-zpool-list-v.txt
 			df -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 &> $debug_data_dir/df-P-excludes.txt
 			df -P &> $debug_data_dir/bsd-df-P-no-excludes.txt
 			cat /proc/mdstat &> $debug_data_dir/proc-mdstat.txt
