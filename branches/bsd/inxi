@@ -2,8 +2,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 1.8.37
-####  Date: February 16 2013
-####  Patch Number: 04-bsd
+####  Date: February 17 2013
+####  Patch Number: 06-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1485,10 +1485,12 @@ debug_data_collector()
 		sysctl -a &> $debug_data_dir/bsd-sysctl-a.txt
 		
 		dmidecode &> $debug_data_dir/dmidecode.txt
-		lsusb &> $debug_data_dir/lsusb.txt
+		
+		lscpu &> $debug_data_dir/lscpu.txt
 		lspci &> $debug_data_dir/lspci.txt
 		lspci -n &> $debug_data_dir/lspci-n.txt
 		lspci -v &> $debug_data_dir/lspci-v.txt
+		lsusb &> $debug_data_dir/lsusb.txt
 		ps aux &> $debug_data_dir/ps-aux.txt
 		sensors &> $debug_data_dir/sensors.txt
 		
@@ -7979,6 +7981,10 @@ print_gfx_data()
 	fi
 	if [[ -n $failed ]];then
 		x_driver="${x_driver} ${RED}FAILED:${C2} $failed"
+	fi
+	# sometimes for some reason there is no driver found but the array is started
+	if [[ -z $x_driver ]];then
+		x_driver=' N/A'
 	fi
 
 	if [[ ${#A_GRAPHIC_DRIVERS[@]} -gt 1 ]];then
