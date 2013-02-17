@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 16 2013
-####  Patch Number: 02-bsd
+####  Patch Number: 03-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -94,6 +94,8 @@
 ####  * BSD ps does not support --without-headers option, and also does not support --sort <option>
 ####    Tests show that -m fails to sort memory as expected, but -r does sort cpu percentage.
 ####  * BSD_TYPE is set with values null, dgbsd (debian gnu/kfreebsd), bsd (all other bsds)
+####  * Subshell and array closing ) must not be on their own line unless you use an explicit \ 
+####    to indicate that logic continues to next line where closing ) or )) are located.
 ########################################################################
 ####  CONVENTIONS:
 ####  * Character Encoding: UTF-8 - this file contains special characters that must be opened and saved as UTF8
@@ -288,8 +290,7 @@ B_SHOW_DISK='false'
 B_SHOW_FULL_HDD='false'
 B_SHOW_FULL_OPTICAL='false'
 B_SHOW_GRAPHICS='false'
-# Set this to 'false' to avoid printing the hostname, this isn't used except for 
-# user configuration options via config files
+# Set this to 'false' to avoid printing the hostname, can be set false now
 B_SHOW_HOST='true'
 B_SHOW_INFO='false'
 B_SHOW_IP='false'
@@ -596,8 +597,6 @@ main()
 	if [[ -s $HOME/.$SCRIPT_NAME/$SCRIPT_NAME.conf ]];then
 		source $HOME/.$SCRIPT_NAME/$SCRIPT_NAME.conf
 	fi
-	
-	
 
 	## this needs to run before the KONVI stuff is set below
 	## Konversation 1.2 apparently does not like the $PPID test in get_start_client
@@ -2306,6 +2305,12 @@ get_parameters()
 					30)
 						B_RUNNING_IN_SHELL='true'
 						;;
+					31)
+						B_SHOW_HOST='false'
+						;;
+					32)
+						B_SHOW_HOST='true'
+						;;
 					ftp*)
 						ALTERNATE_FTP="$OPTARG"
 						;;
@@ -2486,6 +2491,9 @@ show_options()
 	print_screen_output "    12 - With xorg conf and log data, xrandr, xprop, xdpyinfo, glxinfo etc."
 	print_screen_output "    13 - With data from dev, disks, ${partition_string}s, etc., plus xiin data file."
 	print_screen_output "    14 - Everything, full data collection."
+	print_screen_output "Advanced Options:"
+	print_screen_output "-! 31  Turns off hostname in output. Useful if showing output from servers etc."
+	print_screen_output "-! 32  Turns on hostname in output. Overrides global B_SHOW_HOST='false'"
 	if [[ $1 == 'full' ]];then
 		print_screen_output " "
 		print_screen_output "Developer and Testing Options (Advanced):"
