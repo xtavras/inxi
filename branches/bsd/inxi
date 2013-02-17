@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 06-bsd
+####  Patch Number: 07-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7823,11 +7823,17 @@ print_cpu_data()
 		# update for multicore, bogomips x core count.
 		if [[ $B_EXTRA_DATA == 'true' ]];then
 # 			if [[ $cpu_vendor != 'intel' ]];then
+			if [[ -n ${a_cpu_working[4]} ]];then
 				bmip_data=$( calculate_multicore_data "${a_cpu_working[4]}" "$(( $cpu_core_count * $cpu_physical_count ))" )
+			fi
 # 			else
 # 				bmip_data="${a_cpu_working[4]}"
 # 			fi
-			bmip_data=" ${C1}bmips$SEP3${C2} $bmip_data"
+			if
+			# bogomips are a linux thing, but my guess is over time bsds will use them somewhere anyway
+			if [[ $BSD_TYPE != 'bsd' && -n $bpip_data ]];then
+				bmip_data=" ${C1}bmips$SEP3${C2} $bmip_data"
+			fi
 		fi
 		## note: this handles how intel reports L2, total instead of per core like AMD does
 		# note that we need to multiply by number of actual cpus here to get true cache size
