@@ -7829,7 +7829,6 @@ print_cpu_data()
 # 			else
 # 				bmip_data="${a_cpu_working[4]}"
 # 			fi
-			if
 			# bogomips are a linux thing, but my guess is over time bsds will use them somewhere anyway
 			if [[ $BSD_TYPE != 'bsd' && -n $bpip_data ]];then
 				bmip_data=" ${C1}bmips$SEP3${C2} $bmip_data"
