@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 16 2013
-####  Patch Number: 03-gnubsd
+####  Patch Number: 04-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -86,7 +86,8 @@
 ########################################################################
 ####  BSD Adjustments
 ####  * sed -i '' form supported by using SED_I="-i ''".
-####  * Note: BSD sed supports using -r instead of -E for compatibility with gnu sed
+####  * Note: New BSD sed supports using -r instead of -E for compatibility with gnu sed
+####    However, older, like FreeBSD 7.x, does not have -r so using SED_RX='-E' for this.
 ####  * Gnu grep options can be used if the function component is only run in linux
 ####    These are the options that bsd grep does not support that inxi uses: -m <number> -o 
 ####    so make sure if you use those to have them in gnu/linux only sections.
@@ -209,6 +210,7 @@ PS_COUNT=5
 PS_THROTTLED=''
 REPO_DATA=''
 SED_I='-i' # for gnu sed, will be set to -i '' for bsd sed
+SED_RX='-r' # for gnu sed, will be set to -E for bsd sed for backward compatibility
 
 ### primary data array holders	## usage: 'A_<var>'
 A_ALSA_DATA=''
@@ -721,11 +723,13 @@ initialize_data()
 	
 	# note: archbsd says they are a freebsd distro, so assuming it's the same as freebsd
 	if [[ -n $( grep -i 'bsd' <<< $( uname -s 2>/dev/null ) ) ]];then
+		# GNU/kfreebsd will by definition have GNU tools like sed/grep
 		if [[ -n $( grep -i 'kfreebsd' <<< $( uname -s 2>/dev/null ) ) ]];then
 			BSD_TYPE='dgbsd' # debian gnu bsd
-			SED_I="-i ''"
 		else
 			BSD_TYPE='bsd' # all other bsds
+			SED_I="-i ''"
+			SED_RX='-E'
 		fi
 	fi
 	# now set the script BOOLEANS for files required to run features
@@ -1323,7 +1327,7 @@ log_function_data()
 		# This pattern doesn't work for irc colors, if we need that someone can figure it out
 		if [[ -n $logged_data ]];then
 			if [[ $B_LOG_COLORS != 'true' ]];then
-				echo -e "${spacer}$logged_data" | sed -r 's/\x1b\[[0-9]{1,2}(;[0-9]{1,2}){0,2}m//g' >> $LOG_FILE
+				echo -e "${spacer}$logged_data" | sed $SED_RX 's/\x1b\[[0-9]{1,2}(;[0-9]{1,2}){0,2}m//g' >> $LOG_FILE
 			else
 				echo -e "${spacer}$logged_data" >> $LOG_FILE
 			fi
@@ -4069,7 +4073,7 @@ get_distro_data()
 		# if the file was null but present, which can happen in some cases, then use the file name itself to 
 		# set the distro value. Why say unknown if we have a pretty good idea, after all?
 		if [[ -n $distro_file ]] && [[ " $DISTROS_DERIVED $DISTROS_PRIMARY " == *" $distro_file "* ]];then
-			distro=$( sed -r -e 's/[-_]//' -e 's/(release|version)//' <<< $distro_file | sed -r 's/^([a-z])/\u\1/' )
+			distro=$( sed $SED_RX -e 's/[-_]//' -e 's/(release|version)//' <<< $distro_file | sed $SED_RX 's/^([a-z])/\u\1/' )
 		fi
 		## finally, if all else has failed, give up
 		if [[ -z $distro ]];then
@@ -4330,7 +4334,7 @@ get_dmesg_boot_data()
 	
 	if [[ $B_DMESG_BOOT_FILE == 'true' ]];then
 		# replace all indented items with ~ so we can id them easily while processing
-		dmsg_boot_data="$( cat $FILE_DMESG_BOOT | sed -r 's/"//g' )"
+		dmsg_boot_data="$( cat $FILE_DMESG_BOOT | sed $SED_RX 's/"//g' )"
 	fi
 	echo "$dmsg_boot_data"
 	# log_function_data "$dmsg_boot_data"
@@ -4353,7 +4357,7 @@ get_gcc_system_version()
 	eval $LOGFS
 	local separator='' gcc_installed='' gcc_list='' gcc_others='' temp_array=''
 	local gcc_version=$( 
-	gcc --version 2>/dev/null | sed -r 's/\([^\)]*\)//g' | gawk '
+	gcc --version 2>/dev/null | sed $SED_RX 's/\([^\)]*\)//g' | gawk '
 	BEGIN {
 		IGNORECASE=1
 	}
@@ -6634,7 +6638,7 @@ get_repo_data()
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
-		REPO_DATA="$( grep -Esv '(^[[:space:]]*$|^[[:space:]]*#)' $apt_file $apt_file.d/*.list | sed -r 's/^(.*)/apt sources:\1/' )"
+		REPO_DATA="$( grep -Esv '(^[[:space:]]*$|^[[:space:]]*#)' $apt_file $apt_file.d/*.list | sed $SED_RX 's/^(.*)/apt sources:\1/' )"
 	fi
 	# yum - fedora, redhat, centos, etc. Note that rpmforge also may create apt sources
 	# in /etc/apt/sources.list.d/. Therefore rather than trying to assume what package manager is
@@ -7165,7 +7169,8 @@ get_shell_data()
 	if [[ $B_EXTRA_DATA == 'true' && -n $shell_type ]];then
 		case $shell_type in
 			bash)
-				shell_version=$( get_de_app_version "$shell_type" "^GNU[[:space:]]bash,[[:space:]]version" "4" | sed -r 's/(\(.*|-release|-version)//' )
+				shell_version=$( get_de_app_version "$shell_type" "^GNU[[:space:]]bash,[[:space:]]version" "4" | \
+				sed $SED_RX 's/(\(.*|-release|-version)//' )
 				;;
 			# csh/dash use dpkg package version data, debian/buntu only
 			csh)
@@ -8902,7 +8907,7 @@ print_partition_data()
 			fi
 			# don't show user names in output
 			if [[ $B_OUTPUT_FILTER == 'true' ]];then
-				partitionIdClean=$( sed -r "s|/home/([^/]+)/(.*)|/home/$FILTER_STRING/\2|" <<< ${a_partition_working[0]} )
+				partitionIdClean=$( sed $SED_RX "s|/home/([^/]+)/(.*)|/home/$FILTER_STRING/\2|" <<< ${a_partition_working[0]} )
 			else
 				partitionIdClean=${a_partition_working[0]}
 			fi
