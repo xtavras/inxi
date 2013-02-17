@@ -2,8 +2,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 1.8.37
-####  Date: February 12 2013
-####  Patch Number: 01-gnubsd
+####  Date: February 16 2013
+####  Patch Number: 02-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3209,8 +3209,7 @@ get_audio_alsa_data()
 				}
 				version=$NF
 				print alsa "," version
-			}' $FILE_ASOUND_VERSION 
-		) )
+			}' $FILE_ASOUND_VERSION ) )
 		IFS="$ORIGINAL_IFS"
 		log_function_data 'cat' "$FILE_ASOUND_VERSION"
 	fi
@@ -4353,8 +4352,7 @@ get_gcc_system_version()
 	/^gcc/ {
 		print $2
 		exit
-	}'
-	)
+	}' 	)
 
 	# can't use xargs -L basename because not all systems support thats
 	if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
@@ -4413,8 +4411,7 @@ get_gpu_temp_data()
 			}
 			END {
 				print gpuTemp
-			}'
-			)
+			}' 	)
 			screen_nu=$( cut -d ':' -f 2 <<< $screen_nu )
 			gpu_temp="$gpu_temp$screen_nu:$gpu_temp_looper "
 		done
@@ -4434,8 +4431,7 @@ get_gpu_temp_data()
 		}
 		END {
 			print gpuTemp
-		}'
-		)
+		}' 	)
 	# this handles some newer cases of free driver temp readouts, will require modifications as
 	# more user data appears.
 	elif [[ -n $Sensors_Data ]];then
@@ -4458,8 +4454,7 @@ get_gpu_temp_data()
 		}
 		END {
 			print gpuTemp
-		}' <<< "$Sensors_Data"
-		)
+		}' <<< "$Sensors_Data" )
 	fi
 	
 	if [[ -n $gpu_temp ]];then
@@ -4559,8 +4554,7 @@ get_graphics_driver()
 			for ( driver in aDrivers ) {
 				print driver "," aDrivers[driver]
 			}
-		}' < $FILE_XORG_LOG
-		) )
+		}' < $FILE_XORG_LOG ) )
 	fi
 	temp_array=${A_GRAPHIC_DRIVERS[@]}
 	log_function_data "A_GRAPHIC_DRIVERS: $temp_array"
@@ -4811,8 +4805,7 @@ get_graphics_x_version()
 		/^X Window System Version/ {
 			print $5
 			exit
-		}' <<< "$x_data"
-		)
+		}' <<< "$x_data" )
 	fi
 	echo $x_version
 	log_function_data " x_version: $x_version"
@@ -4914,8 +4907,7 @@ get_hdd_data_basic()
 			else {
 				print "NA,-" # print an empty array, this will be further handled in the print out function
 			}
-		}' $FILE_PARTITIONS 
-		) )
+		}' $FILE_PARTITIONS ) )
 		log_function_data 'cat' "$FILE_PARTITIONS"
 	fi
 	IFS="$ORIGINAL_IFS"
@@ -5074,8 +5066,7 @@ get_hdd_serial_number()
 		serial=gensub( /^(.+)_([^_]+)$/, "\\2", 1, $9 )
 		print serial
 		exit
-	}' <<< "$DEV_DISK_ID"
-	)
+	}' <<< "$DEV_DISK_ID" )
 	
 	echo $hdd_serial
 	log_function_data "hdd serial: $hdd_serial"
@@ -5191,8 +5182,7 @@ get_machine_data()
 					gsub(/^ +| +$/, "", $0)
 					gsub(/ [ \t]+/, " ", $0)
 					print $0
-				}' < $id_dir$id_file
-				)
+				}' < $id_dir$id_file )
 			fi
 			array_string="$array_string$separator$file_data"
 			separator=','
@@ -5476,8 +5466,7 @@ get_networking_data()
 			print a[j] "," useDrivers "," usePorts "," useModules, "," usePciBusId
 			j++
 		}
-	}'
-	) )
+	}' ) )
 	IFS="$ORIGINAL_IFS"
 	get_networking_usb_data
 	if [[ $B_SHOW_ADVANCED_NETWORK == 'true' || $B_USB_NETWORKING == 'true' ]];then
@@ -5658,8 +5647,7 @@ get_networking_usb_data()
 					sub(/:/, "", $4 )
 					print string ",,,,usb-" $2 "-" $4 ",,,,,," $6
 				}
-			}' <<< "$lsusb_data" 
-			) )
+			}' <<< "$lsusb_data" ) )
 			IFS="$ORIGINAL_IFS"
 			if [[ ${#a_usb[@]} -gt 0 ]];then
 				array_count=${#A_NETWORK_DATA[@]}
@@ -5806,8 +5794,7 @@ get_networking_local_ip_data()
 				}
 				j++
 			}
-		}' <<< "$ip_tool_data"
-		) )
+		}' <<< "$ip_tool_data" ) )
 		IFS="$ORIGINAL_IFS"
 	else
 		A_INTERFACES_DATA=( "Interfaces program $ip_tool present but created no data. " )
@@ -5917,8 +5904,7 @@ get_optical_drive_data()
 					gsub(/^[[:space:]]*|[[:space:]]*$/, "", $0)
 					gsub(/ [[:space:]]+/, " ", $0)
 					print $0
-				}'	<<< $vendor
-				)
+				}'	<<< $vendor )
 			fi
 			# this needs to run no matter if there's proc data or not to create the array comma list
 			if [[ $B_SHOW_FULL_OPTICAL == 'true' ]];then
@@ -5975,12 +5961,11 @@ get_optical_drive_data()
 				END {
 					print speed "," multisession "," mcn "," audio "," cdr "," cdrw "," dvd "," dvdr "," dvdram
 				}
-				' <<< "$proc_cdrom"
-				)
+				' <<< "$proc_cdrom" )
 			fi
 			item_string="$item_string,$vendor,$model,$rev_number,$proc_info_string,$state"
 			echo $item_string
-		done
+		done \
 		) )
 		IFS="$ORIGINAL_IFS"
 	fi
@@ -6074,8 +6059,7 @@ get_partition_data()
 		else if ( $(NF - 3) ~ /[0-9]+%/ ) {
 			print $(NF - 2) " " $(NF - 1) " " $NF "," $(NF - 6) "," $(NF - 5) "," $(NF - 3) ",secondary," $(NF - 7) "," devBase 
 		}
-	}
-	' )
+	}' )
 	
 	# now add the swap partition data, don't want to show swap files, just partitions,
 	# though this can include /dev/ramzswap0. Note: you can also use /proc/swaps for this
@@ -6617,8 +6601,7 @@ get_raid_data()
 			
 			print raidString
 		}
-		' <<< "$mdstat"
-		) )
+		' <<< "$mdstat" ) )
 		IFS="$ORIGINAL_IFS"
 		temp_array=${A_RAID_DATA[@]}
 		log_function_data "A_RAID_DATA: $temp_array"
@@ -7139,8 +7122,7 @@ get_sensors_data()
 				print fanMainString
 				print fanDefaultString
 			}
-		}' <<< "$Sensors_Data"
-		) )
+		}' <<< "$Sensors_Data" ) )
 	fi
 	
 	IFS="$ORIGINAL_IFS"
@@ -7467,8 +7449,7 @@ process_cpu_flags()
 			}
 		}
 		print flag_string
-	}' 
-	)
+	}' )
 
 	#grep -oE '\<(nx|lm|sse[0-9]?|pni|svm|vmx)\>' | tr '\n' ' '))
 	if [[ -z $cpu_flags ]];then
