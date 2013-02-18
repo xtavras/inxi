@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 11-gnubsd
+####  Patch Number: 12-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4836,7 +4836,7 @@ get_hdd_data_basic()
 	if [[ -z $BSD_TYPE ]];then
 		df_string='df -P -T --exclude-type=aufs --exclude-type=devfs --exclude-type=devtmpfs 
 		--exclude-type=fdescfs --exclude-type=iso9660 --exclude-type=linprocfs --exclude-type=procfs
-		--exclude-type=squashfs --exclude-type=sysfs--exclude-type=tmpfs --exclude-type=unionfs'
+		--exclude-type=squashfs --exclude-type=sysfs --exclude-type=tmpfs --exclude-type=unionfs'
 	else
 		# default size is 512, so use -k for 1024
 		df_string='df -T -k'
@@ -6012,7 +6012,7 @@ get_partition_data()
 		swap_data="$( swapon -s 2>/dev/null )"
 		df_string='df -h -T -P --exclude-type=aufs --exclude-type=devfs --exclude-type=devtmpfs 
 		--exclude-type=fdescfs --exclude-type=iso9660 --exclude-type=linprocfs --exclude-type=procfs
-		--exclude-type=squashfs --exclude-type=sysfs--exclude-type=tmpfs --exclude-type=unionfs'
+		--exclude-type=squashfs --exclude-type=sysfs --exclude-type=tmpfs --exclude-type=unionfs'
 	else
 		swap_data="$( swapctl -l 2>/dev/null )"
 		# default size is 512, -H only for size in human readable format
@@ -6077,7 +6077,7 @@ get_partition_data()
 	# has the search string in its name
 	$NF ~ /^\/$|^\/boot$|^\/var$|^\/home$|^\/tmp$|^\/usr$/ {
 		# note, older df in bsd do not have file system column
-		if ( $(NF - 5) !~ /^[0-9]+/ ) {
+		if ( NF == "6" && $(NF - 1) ~ /[0-9]+%/ ) {
 			fileSystem=$(NF - 5)
 		}
 		else {
@@ -6093,7 +6093,7 @@ get_partition_data()
 		# using 3 cases, first default, standard, 2nd, 3rd, handles one and two spaces in name
 		if ( $(NF - 1) ~ /[0-9]+%/ ) {
 			# note, older df in bsd do not have file system column
-			if ( $(NF - 5) !~ /^[0-9]+/ ) {
+			if ( NF == "6" ) {
 				fileSystem=$(NF - 5)
 			}
 			else {
@@ -6104,7 +6104,7 @@ get_partition_data()
 		# these two cases construct the space containing name
 		else if ( $(NF - 2) ~ /[0-9]+%/ ) {
 			# note, older df in bsd do not have file system column
-			if ( $(NF - 6) !~ /^[0-9]+/ ) {
+			if ( NF == "7" && $(NF - 6) !~ /^[0-9]+/ ) {
 				fileSystem=$(NF - 6)
 			}
 			else {
@@ -6114,8 +6114,8 @@ get_partition_data()
 		}
 		else if ( $(NF - 3) ~ /[0-9]+%/ ) {
 			# note, older df in bsd do not have file system column
-			if ( $(NF - 6) !~ /^[0-9]+/ ) {
-				fileSystem=$(NF - 6)
+			if ( NF == "8" && $(NF - 7) !~ /^[0-9]+/ ) {
+				fileSystem=$(NF - 7)
 			}
 			else {
 				fileSystem=""
