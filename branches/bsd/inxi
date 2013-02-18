@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 16-bsd
+####  Patch Number: 17-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3847,8 +3847,11 @@ get_de_app_version()
 		dwm|ksh|scrotwm)
 			version_data="$( $1 $get_version 2>&1 )"
 			;;
+		csh)
+			version_data="$( tcsh $get_version 2>/dev/null )"
+			;;
 		# quick debian/buntu hack until I find a universal way to get version for these
-		csh|dash)
+		dash)
 			if [[ -n $( type -p dpkg ) ]];then
 				version_data="$( dpkg -l $1 2>/dev/null )"
 			fi
@@ -7233,7 +7236,7 @@ get_shell_data()
 				;;
 			# csh/dash use dpkg package version data, debian/buntu only
 			csh)
-				shell_version=$( get_de_app_version "$shell_type" "$shell_type" "3" )
+				shell_version=$( get_de_app_version "$shell_type" "^tcsh" "2" )
 				;;
 			dash)
 				shell_version=$( get_de_app_version "$shell_type" "$shell_type" "3" )
