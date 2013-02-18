@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 13-bsd
+####  Patch Number: 14-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7896,17 +7896,25 @@ print_cpu_data()
 		fi
 		## note: this handles how intel reports L2, total instead of per core like AMD does
 		# note that we need to multiply by number of actual cpus here to get true cache size
-		if [[ $cpu_vendor != 'intel' ]];then
-			cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$(( $cpu_core_count * $cpu_physical_count ))"  )
+		if [[ -n ${a_cpu_working[2]} ]];then
+			if [[ $cpu_vendor != 'intel' ]];then
+				cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$(( $cpu_core_count * $cpu_physical_count ))"  )
+			else
+				cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$cpu_physical_count"  )
+			fi
 		else
-			cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$cpu_physical_count"  )
+			cpu_cache='N/A'
 		fi
 		# only print shortened list
 		if [[ $B_CPU_FLAGS_FULL != 'true' ]];then
 			# gawk has already sorted this output
-			
 			cpu_flags=$( process_cpu_flags "${a_cpu_working[3]}" )
-			cpu_flags=" ${C1}flags$SEP3${C2} ($cpu_flags)"
+			if [[ -n $cpu_flags ]];then
+				cpu_flags="($cpu_flags)"
+			else
+				cpu_flags='N/A'
+			fi
+			cpu_flags=" ${C1}flags$SEP3${C2} $cpu_flags"
 		fi
 		cpu_data="$cpu_data${C2} ${C1}cache$SEP3${C2} $cpu_cache$cpu_flags$bmip_data${CN}"
 	fi
