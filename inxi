@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 18-gnubsd
+####  Patch Number: 19-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6369,7 +6369,7 @@ get_partition_data_advanced_bsd()
 			a_partition_working=( ${A_PARTITION_DATA[i]} )
 			IFS="$ORIGINAL_IFS"
 			# no need to use the rest of the name if it's not a straight /dev/item
-			dev_item=$( basename <<< ${a_partition_working[6]} )
+			dev_item=$( basename ${a_partition_working[6]} )
 			
 			label_uuid=$( gawk -F ':' '
 			BEGIN {
