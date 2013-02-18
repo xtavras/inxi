@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 12-gnubsd
+####  Patch Number: 13-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6077,7 +6077,7 @@ get_partition_data()
 	# has the search string in its name
 	$NF ~ /^\/$|^\/boot$|^\/var$|^\/home$|^\/tmp$|^\/usr$/ {
 		# note, older df in bsd do not have file system column
-		if ( NF == "6" && $(NF - 1) ~ /[0-9]+%/ ) {
+		if ( NF == "7" && $(NF - 1) ~ /[0-9]+%/ ) {
 			fileSystem=$(NF - 5)
 		}
 		else {
@@ -6093,7 +6093,7 @@ get_partition_data()
 		# using 3 cases, first default, standard, 2nd, 3rd, handles one and two spaces in name
 		if ( $(NF - 1) ~ /[0-9]+%/ ) {
 			# note, older df in bsd do not have file system column
-			if ( NF == "6" ) {
+			if ( NF == "7" ) {
 				fileSystem=$(NF - 5)
 			}
 			else {
@@ -6104,7 +6104,7 @@ get_partition_data()
 		# these two cases construct the space containing name
 		else if ( $(NF - 2) ~ /[0-9]+%/ ) {
 			# note, older df in bsd do not have file system column
-			if ( NF == "7" && $(NF - 6) !~ /^[0-9]+/ ) {
+			if ( NF == "8" && $(NF - 6) !~ /^[0-9]+/ ) {
 				fileSystem=$(NF - 6)
 			}
 			else {
@@ -6114,7 +6114,7 @@ get_partition_data()
 		}
 		else if ( $(NF - 3) ~ /[0-9]+%/ ) {
 			# note, older df in bsd do not have file system column
-			if ( NF == "8" && $(NF - 7) !~ /^[0-9]+/ ) {
+			if ( NF == "9" && $(NF - 7) !~ /^[0-9]+/ ) {
 				fileSystem=$(NF - 7)
 			}
 			else {
