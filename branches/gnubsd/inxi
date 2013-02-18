@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 18 2013
-####  Patch Number: 20-gnubsd
+####  Patch Number: 21-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7898,6 +7898,9 @@ print_cpu_data()
 	eval $LOGFS
 	local cpu_data='' i='' cpu_clock_speed='' cpu_multi_clock_data=''
 	local bmip_data='' cpu_cache='' cpu_vendor='' cpu_flags=''
+	local a_cpu_working='' cpu_model='' cpu_clock='' cpu_null_error=''
+	local cpc_plural='' cpu_count_print='' model_plural='' cpu_data_string=''
+	local cpu_physical_count='' cpu_core_count='' cpu_core_alpha='' cpu_type=''
 
 	##print_screen_output "A_CPU_DATA[0]=\"${A_CPU_DATA[0]}\""
 	# Array A_CPU_DATA always has one extra element: max clockfreq found.
@@ -7906,29 +7909,9 @@ print_cpu_data()
 	get_cpu_data
 
 	IFS=","
-	local a_cpu_working=(${A_CPU_DATA[0]})
+	a_cpu_working=(${A_CPU_DATA[0]})
 	IFS="$ORIGINAL_IFS"
-	local cpu_model="${a_cpu_working[0]}"
-	## assemble data for output
-	local cpu_clock="${a_cpu_working[1]}"
 
-	cpu_vendor=${a_cpu_working[5]}
-
-	# set A_CPU_CORE_DATA
-	get_cpu_core_count
-	local cpc_plural='' cpu_count_print='' model_plural=''
-	local cpu_physical_count=${A_CPU_CORE_DATA[0]}
-	local cpu_core_count=${A_CPU_CORE_DATA[3]}
-	local cpu_core_alpha=${A_CPU_CORE_DATA[1]}
-	local cpu_type=${A_CPU_CORE_DATA[2]}
-
-	if [[ $cpu_physical_count -gt 1 ]];then
-		cpc_plural='(s)'
-		cpu_count_print="$cpu_physical_count "
-		model_plural='s'
-	fi
-
-	local cpu_data_string="${cpu_count_print}${cpu_core_alpha} core"
 	# Strange (and also some expected) behavior encountered. If print_screen_output() uses $1
 	# as the parameter to output to the screen, then passing "<text1> ${ARR[@]} <text2>"
 	# will output only <text1> and first element of ARR. That "@" splits in elements and "*" _doesn't_,
@@ -7936,64 +7919,80 @@ print_cpu_data()
 	# This has been confirmed by #bash on freenode.
 	# The above mentioned only emerges when using the debugging markers below
 	## print_screen_output "a_cpu_working=\"***${a_cpu_working[@]} $hostName+++++++\"----------"
-	
-	# cpu cache
-	if [[ -z ${a_cpu_working[2]} ]];then
-		a_cpu_working[2]="unknown"
-	fi
+	# unless all these are null, process whatever you have
+	if [[ -n ${a_cpu_working[0]} || -n ${a_cpu_working[1]} || -n ${a_cpu_working[2]} || -n ${a_cpu_working[3]} ]];then
+		cpu_model="${a_cpu_working[0]}"
+		## assemble data for output
+		cpu_clock="${a_cpu_working[1]}"
 
-	cpu_data=$( create_print_line "CPU$cpc_plural:" "${C1}${cpu_data_string}${C2} ${a_cpu_working[0]}$model_plural (${cpu_type})" )
-	if [[ $B_SHOW_CPU == 'true' ]];then
-		# update for multicore, bogomips x core count.
-		if [[ $B_EXTRA_DATA == 'true' ]];then
-# 			if [[ $cpu_vendor != 'intel' ]];then
-			if [[ -n ${a_cpu_working[4]} ]];then
-				bmip_data=$( calculate_multicore_data "${a_cpu_working[4]}" "$(( $cpu_core_count * $cpu_physical_count ))" )
-			fi
-# 			else
-# 				bmip_data="${a_cpu_working[4]}"
-# 			fi
-			# bogomips are a linux thing, but my guess is over time bsds will use them somewhere anyway
-			if [[ $BSD_TYPE == 'bsd' && -z $bmip_data ]];then
-				bmip_data=''
-			else
-				bmip_data=" ${C1}bmips$SEP3${C2} $bmip_data"
-			fi
+		cpu_vendor=${a_cpu_working[5]}
+
+		# set A_CPU_CORE_DATA
+		get_cpu_core_count
+		cpu_physical_count=${A_CPU_CORE_DATA[0]}
+		cpu_core_count=${A_CPU_CORE_DATA[3]}
+		cpu_core_alpha=${A_CPU_CORE_DATA[1]}
+		cpu_type=${A_CPU_CORE_DATA[2]}
+		
+		if [[ $cpu_physical_count -gt 1 ]];then
+			cpc_plural='(s)'
+			cpu_count_print="$cpu_physical_count "
+			model_plural='s'
 		fi
-		## note: this handles how intel reports L2, total instead of per core like AMD does
-		# note that we need to multiply by number of actual cpus here to get true cache size
-		if [[ -n ${a_cpu_working[2]} ]];then
-			if [[ $cpu_vendor != 'intel' ]];then
-				cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$(( $cpu_core_count * $cpu_physical_count ))"  )
-			else
-				cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$cpu_physical_count"  )
+
+		cpu_data_string="${cpu_count_print}${cpu_core_alpha} core"
+		cpu_data=$( create_print_line "CPU$cpc_plural:" "${C1}${cpu_data_string}${C2} ${a_cpu_working[0]}$model_plural (${cpu_type})" )
+		if [[ $B_SHOW_CPU == 'true' ]];then
+			# update for multicore, bogomips x core count.
+			if [[ $B_EXTRA_DATA == 'true' ]];then
+	# 			if [[ $cpu_vendor != 'intel' ]];then
+				if [[ -n ${a_cpu_working[4]} ]];then
+					bmip_data=$( calculate_multicore_data "${a_cpu_working[4]}" "$(( $cpu_core_count * $cpu_physical_count ))" )
+				fi
+	# 			else
+	# 				bmip_data="${a_cpu_working[4]}"
+	# 			fi
+				# bogomips are a linux thing, but my guess is over time bsds will use them somewhere anyway
+				if [[ $BSD_TYPE == 'bsd' && -z $bmip_data ]];then
+					bmip_data=''
+				else
+					bmip_data=" ${C1}bmips$SEP3${C2} $bmip_data"
+				fi
 			fi
-		else
-			cpu_cache='N/A'
-		fi
-		# only print shortened list
-		if [[ $B_CPU_FLAGS_FULL != 'true' ]];then
-			# gawk has already sorted this output
-			cpu_flags=$( process_cpu_flags "${a_cpu_working[3]}" )
-			if [[ -n $cpu_flags ]];then
+			## note: this handles how intel reports L2, total instead of per core like AMD does
+			# note that we need to multiply by number of actual cpus here to get true cache size
+			if [[ -n ${a_cpu_working[2]} ]];then
+				if [[ $cpu_vendor != 'intel' ]];then
+					cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$(( $cpu_core_count * $cpu_physical_count ))"  )
+				else
+					cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$cpu_physical_count"  )
+				fi
+			else
+				cpu_cache='N/A'
+			fi
+			# only print shortened list
+			if [[ $B_CPU_FLAGS_FULL != 'true' ]];then
+				# gawk has already sorted this output, no flags returns -
+				cpu_flags=$( process_cpu_flags "${a_cpu_working[3]}" )
 				cpu_flags="($cpu_flags)"
-			else
-				cpu_flags='N/A'
+				cpu_flags=" ${C1}flags$SEP3${C2} $cpu_flags"
 			fi
-			cpu_flags=" ${C1}flags$SEP3${C2} $cpu_flags"
+			cpu_data="$cpu_data${C2} ${C1}cache$SEP3${C2} $cpu_cache$cpu_flags$bmip_data${CN}"
 		fi
-		cpu_data="$cpu_data${C2} ${C1}cache$SEP3${C2} $cpu_cache$cpu_flags$bmip_data${CN}"
-	fi
-	# we don't this printing out extra line unless > 1 cpu core
-	if [[ ${#A_CPU_DATA[@]} -gt 2 && $B_SHOW_CPU == 'true' ]];then
-		cpu_clock_speed='' # null < verbosity level 5
+		# we don't this printing out extra line unless > 1 cpu core
+		if [[ ${#A_CPU_DATA[@]} -gt 2 && $B_SHOW_CPU == 'true' ]];then
+			cpu_clock_speed='' # null < verbosity level 5
+		else
+			cpu_data="$cpu_data ${C1}clocked at${C2} ${a_cpu_working[1]} MHz${CN}"
+		fi
+		cpu_data="$cpu_data $cpu_clock_speed"
 	else
-		cpu_data="$cpu_data ${C1}clocked at${C2} ${a_cpu_working[1]} MHz${CN}"
+		if [[ $BSD_TYPE == 'bsd' && $B_ROOT != 'true' ]];then
+			cpu_null_error=' No permissions for sysctl use?'
+		fi
+		cpu_data=$( create_print_line "CPU:" "${C2} No CPU data available.$cpu_null_error" )
 	fi
-
-	cpu_data="$cpu_data $cpu_clock_speed"
-	print_screen_output "$cpu_data"
-
+	print_screen_output "$cpu_data"	
 	# we don't this printing out extra line unless > 1 cpu core
 	# note the numbering, the last array item is the min/max/not found for cpu speeds
 	if [[ ${#A_CPU_DATA[@]} -gt 2 && $B_SHOW_CPU == 'true' ]];then
