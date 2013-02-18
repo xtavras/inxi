@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 18 2013
-####  Patch Number: 21-bsd
+####  Patch Number: 22-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8350,6 +8350,10 @@ print_info_data()
 	local up_time="$( get_uptime )"
 	local patch_version_number=$( get_patch_version_string )
 	local gcc_string='' gcc_installed='' gcc_others='' closing_data='' 
+	
+	if [[ -z $memory ]];then
+		memory='N/A'
+	fi
 	
 	if [[ $B_EXTRA_DATA == 'true' ]];then
 		get_gcc_system_version
