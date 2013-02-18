@@ -7990,7 +7990,7 @@ print_cpu_data()
 		if [[ $BSD_TYPE == 'bsd' && $B_ROOT != 'true' ]];then
 			cpu_null_error=' No permissions for sysctl use?'
 		fi
-		cpu_data=$( create_print_line "CPU:" "${C2} No CPU data available.$cpu_null_error" )
+		cpu_data=$( create_print_line "CPU:" "${C2}No CPU data available.$cpu_null_error" )
 	fi
 	print_screen_output "$cpu_data"	
 	# we don't this printing out extra line unless > 1 cpu core
