@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 14-gnubsd
+####  Patch Number: 15-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6073,6 +6073,9 @@ get_partition_data()
 	( $1 ~ /^\/dev\// ) && ( devBase == "" ) {
 		devBase=gensub( /^(\/dev\/)(.+)$/, "\\2", 1, $1 )
 	}
+	( bsdType != "" && $1 ~ /^[^\/]+\/.+/ && devBase == "" ) {
+		devBase=gensub( /^([^\/]+\/)(.+)$/, "non-dev-\\1\\2", 1, $1 )
+	}
 	# this handles yet another fredforfaen special case where a mounted drive
 	# has the search string in its name
 	$NF ~ /^\/$|^\/boot$|^\/var$|^\/home$|^\/tmp$|^\/usr$/ {
@@ -6195,6 +6198,7 @@ get_partition_data()
 		fi
 	done
 	temp_array=${A_PARTITION_DATA[@]}
+	# echo $temp_array
 	log_function_data "2: A_PARTITION_DATA:\n$temp_array"
 	if [[ $B_SHOW_LABELS == 'true' || $B_SHOW_UUIDS == 'true' ]];then
 		get_partition_data_advanced
@@ -8929,6 +8933,7 @@ print_partition_data()
 	local counter=0 i=0 a_partition_data='' line_starter='' line_max=$(( $LINE_MAX - 35 ))
 	local partitionIdClean='' part_dev='' full_dev='' part_label='' full_label=''
 	local part_uuid='' full_uuid='' dev_remote='' full_fs='' line_max_label_uuid=$(( $LINE_MAX - 10 ))
+	local b_non_dev='false'
 
 	# set A_PARTITION_DATA
 	get_partition_data
@@ -8956,9 +8961,12 @@ print_partition_data()
 
 			if [[ $B_SHOW_LABELS == 'true' || $B_SHOW_UUIDS == 'true' ]];then
 				if [[ -n ${a_partition_working[6]} ]];then
-					if [[ -z $( grep -E '(^//|:/)' <<< ${a_partition_working[6]} ) ]];then
+					if [[ -z $( grep -E '(^//|:/|non-dev)' <<< ${a_partition_working[6]} ) ]];then
 						part_dev="/dev/${a_partition_working[6]}"
 						dev_remote='dev'
+					elif [[ -z $( grep '^non-dev' <<< ${a_partition_working[6]} ) ]];then
+						part_dev="${a_partition_working[6]}"
+						dev_remote='raid'
 					else
 						part_dev="${a_partition_working[6]}"
 						dev_remote='remote'
