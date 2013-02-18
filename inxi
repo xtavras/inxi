@@ -2,8 +2,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 1.8.37
-####  Date: February 17 2013
-####  Patch Number: 19-bsd
+####  Date: February 18 2013
+####  Patch Number: 20-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6077,11 +6077,11 @@ get_partition_data()
 	}
 	
 	# next set devBase if it didn not get set above here
-	( $1 ~ /^\/dev\// ) && ( devBase == "" ) {
+	( $1 ~ /^\/dev\/|:\/|\/\// ) && ( devBase == "" ) {
 		devBase=gensub( /^(\/dev\/)(.+)$/, "\\2", 1, $1 )
 	}
-	( bsdType != "" && $1 ~ /^[^\/]+\/.+/ && devBase == "" ) {
-		devBase=gensub( /^([^\/]+\/)(.+)$/, "non-dev-\\1\\2", 1, $1 )
+	( bsdType != "" && devBase == "" && $1 ~ /^[^\/]+\/.+/ ) {
+		devBase=gensub( /^([^\/]+\/)([^\/]+)$/, "non-dev-\\1\\2", 1, $1 )
 	}
 	# this handles yet another fredforfaen special case where a mounted drive
 	# has the search string in its name
@@ -6162,6 +6162,7 @@ get_partition_data()
 	IFS="$ORIGINAL_IFS"
 	
 	temp_array=${A_PARTITION_DATA[@]}
+	# echo $temp_array
 	log_function_data "1: A_PARTITION_DATA:\n$temp_array"
 	
 	# now we'll handle some fringe cases where irregular df -hT output shows /dev/disk/.. instead of 
@@ -6234,6 +6235,7 @@ get_partition_data_advanced()
 			
 			# note: for swap this will already be set
 			if [[ -z ${a_partition_working[6]} ]];then
+				
 				mount_point=$( sed 's|/|\\/|g'  <<< ${a_partition_working[0]} )
 				#echo mount_point $mount_point
 				dev_partition_data=$( gawk '
@@ -6298,10 +6300,12 @@ get_partition_data_advanced()
 			IFS="$ORIGINAL_IFS"
 			# get the mapper actual dev item first, in case it's mapped
 			dev_item=$( get_dev_processed_item "${a_partition_working[6]}" )
-			dev_item=$( basename $dev_item ) ## needed to avoid error in case name still has / in it
+			# make sure not to slice off rest if it's a network mounted file system
+			if [[ -n $dev_item && -z $( grep -E '(^//|:/)' <<< $dev_item ) ]];then
+				dev_item=$( basename $dev_item ) ## needed to avoid error in case name still has / in it
+			fi
 			dev_label=${a_partition_working[7]}
 			dev_uuid=${a_partition_working[8]}
-			
 			# then if dev data/uuid is incomplete, try to get missing piece
 			# it's more likely we'll get a uuid than a label. But this should get the
 			# dev item set no matter what, so then we can get the rest of any missing data
@@ -6324,6 +6328,7 @@ get_partition_data_advanced()
 						}' )
 				fi
 			fi
+			
 			# this can trigger all kinds of weird errors if it is a non /dev path, like: remote:/machine/name
 			if [[ -n $dev_item && -z $( grep -E '(^//|:/)' <<< $dev_item ) ]];then
 				if [[ -n $DEV_DISK_UUID && -z $dev_uuid ]];then
@@ -6352,6 +6357,7 @@ get_partition_data_advanced()
 		fi
 	fi
 	temp_array=${A_PARTITION_DATA[@]}
+	# echo $temp_array
 	log_function_data "3-advanced: A_PARTITION_DATA:\n$temp_array"
 	eval $LOGFE
 }
