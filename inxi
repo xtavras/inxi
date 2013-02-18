@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 07-bsd
+####  Patch Number: 08-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7427,8 +7427,16 @@ calculate_multicore_data()
 process_cpu_flags()
 {
 	eval $LOGFS
+	
+	local cpu_flags_working=$1
+	local bits=$( uname -m | grep 64 )
+	
+	# no need to show pae for 64 bit cpus, it's pointless
+	if [[ -n $bits ]];then
+		cpu_flags_working=$( sed 's/[[:space:]]*pae//' <<< "$cpu_flags_working" )
+	fi
 	# must have a space after last item in list for RS=" "
-	local cpu_flags_working="$1 "
+	cpu_flags_working="$cpu_flags_working "
 	
 	# nx = AMD stack protection extensions
 	# lm = Intel 64bit extensions
@@ -7443,6 +7451,7 @@ process_cpu_flags()
 		i = 1 # start at one because of for increment issue
 		flag_string = ""
 	}
+	
 	/^(lm|nx|pae|pni|svm|vmx|(sss|ss)e([2-9])?([a-z])?(_[0-9])?)$/ {
 		if ( $0 == "pni" ){
 			a_flags[i] = "sse3"
@@ -7830,7 +7839,9 @@ print_cpu_data()
 # 				bmip_data="${a_cpu_working[4]}"
 # 			fi
 			# bogomips are a linux thing, but my guess is over time bsds will use them somewhere anyway
-			if [[ $BSD_TYPE != 'bsd' && -n $bpip_data ]];then
+			if [[ $BSD_TYPE == 'bsd' && -z $bmip_data ]];then
+				bmip_data=''
+			else
 				bmip_data=" ${C1}bmips$SEP3${C2} $bmip_data"
 			fi
 		fi
@@ -7844,6 +7855,7 @@ print_cpu_data()
 		# only print shortened list
 		if [[ $B_CPU_FLAGS_FULL != 'true' ]];then
 			# gawk has already sorted this output
+			
 			cpu_flags=$( process_cpu_flags "${a_cpu_working[3]}" )
 			cpu_flags=" ${C1}flags$SEP3${C2} ($cpu_flags)"
 		fi
