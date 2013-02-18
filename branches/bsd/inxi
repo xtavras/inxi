@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.37
 ####  Date: February 17 2013
-####  Patch Number: 17-bsd
+####  Patch Number: 18-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6346,9 +6346,58 @@ get_partition_data_advanced()
 			IFS="$ORIGINAL_IFS"
 		done
 		log_function_data 'cat' "$FILE_MOUNTS"
+	else
+		if [[ $BSD_TYPE == 'bsd' ]];then
+			get_partition_data_advanced_bsd
+		fi
 	fi
 	temp_array=${A_PARTITION_DATA[@]}
 	log_function_data "3-advanced: A_PARTITION_DATA:\n$temp_array"
+	eval $LOGFE
+}
+
+get_partition_data_advanced_bsd()
+{
+	eval $LOGFS
+	local gpart_data="$( gpart list 2>/dev/null )"
+	local a_partition_working='' label_uuid='' dev_item=''
+	
+	if [[ -n $gpart_data ]];then
+		for (( i=0; i < ${#A_PARTITION_DATA[@]}; i++ ))
+		do
+			IFS=","
+			a_partition_working=( ${A_PARTITION_DATA[i]} )
+			IFS="$ORIGINAL_IFS"
+			# no need to use the rest of the name if it's not a straight /dev/item
+			dev_item=$( basename <<< ${a_partition_working[6]} )
+			
+			label_uuid=$( gawk -F ':' '
+			BEGIN {
+				IGNORECASE=1
+				label=""
+				uuid=""
+			}
+			/^[0-9]+\.[[:space:]]*Name.*'$dev_item'/ {
+				while ( getline && $1 !~ /^[0-9]+\.[[:space:]]*Name/ ) {
+					if ( $1 ~ /rawuuid/ ) {
+						gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2)
+						uuid=$2
+					}
+					if ( $1 ~ /label/ ) {
+						gsub(/^[[:space:]]+|[[:space:]]+$|none|\(null\)/,"",$2)
+						label=$2
+					}
+				}
+				print label","uuid
+				exit
+			}' <<< "$gpart_data" )
+
+			# assemble everything we could get for dev/h/dx, label, and uuid
+			IFS=","
+			A_PARTITION_DATA[i]=${a_partition_working[0]}","${a_partition_working[1]}","${a_partition_working[2]}","${a_partition_working[3]}","${a_partition_working[4]}","${a_partition_working[5]}","${a_partition_working[6]}","$label_uuid
+			IFS="$ORIGINAL_IFS"
+		done
+	fi
 	eval $LOGFE
 }
 
