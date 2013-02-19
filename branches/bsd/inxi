@@ -5375,6 +5375,7 @@ get_memory_data()
 			if ( realMemory != "" ) {
 				exit
 			}
+		}
 		/^Free Memory Pages:/ {
 			gsub(/[^0-9]/,"",$4)
 			freeMemory = $4
