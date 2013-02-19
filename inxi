@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 18 2013
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5369,16 +5369,9 @@ get_memory_data()
 			}
 		}
 		# But, it uses K here
-		/^Free Memory:/ {
-			gsub(/[^0-9]/,"",$3)
-			freeMemory = $3
-			if ( realMemory != "" ) {
-				exit
-			}
-		}
-		/^Free Memory Pages:/ {
-			gsub(/[^0-9]/,"",$4)
-			freeMemory = $4
+		/^Free Memory:|^Free Memory Pages:/ {
+			gsub(/[^0-9]/,"",$NF)
+			freeMemory = $NF
 			if ( realMemory != "" ) {
 				exit
 			}
