@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 18 2013
-####  Patch Number: 01-gnubsd
+####  Patch Number: 02-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6008,7 +6008,7 @@ get_partition_data()
 	
 	local a_partition_working='' dev_item='' temp_array='' dev_working_item='' 
 	local swap_data='' df_string='' main_partition_data='' df_test='' fs_type=''
-	local mount_data='' dev_bsd_working_item=''
+	local mount_data='' dev_bsd_item=''
 	#local excluded_file_types='--exclude-type=aufs --exclude-type=tmpfs --exclude-type=iso9660'
 	# df doesn't seem to work in script with variables like at the command line
 	# added devfs linprocfs sysfs fdescfs which show on debian kfreebsd kernel output
@@ -6179,27 +6179,28 @@ get_partition_data()
 		a_partition_working=( ${A_PARTITION_DATA[i]} )
 		IFS="$ORIGINAL_IFS"
 		
-		dev_item='' # reset each loop
+		dev_item=${a_partition_working[6]} # reset each loop
 		fs_type=${a_partition_working[5]}
 		# older bsds have df minus -T so can't get fs type easily, try using mount instead
-		if [[ $BSD_TYPE == 'bsd' && -z ${a_partition_working[5]} ]];then
-			dev_bsd_working_item=$( sed -e 's/non-dev-//' -e 's|/|\\/|g' <<< ${a_partition_working[6]} )
+		if [[ $BSD_TYPE == 'bsd' && -z $fs_type && -n $dev_item ]];then
+			dev_bsd_item=$( sed -e 's/non-dev-//' -e 's|/|\\/|g' <<< "$dev_item" )
 			fs_type=$( gawk -F '(' '
-			# get the line where the slice id is found, not perfect but better than nothing
-			/'$dev_bsd_working_item'/ {
-				# after the (, slice out everything before the first , - hack, but should work
-				gensub( /([^,]+)(.*)/, "\\1, 1, $2 )
+			/'$dev_bsd_item'/ {
+				# slice out everything after / plus the first comma
+				sub( /,.*/, "", $2 )
 				print $2
-			} ' <<< "$mount_data" )
+				exit
+			}' <<< "$mount_data" )
 		fi
 		# note: for swap this will already be set
-		if [[ -n $( grep -E '(by-uuid|by-label)' <<< ${a_partition_working[6]} ) ]];then
-			dev_working_item=$( basename ${a_partition_working[6]} )
+		if [[ -n $( grep -E '(by-uuid|by-label)' <<< $dev_item ) ]];then
+			dev_working_item=$( basename $dev_item )
 			if [[ -n $DEV_DISK_UUID ]];then
 				dev_item=$( echo "$DEV_DISK_UUID" | gawk '
 					$0 ~ /[ /t]'$dev_working_item'[ /t]/ {
 						item=gensub( /..\/..\/(.+)/, "\\1", 1, $NF )
 						print item
+						exit
 					}' )
 			fi
 			# if we didn't find anything for uuid try label
@@ -6208,11 +6209,12 @@ get_partition_data()
 					$0 ~ /[ /t]'$dev_working_item'[ /t]/ {
 						item=gensub( /..\/..\/(.+)/, "\\1", 1, $NF )
 						print item
+						exit
 					}' )
 			fi
-		elif [[ -n $( grep 'mapper/' <<< ${a_partition_working[6]} ) ]];then
+		elif [[ -n $( grep 'mapper/' <<< $dev_item ) ]];then
 			# get the mapper actual dev item
-			dev_item=$( get_dev_processed_item "${a_partition_working[6]}" )
+			dev_item=$( get_dev_processed_item "$dev_item" )
 		fi
 		
 		if [[ -n $dev_item ]];then
@@ -6304,6 +6306,7 @@ get_partition_data_advanced()
 						}
 					}
 					print partition "," label "," uuid
+					exit
 				}'	$FILE_MOUNTS )
 
 				# assemble everything we could get for dev/h/dx, label, and uuid
@@ -6333,6 +6336,7 @@ get_partition_data_advanced()
 						$0 ~ /[ \t]'$dev_uuid'[ \t]/ {
 							item=gensub( /..\/..\/(.+)/, "\\1", 1, $NF )
 							print item
+							exit
 						}' )
 				elif [[ -n $DEV_DISK_LABEL && -n $dev_label ]];then
 					dev_item=$( echo "$DEV_DISK_LABEL" | gawk '
@@ -6342,6 +6346,7 @@ get_partition_data_advanced()
 						$0 ~ /[ \t]'$dev_label'[ \t]/ {
 							item=gensub( /..\/..\/(.+)/, "\\1", 1, $NF )
 							print item
+							exit
 						}' )
 				fi
 			fi
@@ -6352,12 +6357,14 @@ get_partition_data_advanced()
 					dev_uuid=$( echo "$DEV_DISK_UUID" | gawk  '
 					/'$dev_item'$/ {
 						print $(NF - 2)
+						exit
 					}' )
 				fi
 				if [[ -n $DEV_DISK_LABEL && -z $dev_label ]];then
 					dev_label=$( echo "$DEV_DISK_LABEL" | gawk '
 					/'$dev_item'$/ {
 						print $(NF - 2)
+						exit
 					}' )
 				fi
 			fi
@@ -9037,7 +9044,7 @@ print_partition_data()
 			if [[ -n ${a_partition_working[5]} ]];then
 				full_fs="${a_partition_working[5]}"
 			else
-				full_fs='N/A' # reset partition used to null
+				full_fs='N/A' # reset partition fs type
 			fi
 			full_fs="${C1}fs$SEP3${C2} $full_fs "
 
