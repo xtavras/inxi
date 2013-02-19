@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 18 2013
-####  Patch Number: 05-gnubsd
+####  Patch Number: 06-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4267,9 +4267,14 @@ get_dmidecode_data()
 			BEGIN {
 				IGNORECASE=1
 				cutExtraTab="false"
+				twoData=""
+				oneData=""
 			}
 			{
-				if ( $2 != "" ) {
+				# no idea why, but freebsd gawk does not do this right
+				oneData=$1
+				twoData=$2
+				if ( twoData != "" ) {
 					twoHolder="true"
 				}
 				else {
@@ -4279,7 +4284,7 @@ get_dmidecode_data()
 					sub(/^\tDMI type.*/, "", $0)
 					cutExtraTab="true"
 				}
-				gsub(/'"$BAN_LIST_NORMAL"'/, "", $2)
+				gsub(/'"$BAN_LIST_NORMAL"'/, "", twoData)
 				gsub(/,/, " ", $0)
 				# clean out Handle line
 				sub(/^Handle.*/,"", $0)
@@ -4290,27 +4295,27 @@ get_dmidecode_data()
 				# System manufacturer|System Product Name|System Version
 				# To Be Filled By O.E.M.
 				# strip out starting white space so that the following stuff will clear properly
-				sub(/^[[:space:]]+/, "", $2)
-				sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*/, "", $2) 
-				gsub(/bios|acpi/, "", $2)
-				sub(/http:\/\/www.abit.com.tw\//, "Abit", $2)
+				sub(/^[[:space:]]+/, "", twoData)
+				sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*/, "", twoData) 
+				gsub(/bios|acpi/, "", twoData)
+				sub(/http:\/\/www.abit.com.tw\//, "Abit", twoData)
 				
 				# for double indented values replace with ~ so later can test for it, we are trusting that
 				# indentation will be tabbed in this case
 				# special case, dmidecode 2.2 has an extra tab and a DMI type line
 				if ( cutExtraTab == "true" ) {
-					sub(/^\t\t\t+/, "~", $1)
+					sub(/^\t\t\t+/, "~", oneData)
 				}
 				else {
-					sub(/^\t\t+/, "~", $1)
+					sub(/^\t\t+/, "~", oneData)
 				}
 				
-				gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
-				gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1)
-				gsub(/ [ \t]+/, " ", $2)
+				gsub(/^[[:space:]]+|[[:space:]]+$/, "", twoData)
+				gsub(/^[[:space:]]+|[[:space:]]+$/, "", oneData)
+				gsub(/ [ \t]+/, " ", twoData)
 				# reconstructing the line for processing so gawk can use -F : again
-				if ( $1 != "" && twoHolder == "true" ) {
-					print $1 ":" $2
+				if ( oneData != "" && twoHolder == "true" ) {
+					print oneData ":" twoData
 				}
 				else {
 					print $0
