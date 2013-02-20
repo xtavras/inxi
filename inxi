@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 18 2013
-####  Patch Number: 06-gnubsd
+####  Patch Number: 07-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1604,7 +1604,9 @@ debug_data_collector()
 			readlink /dev/root &> $debug_data_dir/dev-root.txt
 			df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs &> $debug_data_dir/df-h-T-excludes.txt
 			df -H -T &> $debug_data_dir/bsd-df-H-T-no-excludes.txt
+			df -H &> $debug_data_dir/bsd-df-H-no-excludes.txt
 			# bsd tool
+			mount &> $debug_data_dir/mount.txt
 			gpart list &> $debug_data_dir/bsd-gpart-list.txt
 			gpart show &> $debug_data_dir/bsd-gpart-show.txt
 			gpart status &> $debug_data_dir/bsd-gpart-status.txt
@@ -6760,13 +6762,73 @@ get_raid_data()
 		}
 		' <<< "$mdstat" ) )
 		IFS="$ORIGINAL_IFS"
-		temp_array=${A_RAID_DATA[@]}
-		log_function_data "A_RAID_DATA: $temp_array"
-# 		echo -e "A_RAID_DATA:\n${A_RAID_DATA[@]}"
+	else
+		if [[ $BSD_TYPE == 'bsd' ]];then
+			get_raid_data_bsd
+		fi
 	fi
+	
+	temp_array=${A_RAID_DATA[@]}
+	log_function_data "A_RAID_DATA: $temp_array"
+# 	echo -e "A_RAID_DATA:\n${A_RAID_DATA[@]}"
 	
 	eval $LOGFE
 }
+
+get_raid_data_bsd()
+{
+	eval $LOGFS
+	local zpool_path=$( type -p zpool 2>/dev/null )
+	local zpool_data=''
+	
+	if [[ -n $zpool_path ]];then
+		zpool_data="$( $zpool_path list -v | sed $SED_RX -e 's/^([^[:space:]])/\n\1/' )"
+# 		echo "$zpool_data"
+		IFS=$'\n'
+		A_RAID_DATA=( $(
+		gawk '
+		BEGIN {
+			raidString=""
+			separator=""
+			components=""
+		}
+		{ 
+			sub(/.*ALLOC.*/,"", $0)
+			# we need to know where to end the loop so start line with ~
+			#sub(/^[[:space:]]+/, "~", $0 )
+			#print $1
+		}
+		
+		/^[^[:space:]]/ {
+			components=""
+			separator=""
+			device=$1
+			deviceState=$7
+			
+			getline
+# 			sub(/^~/, "", $1)
+			raidLevel=$1
+			
+			while ( getline && $1 !~ /^$/ ) {
+				# print $1
+				components = components separator $1
+				separator=" "
+			}
+			
+			# print $NR
+			# print $1
+			raidString = device "," deviceState "," raidLevel "," components "," deviceReport "," uData 
+			raidString = raidString "," blocks "," superBlock "," algorithm "," chunkSize "," bitmapValues
+			raidString = raidString "," recoveryProgressBar "," recoveryPercent "," sectorsRecovered "," finishTime "," recoverSpeed
+			gsub(/~/,"",raidString)
+			print raidString
+		}' <<< "$zpool_data" 
+		) )
+		IFS="$ORIGINAL_IFS"
+	fi
+	eval $LOGFE
+}
+# get_raid_data_bsd;exit
 
 # Repos will be added as we get distro package manager data to create the repo data. 
 # This method will output the file name also, which is useful to create output that's 
@@ -9223,19 +9285,23 @@ print_raid_data()
 	local device_report='' u_data='' blocks='' super_blocks='' algorithm='' chunk_size=''
 	local bitmap_values='' recovery_progress_bar='' recovery_percent='' recovered_sectors=''
 	local finish_time='' recovery_speed='' raid_counter=0 device_counter=1 basic_counter=1
-	local a_partition_working='' raid_data='' kernel_support='' read_ahead='' unused_devices=''
+	local a_raid_working='' raid_data='' kernel_support='' read_ahead='' unused_devices=''
 	local basic_raid='' basic_raid_separator='' basic_raid_plural='' inactive=''
 	local component_separator='' device_id='' print_string='' loop_limit=0 array_count_unused=''
 	local array_count='' raid_event='' b_print_lines='true'
-	local no_raid_detected=""
+	local no_raid_detected="" dev_string='/dev/'
 	local empty_raid_data=""
 	
 	if [[ -n $BSD_TYPE ]];then
-		no_raid_detected='No RAID data available - not yet configured for BSD systems.'
-		empty_raid_data='No RAID data available - not yet configured for BSD systems.'
+		no_raid_detected='No RAID detected - BSD support is only preliminary.'
+		empty_raid_data='No RAID data available - BSD support is only preliminary.'
 	else
 		no_raid_detected="No RAID data available - $FILE_MDSTAT is missing - is md_mod kernel module loaded?"
 		empty_raid_data="No RAID devices detected - $FILE_MDSTAT and md_mod kernel raid module present"
+	fi
+	
+	if [[ $BSD_TYPE == 'bsd' ]];then
+		dev_string=''
 	fi
 	
 
@@ -9244,7 +9310,7 @@ print_raid_data()
 	for (( i=0; i < ${#A_RAID_DATA[@]}; i++ ))
 	do
 		IFS=","
-		a_partition_working=(${A_RAID_DATA[i]})
+		a_raid_working=(${A_RAID_DATA[i]})
 		IFS="$ORIGINAL_IFS"
 		
 		# reset on each iteration
@@ -9270,78 +9336,79 @@ print_raid_data()
 		super_blocks=''
 		u_data=''
 		
-		if [[ -n $( grep '^md' <<< ${a_partition_working[0]} ) ]];then
+		if [[ -n $( grep '^md' <<< ${a_raid_working[0]} ) ]] || \
+		[[ $BSD_TYPE == 'bsd' && -n ${a_raid_working[0]} ]];then
 			if [[ $B_SHOW_BASIC_RAID == 'true' ]];then
 				if [[ $basic_raid != '' ]];then
 					basic_raid_plural='s'
 				fi
-				if [[ ${a_partition_working[1]} == 'inactive' ]];then
-					inactive=" - ${a_partition_working[1]}"
+				if [[ ${a_raid_working[1]} == 'inactive' ]];then
+					inactive=" - ${a_raid_working[1]}"
 				fi
-				basic_raid="$basic_raid$basic_raid_separator${C1}$basic_counter${SEP3}${C2} /dev/${a_partition_working[0]}$inactive"
+				basic_raid="$basic_raid$basic_raid_separator${C1}$basic_counter${SEP3}${C2} $dev_string${a_raid_working[0]}$inactive"
 				basic_raid_separator=' '
 				(( basic_counter++ ))
 			else
 				device_id="-$device_counter"
-				device="/dev/${a_partition_working[0]}"
+				device="$dev_string${a_raid_working[0]}"
 				
 				(( device_counter++ ))
-				if [[ ${a_partition_working[1]} != '' ]];then
-					device_state=" - ${a_partition_working[1]}"
+				if [[ ${a_raid_working[1]} != '' ]];then
+					device_state=" - ${a_raid_working[1]}"
 				fi
 				
-				if [[ ${a_partition_working[2]} == '' ]];then
+				if [[ ${a_raid_working[2]} == '' ]];then
 					raid_level='N/A'
 				else
-					raid_level=${a_partition_working[2]}
+					raid_level=${a_raid_working[2]}
 				fi
 				# there's one case: md0 : inactive  that has to be protected against
-				if [[ ${a_partition_working[2]} == '' && ${a_partition_working[1]} == 'inactive' ]];then
+				if [[ ${a_raid_working[2]} == '' && ${a_raid_working[1]} == 'inactive' ]];then
 					raid_level=''
 				else
 					raid_level=" ${C1}raid${SEP3}${C2} $raid_level"
 				fi
-				if [[ ${a_partition_working[4]} != '' ]];then
-					device_report="${a_partition_working[4]}"
+				if [[ ${a_raid_working[4]} != '' ]];then
+					device_report="${a_raid_working[4]}"
 				else
 					device_report="N/A"
 				fi
 				if [[ $B_EXTRA_DATA == 'true' ]];then
-					if [[ ${a_partition_working[6]} != '' ]];then
-						blocks=${a_partition_working[6]}
+					if [[ ${a_raid_working[6]} != '' ]];then
+						blocks=${a_raid_working[6]}
 					else
 						blocks='N/A'
 					fi
 					blocks=" ${C1}blocks${SEP3}${C2} $blocks"
 					
-					if [[ ${a_partition_working[9]} != '' ]];then
-						chunk_size=${a_partition_working[9]}
+					if [[ ${a_raid_working[9]} != '' ]];then
+						chunk_size=${a_raid_working[9]}
 					else
 						chunk_size='N/A'
 					fi
 					chunk_size=" ${C1}chunk size${SEP3}${C2} $chunk_size"
-					if [[ ${a_partition_working[10]} != '' ]];then
+					if [[ ${a_raid_working[10]} != '' ]];then
 						bitmap_value='true'
 						bitmap_value=" ${C1}bitmap${SEP3}${C2} $bitmap_value"
 					fi
 				fi
 				if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-					if [[ ${a_partition_working[5]} != '' ]];then
-						u_data=" ${a_partition_working[5]}"
+					if [[ ${a_raid_working[5]} != '' ]];then
+						u_data=" ${a_raid_working[5]}"
 					fi
-					if [[ ${a_partition_working[7]} != '' ]];then
-						super_blocks=" ${C1}super blocks${SEP3}${C2} ${a_partition_working[7]}"
+					if [[ ${a_raid_working[7]} != '' ]];then
+						super_blocks=" ${C1}super blocks${SEP3}${C2} ${a_raid_working[7]}"
 					fi
-					if [[ ${a_partition_working[8]} != '' ]];then
-						algorithm=" ${C1}algorithm${SEP3}${C2} ${a_partition_working[8]}"
+					if [[ ${a_raid_working[8]} != '' ]];then
+						algorithm=" ${C1}algorithm${SEP3}${C2} ${a_raid_working[8]}"
 					fi
 				fi
-				if [[ ${a_partition_working[3]} == '' ]];then
-					if [[ ${a_partition_working[1]} != 'inactive' ]];then
+				if [[ ${a_raid_working[3]} == '' ]];then
+					if [[ ${a_raid_working[1]} != 'inactive' ]];then
 						device_components='N/A'
 					fi
 				else
-					for component in ${a_partition_working[3]}
+					for component in ${a_raid_working[3]}
 					do
 						if [[ $B_EXTRA_DATA != 'true' ]];then
 							component=$( sed 's/\[[0-9]\+\]//' <<< $component )
@@ -9377,7 +9444,7 @@ print_raid_data()
 				fi
 				a_raid_data[$raid_counter]="${C1}Device$device_id${SEP3}${C2} $device$device_state$raid_level$device_components"
 				
-				if [[ $B_EXTRA_DATA == 'true' && ${a_partition_working[1]} != 'inactive' ]];then
+				if [[ $B_EXTRA_DATA == 'true' && ${a_raid_working[1]} != 'inactive' ]];then
 					a_raid_data[$raid_counter]="${C1}Device$device_id${SEP3}${C2} $device$device_state$device_components"
 					(( raid_counter++ ))
 					print_string="${C1}Info${SEP3}${C2}$raid_level ${C1}report${SEP3}${C2} $device_report$u_data"
@@ -9389,25 +9456,25 @@ print_raid_data()
 				(( raid_counter++ ))
 				
 				# now let's do the recover line if required
-				if [[ ${a_partition_working[12]} != '' ]];then
-					recovery_percent=$( cut -d '~' -f 2 <<< ${a_partition_working[12]} )
-					if [[ ${a_partition_working[14]} != '' ]];then
-						finish_time=${a_partition_working[14]}
+				if [[ ${a_raid_working[12]} != '' ]];then
+					recovery_percent=$( cut -d '~' -f 2 <<< ${a_raid_working[12]} )
+					if [[ ${a_raid_working[14]} != '' ]];then
+						finish_time=${a_raid_working[14]}
 					else
 						finish_time='N/A'
 					fi
 					finish_time=" ${C1}time remaining${SEP3}${C2} $finish_time"
 					if [[ $B_EXTRA_DATA == 'true' ]];then
-						if [[ ${a_partition_working[13]} != '' ]];then
-							recovered_sectors=" ${C1}sectors${SEP3}${C2} ${a_partition_working[13]}"
+						if [[ ${a_raid_working[13]} != '' ]];then
+							recovered_sectors=" ${C1}sectors${SEP3}${C2} ${a_raid_working[13]}"
 						fi
 					fi
 					if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-						if [[ ${a_partition_working[11]} != '' ]];then
-							recovery_progress_bar=" ${a_partition_working[11]}"
+						if [[ ${a_raid_working[11]} != '' ]];then
+							recovery_progress_bar=" ${a_raid_working[11]}"
 						fi
-						if [[ ${a_partition_working[15]} != '' ]];then
-							recovery_speed=" ${C1}speed${SEP3}${C2} ${a_partition_working[15]}"
+						if [[ ${a_raid_working[15]} != '' ]];then
+							recovery_speed=" ${C1}speed${SEP3}${C2} ${a_raid_working[15]}"
 						fi
 					fi
 					
@@ -9415,29 +9482,29 @@ print_raid_data()
 					(( raid_counter++ ))
 				fi
 			fi
-		elif [[ ${a_partition_working[0]} == 'KernelRaidSupport' ]];then
-			if [[ ${a_partition_working[1]} == '' ]];then
+		elif [[ ${a_raid_working[0]} == 'KernelRaidSupport' ]];then
+			if [[ ${a_raid_working[1]} == '' ]];then
 				kernel_support='N/A'
 			else
-				kernel_support=${a_partition_working[1]}
+				kernel_support=${a_raid_working[1]}
 			fi
 			kernel_support=" ${C1}supported${SEP3}${C2} $kernel_support"
-		elif [[ ${a_partition_working[0]} == 'ReadAhead' ]];then
-			if [[ ${a_partition_working[1]} != '' ]];then
-				read_ahead=${a_partition_working[1]}
+		elif [[ ${a_raid_working[0]} == 'ReadAhead' ]];then
+			if [[ ${a_raid_working[1]} != '' ]];then
+				read_ahead=${a_raid_working[1]}
 				read_ahead=" ${C1}read ahead${SEP3}${C2} $read_ahead"
 			fi
-		elif [[ ${a_partition_working[0]} == 'UnusedDevices' ]];then
-			if [[ ${a_partition_working[1]} == '' ]];then
+		elif [[ ${a_raid_working[0]} == 'UnusedDevices' ]];then
+			if [[ ${a_raid_working[1]} == '' ]];then
 				unused_devices='N/A'
 			else
-				unused_devices=${a_partition_working[1]}
+				unused_devices=${a_raid_working[1]}
 			fi
 			unused_devices="${C1}Unused Devices${SEP3}${C2} $unused_devices"
-		elif [[ ${a_partition_working[0]} == 'raidEvent' ]];then
-			if [[ ${a_partition_working[1]} != '' ]];then
-				raid_event=${a_partition_working[1]}
-				raid_event=" ${C1}Raid Event${SEP3}${C2} ${a_partition_working[1]}"
+		elif [[ ${a_raid_working[0]} == 'raidEvent' ]];then
+			if [[ ${a_raid_working[1]} != '' ]];then
+				raid_event=${a_raid_working[1]}
+				raid_event=" ${C1}Raid Event${SEP3}${C2} ${a_raid_working[1]}"
 			fi
 		fi
 	done
@@ -9445,8 +9512,9 @@ print_raid_data()
 	if [[ $B_SHOW_BASIC_RAID == 'true' && $basic_raid != '' ]];then
 		a_raid_data[0]="${C1}Device$basic_raid_plural${SEP3}${C2} $basic_raid"
 	fi
-
-	if [[ $B_MDSTAT_FILE != 'true' ]];then
+	# note bsd temp test hack to make it run
+	if [[ $B_MDSTAT_FILE != 'true' ]] || \
+	[[ $BSD_TYPE == 'bsd' && $A_RAID_DATA == '' ]];then
 		if [[ $B_SHOW_RAID_R == 'true' ]];then
 			a_raid_data[0]="$no_raid_detected"
 		else
@@ -9472,6 +9540,7 @@ print_raid_data()
 			loop_limit=2
 		fi
 	fi
+	b_print_lines=true
 	# we don't want to print anything if it's -b and no data is present, just a waste of a line
 	if [[ $b_print_lines == 'true' ]];then
 		# print out all lines, line starter on first line
