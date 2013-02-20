@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 18 2013
-####  Patch Number: 08-gnubsd
+####  Patch Number: 09-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6796,30 +6796,27 @@ get_raid_data_bsd()
 			separator=""
 			components=""
 		}
-		{ 
+		/SIZE.*ALLOC/ {
 			sub(/.*ALLOC.*/,"", $0)
-			# we need to know where to end the loop so start line with ~
-			#sub(/^[[:space:]]+/, "~", $0 )
-			#print $1
 		}
-		
 		/^[^[:space:]]/ {
 			components=""
 			separator=""
+			raidLevel=
 			device=$1
 			deviceState=$7
-			
+			# go to the next line now, this will probably need fixing later with weird data sets
 			getline
-# 			sub(/^~/, "", $1)
-			raidLevel=$1
+			if ( $1 != "" ) {
+				raidLevel="zfs $1"
+			}
 			
 			while ( getline && $1 !~ /^$/ ) {
 				# print $1
 				components = components separator $1
 				separator=" "
 			}
-			
-			# print $NR
+
 			# print $1
 			raidString = device "," deviceState "," raidLevel "," components "," deviceReport "," uData 
 			raidString = raidString "," blocks "," superBlock "," algorithm "," chunkSize "," bitmapValues
