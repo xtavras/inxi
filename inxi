@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 19 2013
-####  Patch Number: 12-gnubsd
+####  Patch Number: 13-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9445,7 +9445,7 @@ print_raid_data()
 						spare=" ${C1}spare${SEP3}${C2}$spare${C2}"
 					fi
 					if [[ $device_components != '' ]];then
-						if [[ $B_EXTRA_DATA != 'true' ]];then
+						if [[ $B_EXTRA_DATA != 'true' && -z $BSD_TYPE ]];then
 							if [[ $device_report != 'N/A' ]];then
 								device_components="$device_report - $device_components"
 							fi
