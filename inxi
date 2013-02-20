@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 18 2013
-####  Patch Number: 07-gnubsd
+####  Patch Number: 08-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -240,6 +240,7 @@ A_X_DATA=''
 # flag to allow distro maintainers to turn off update features. If false, turns off
 # -U and -! testing/advanced update options, as well as removing the -U help menu item
 B_ALLOW_UPDATE='true'
+B_BSD_RAID='false'
 B_COLOR_SCHEME_SET='false'
 B_CONSOLE_IRC='false'
 # triggers full display of cpu flags
@@ -6782,7 +6783,10 @@ get_raid_data_bsd()
 	local zpool_data=''
 	
 	if [[ -n $zpool_path ]];then
-		zpool_data="$( $zpool_path list -v | sed $SED_RX -e 's/^([^[:space:]])/\n\1/' )"
+		B_BSD_RAID='true'
+		# bsd sed does not support inserting a true \n so use this trick
+		zpool_data="$( $zpool_path list -v | sed $SED_RX 's/^([^[:space:]])/\
+1/' )"
 # 		echo "$zpool_data"
 		IFS=$'\n'
 		A_RAID_DATA=( $(
@@ -9303,8 +9307,6 @@ print_raid_data()
 	if [[ $BSD_TYPE == 'bsd' ]];then
 		dev_string=''
 	fi
-	
-
 	get_raid_data
 
 	for (( i=0; i < ${#A_RAID_DATA[@]}; i++ ))
@@ -9336,8 +9338,8 @@ print_raid_data()
 		super_blocks=''
 		u_data=''
 		
-		if [[ -n $( grep '^md' <<< ${a_raid_working[0]} ) ]] || \
-		[[ $BSD_TYPE == 'bsd' && -n ${a_raid_working[0]} ]];then
+		if [[ -n $( grep '^md' <<< ${a_raid_working[0]} ) && -z $BSD_TYPE ]] || \
+		[[ -n $BSD_TYPE && ${a_raid_working[0]} != '' ]];then
 			if [[ $B_SHOW_BASIC_RAID == 'true' ]];then
 				if [[ $basic_raid != '' ]];then
 					basic_raid_plural='s'
@@ -9513,8 +9515,8 @@ print_raid_data()
 		a_raid_data[0]="${C1}Device$basic_raid_plural${SEP3}${C2} $basic_raid"
 	fi
 	# note bsd temp test hack to make it run
-	if [[ $B_MDSTAT_FILE != 'true' ]] || \
-	[[ $BSD_TYPE == 'bsd' && $A_RAID_DATA == '' ]];then
+	if [[ $B_MDSTAT_FILE != 'true' && -z $BSD_TYPE ]] || \
+	[[ -n $BSD_TYPE && $B_BSD_RAID == 'false' ]];then
 		if [[ $B_SHOW_RAID_R == 'true' ]];then
 			a_raid_data[0]="$no_raid_detected"
 		else
@@ -9540,7 +9542,7 @@ print_raid_data()
 			loop_limit=2
 		fi
 	fi
-	b_print_lines=true
+
 	# we don't want to print anything if it's -b and no data is present, just a waste of a line
 	if [[ $b_print_lines == 'true' ]];then
 		# print out all lines, line starter on first line
