@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 19 2013
-####  Patch Number: 11-bsd
+####  Patch Number: 12-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6795,6 +6795,9 @@ get_raid_data_bsd()
 			raidString=""
 			separator=""
 			components=""
+			reportSize=""
+			blocksAvailable=""
+			chunkRaidAllocated=""
 		}
 		/SIZE.*ALLOC/ {
 			sub(/.*ALLOC.*/,"", $0)
@@ -6805,6 +6808,10 @@ get_raid_data_bsd()
 			raidLevel=""
 			device=$1
 			deviceState=$7
+			reportSize=$2
+			blocksAvailable=$4
+			chunkRaidAllocated=$3
+			
 			# go to the next line now, this will probably need fixing later with weird data sets
 			getline
 			if ( $1 != "" ) {
@@ -6818,9 +6825,11 @@ get_raid_data_bsd()
 			}
 
 			# print $1
-			raidString = device "," deviceState "," raidLevel "," components "," deviceReport "," uData 
-			raidString = raidString "," blocks "," superBlock "," algorithm "," chunkSize "," bitmapValues
-			raidString = raidString "," recoveryProgressBar "," recoveryPercent "," sectorsRecovered "," finishTime "," recoverSpeed
+			raidString = device "," deviceState "," raidLevel "," components "," reportSize "," uData 
+			raidString = raidString "," blocksAvailable "," superBlock "," algorithm "," chunkRaidAllocated 
+			# none of these are used currently
+			raidString = raidString "," bitmapValues  "," recoveryProgressBar "," recoveryPercent 
+			raidString = raidString "," sectorsRecovered "," finishTime "," recoverSpeed
 			gsub(/~/,"",raidString)
 			print raidString
 		}' <<< "$zpool_data" 
@@ -9290,12 +9299,15 @@ print_raid_data()
 	local basic_raid='' basic_raid_separator='' basic_raid_plural='' inactive=''
 	local component_separator='' device_id='' print_string='' loop_limit=0 array_count_unused=''
 	local array_count='' raid_event='' b_print_lines='true'
-	local no_raid_detected="" dev_string='/dev/'
-	local empty_raid_data=""
+	local no_raid_detected='' dev_string='/dev/'
+	local empty_raid_data='' report_size='report' blocks_avail='blocks' chunk_raid_usage='chunk size'
 	
 	if [[ -n $BSD_TYPE ]];then
 		no_raid_detected='No RAID detected - BSD support is only preliminary.'
 		empty_raid_data='No RAID data available - BSD support is only preliminary.'
+		report_size='full size'
+		blocks_avail='available size'
+		chunk_raid_usage='raid allocated'
 	else
 		no_raid_detected="No RAID data available - $FILE_MDSTAT is missing - is md_mod kernel module loaded?"
 		empty_raid_data="No RAID devices detected - $FILE_MDSTAT and md_mod kernel raid module present"
@@ -9378,14 +9390,14 @@ print_raid_data()
 					else
 						blocks='N/A'
 					fi
-					blocks=" ${C1}blocks${SEP3}${C2} $blocks"
+					blocks=" ${C1}$blocks_avail${SEP3}${C2} $blocks"
 					
 					if [[ ${a_raid_working[9]} != '' ]];then
 						chunk_size=${a_raid_working[9]}
 					else
 						chunk_size='N/A'
 					fi
-					chunk_size=" ${C1}chunk size${SEP3}${C2} $chunk_size"
+					chunk_size=" ${C1}$chunk_raid_usage${SEP3}${C2} $chunk_size"
 					if [[ ${a_raid_working[10]} != '' ]];then
 						bitmap_value='true'
 						bitmap_value=" ${C1}bitmap${SEP3}${C2} $bitmap_value"
@@ -9446,7 +9458,7 @@ print_raid_data()
 				if [[ $B_EXTRA_DATA == 'true' && ${a_raid_working[1]} != 'inactive' ]];then
 					a_raid_data[$raid_counter]="${C1}Device$device_id${SEP3}${C2} $device$device_state$device_components"
 					(( raid_counter++ ))
-					print_string="${C1}Info${SEP3}${C2}$raid_level ${C1}report${SEP3}${C2} $device_report$u_data"
+					print_string="${C1}Info${SEP3}${C2}$raid_level ${C1}$report_size${SEP3}${C2} $device_report$u_data"
 					print_string="$print_string$blocks$chunk_size$bitmap_value$super_blocks$algorithm"
 					a_raid_data[$raid_counter]="$print_string"
 				else
