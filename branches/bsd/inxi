@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 18 2013
-####  Patch Number: 09-bsd
+####  Patch Number: 10-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6802,13 +6802,13 @@ get_raid_data_bsd()
 		/^[^[:space:]]/ {
 			components=""
 			separator=""
-			raidLevel=
+			raidLevel=""
 			device=$1
 			deviceState=$7
 			# go to the next line now, this will probably need fixing later with weird data sets
 			getline
 			if ( $1 != "" ) {
-				raidLevel="zfs $1"
+				raidLevel="zfs " $1
 			}
 			
 			while ( getline && $1 !~ /^$/ ) {
