@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 27 2013
-####  Patch Number: 14-gnubsd
+####  Patch Number: 15-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6851,7 +6851,7 @@ get_raid_component_data_bsd()
 	
 	for (( i=0; i<${#A_RAID_DATA[@]}; i++))
 	do
-		IFS=$','
+		IFS=","
 		a_raid_data=${A_RAID_DATA[$i]}
 		IFS="$ORIGINAL_IFS"
 		separator=''
@@ -6877,7 +6877,7 @@ get_raid_component_data_bsd()
 		array_string="$device,$a_raid_data[1],$a_raid_data[2],$component_string,$a_raid_data[4],$a_raid_data[5]"
 		array_string="$array_string,$a_raid_data[6],$a_raid_data[7],$a_raid_data[8],$a_raid_data[9],$a_raid_data[10]"
 		array_string="$array_string,$a_raid_data[11],$a_raid_data[12],$a_raid_data[13],$a_raid_data[14],$a_raid_data[15]"
-		IFS=$'\n'
+		IFS=","
 		A_RAID_DATA[i]=$array_string
 		IFS="$ORIGINAL_IFS"
 	done
