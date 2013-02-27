@@ -2,8 +2,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 1.8.38
-####  Date: February 19 2013
-####  Patch Number: 13-bsd
+####  Date: February 27 2013
+####  Patch Number: 14-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6835,7 +6835,53 @@ get_raid_data_bsd()
 		}' <<< "$zpool_data" 
 		) )
 		IFS="$ORIGINAL_IFS"
+		if [[ $B_EXTRA_DATA == 'true' ]];then
+			get_raid_component_data_bsd
+		fi
 	fi
+	eval $LOGFE
+}
+
+# note, we've already tested for zpool so no further tests required
+get_raid_component_data_bsd()
+{
+	eval $LOGFS
+	local a_raid_data='' array_string='' component='' component_string='' 
+	local zpool_status='' device='' separator=''
+	
+	for (( i=0; i<${#A_RAID_DATA[@]}; i++))
+	do
+		IFS=$','
+		a_raid_data=${A_RAID_DATA[$i]}
+		IFS="$ORIGINAL_IFS"
+		separator=''
+		component_string=''
+		zpool_status=''
+		device=$a_raid_data[0]
+		zpool_status="$( zpool status $device )"
+		for component in $a_raid_data[3]
+		do
+			component_string=$component_string $separator $( gawk '
+			BEGIN {
+				IGNORECASE=1
+			}
+			$1 ~ /^'$component'$/ {
+				sub( /ONLINE/, "on", $2 )
+				sub( /OFFLINE/, "off", $2 )
+				sub( /DEGRADED/, "deg", $2 )
+				print "'$component'[" $2 "]"
+				exit
+			}' <<< "$zpool_status" )
+			separator=' '
+		done
+		array_string="$device,$a_raid_data[1],$a_raid_data[2],$component_string,$a_raid_data[4],$a_raid_data[5]"
+		array_string="$array_string,$a_raid_data[6],$a_raid_data[7],$a_raid_data[8],$a_raid_data[9],$a_raid_data[10]"
+		array_string="$array_string,$a_raid_data[11],$a_raid_data[12],$a_raid_data[13],$a_raid_data[14],$a_raid_data[15]"
+		IFS=$'\n'
+		A_RAID_DATA[i]=$array_string
+		IFS="$ORIGINAL_IFS"
+	done
+	
 	eval $LOGFE
 }
 # get_raid_data_bsd;exit
