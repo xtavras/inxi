@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.38
 ####  Date: February 27 2013
-####  Patch Number: 15-gnubsd
+####  Patch Number: 17-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -2417,9 +2417,9 @@ show_options()
 	print_screen_output "-p  Full ${partition_string} information (-P plus all other detected ${partition_string}s)."
 	print_screen_output "-P  Basic ${partition_string} information (shows what -v 4 would show, but without extra data)."
 	print_screen_output "    Shows, if detected: / /boot /home /tmp /usr /var. Use -p to see all mounted ${partition_string}s."
-	print_screen_output "-r  Distro repository data. Currently supported repo types: APT; PACMAN; PISI; YUM, Ports."
+	print_screen_output "-r  Distro repository data. Currently supported repo types: APT; PACMAN; PISI; YUM; Ports."
 	print_screen_output "-R  RAID data. Shows RAID devices, states, levels, and components, and extra data with -x/-xx"
-	print_screen_output "    If device is resyncing, shows resync progress line as well."
+	print_screen_output "    If device is resyncing, shows resync progress line as well (md-raid only)."
 	print_screen_output "-s  Sensors output (if sensors installed/configured): mobo/cpu/gpu temp; detected fan speeds."
 	print_screen_output "    Gpu temp only for Fglrx/Nvidia drivers. Nvidia shows screen number for > 1 screens."
 	print_screen_output "-S  System information: host name, kernel, desktop environment (if in X), distro"
@@ -2452,7 +2452,7 @@ show_options()
 	print_screen_output "       - If running in console, not in IRC client, shows shell version number if detected."
 	print_screen_output "    -N -A - Version/port(s)/driver version (if available) for Network/Audio;"
 	print_screen_output "    -N -A -G - Network, audio, graphics, shows PCI Bus ID/Usb ID number of card;"
-	print_screen_output "    -R - Show component raid id. Adds second RAID Info line: raid level; report on drives (like 5/5);"
+	print_screen_output "    -R - (md-raid only) Show component raid id. Adds second RAID Info line: raid level; report on drives (like 5/5);"
 	print_screen_output "         blocks; chunk size; bitmap (if present). Resync line, shows blocks synced/total blocks."
 	print_screen_output "    -S - Desktop toolkit if avaliable (GNOME/XFCE/KDE only); Kernel gcc version"
 	print_screen_output "    -t - Adds memory use output to cpu (-xt c), and cpu use to memory (-xt m)."
@@ -2464,9 +2464,9 @@ show_options()
 	print_screen_output "         Adds parent program (or tty) for shell info if not in IRC (like Konsole or Gterm)."
 	print_screen_output "    -M - Chassis information, bios rom size (dmidecode only), if data for either is available."
 	print_screen_output "    -N - Chip vendor:product ID for each nic."
-	print_screen_output "    -R - Superblock (if present); algorythm, U data. Adds system info line (kernel support,"
-	print_screen_output "         read ahead, raid events). If present, adds unused device line. Resync line, shows"
-	print_screen_output "         progress bar."
+	print_screen_output "    -R - (md-raid only) Superblock (if present); algorythm, U data. Adds system info line"
+	print_screen_output "         (kernel support,read ahead, raid events). If present, adds unused device line. "
+	print_screen_output "         Resync line, shows progress bar."
 	print_screen_output "    -S - Display manager (dm) in desktop output, if in X (like kdm, gdm3, lightdm)."
 	print_screen_output "    -xx -@ <11-14> - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com."
 	print_screen_output "-xxx Show extra, extra, extra data (only works with verbose or line output, not short form): "
@@ -6835,9 +6835,7 @@ get_raid_data_bsd()
 		}' <<< "$zpool_data" 
 		) )
 		IFS="$ORIGINAL_IFS"
-		if [[ $B_EXTRA_DATA == 'true' ]];then
-			get_raid_component_data_bsd
-		fi
+		get_raid_component_data_bsd
 	fi
 	eval $LOGFE
 }
@@ -6847,36 +6845,39 @@ get_raid_component_data_bsd()
 {
 	eval $LOGFS
 	local a_raid_data='' array_string='' component='' component_string='' 
-	local zpool_status='' device='' separator=''
+	local zpool_status='' device='' separator='' component_status=''
 	
 	for (( i=0; i<${#A_RAID_DATA[@]}; i++))
 	do
 		IFS=","
-		a_raid_data=${A_RAID_DATA[$i]}
+		a_raid_data=( ${A_RAID_DATA[i]} )
 		IFS="$ORIGINAL_IFS"
 		separator=''
 		component_string=''
+		component_status=''
 		zpool_status=''
-		device=$a_raid_data[0]
+		device=${a_raid_data[0]}
 		zpool_status="$( zpool status $device )"
-		for component in $a_raid_data[3]
+		# we will remove ONLINE for status and only use OFFLINE/DEGRADED as tests
+		# for print output display of issues with components
+		for component in ${a_raid_data[3]}
 		do
-			component_string=$component_string $separator $( gawk '
+			component_status=$( gawk '
 			BEGIN {
 				IGNORECASE=1
 			}
 			$1 ~ /^'$component'$/ {
-				sub( /ONLINE/, "on", $2 )
-				sub( /OFFLINE/, "off", $2 )
-				sub( /DEGRADED/, "deg", $2 )
-				print "'$component'[" $2 "]"
+				sub( /ONLINE/, "", $2 )
+				print "'$component'" $2
 				exit
 			}' <<< "$zpool_status" )
+			component_string="$component_string$separator$component_status"
 			separator=' '
 		done
-		array_string="$device,$a_raid_data[1],$a_raid_data[2],$component_string,$a_raid_data[4],$a_raid_data[5]"
-		array_string="$array_string,$a_raid_data[6],$a_raid_data[7],$a_raid_data[8],$a_raid_data[9],$a_raid_data[10]"
-		array_string="$array_string,$a_raid_data[11],$a_raid_data[12],$a_raid_data[13],$a_raid_data[14],$a_raid_data[15]"
+		array_string="$device,${a_raid_data[1]},${a_raid_data[2]},$component_string,${a_raid_data[4]}"
+		array_string="$array_string,${a_raid_data[5]},${a_raid_data[6]},${a_raid_data[7]},${a_raid_data[8]}"
+		array_string="$array_string,${a_raid_data[9]},${a_raid_data[10]},${a_raid_data[11]},${a_raid_data[12]},"
+		array_string="$array_string${a_raid_data[13]},${a_raid_data[14]},${a_raid_data[15]}"
 		IFS=","
 		A_RAID_DATA[i]=$array_string
 		IFS="$ORIGINAL_IFS"
@@ -9242,6 +9243,20 @@ print_partition_data()
 	eval $LOGFE
 }
 
+print_program_version()
+{
+	local patch_version_number=$( get_patch_version_string )
+	local program_version="${C1}$SCRIPT_NAME$SEP3${C2} $SCRIPT_VERSION_NUMBER$patch_version_number${CN}"
+	# great trick from: http://ideatrash.net/2011/01/bash-string-padding-with-sed.html
+	# left pad: sed -e :a -e 's/^.\{1,80\}$/& /;ta'
+	# right pad: sed -e :a -e 's/^.\{1,80\}$/ &/;ta'
+	# center pad: sed -e :a -e 's/^.\{1,80\}$/ & /;ta'
+	#local line_max=$(( $LINE_MAX - 10 ))
+	#program_version="$( sed -e :a -e "s/^.\{1,$line_max\}$/ &/;ta" <<< $program_version )" # use to create padding if needed
+	# program_version=$( create_print_line "Version:" "$program_version" )
+	print_screen_output "$program_version"
+}
+
 print_ps_data()
 {
 	eval $LOGFS
@@ -9470,12 +9485,13 @@ print_raid_data()
 						if [[ $B_EXTRA_DATA != 'true' ]];then
 							component=$( sed 's/\[[0-9]\+\]//' <<< $component )
 						fi
-						if [[ -n $( grep 'F' <<< $component ) ]];then
-							component=$( sed -e 's/(F)//' -e 's/F//' <<<  $component )
+						# NOTE: for bsd zfs, states are: ONLINE,DEGRADED,OFFLINE (at least)
+						if [[ -n $( grep -Ei '(F|DEGRADED)' <<< $component ) ]];then
+							component=$( sed -e 's/(F)//' -e 's/F//' -e 's/DEGRADED//i' <<<  $component )
 							failed="$failed $component"
 							component=''
-						elif [[ -n $( grep 'S' <<< $component ) ]];then
-							component=$( sed -e 's/(S)//' -e 's/S//' <<<  $component )
+						elif [[ -n $( grep -Ei '(S|OFFLINE)' <<< $component ) ]];then
+							component=$( sed -e 's/(S)//' -e 's/S//' -e 's/OFFLINE//i' <<<  $component )
 							spare="$spare $component"
 							component=''
 						else
@@ -9627,20 +9643,6 @@ print_raid_data()
 	fi
 	
 	eval $LOGFE
-}
-
-print_program_version()
-{
-	local patch_version_number=$( get_patch_version_string )
-	local program_version="${C1}$SCRIPT_NAME$SEP3${C2} $SCRIPT_VERSION_NUMBER$patch_version_number${CN}"
-	# great trick from: http://ideatrash.net/2011/01/bash-string-padding-with-sed.html
-	# left pad: sed -e :a -e 's/^.\{1,80\}$/& /;ta'
-	# right pad: sed -e :a -e 's/^.\{1,80\}$/ &/;ta'
-	# center pad: sed -e :a -e 's/^.\{1,80\}$/ & /;ta'
-	#local line_max=$(( $LINE_MAX - 10 ))
-	#program_version="$( sed -e :a -e "s/^.\{1,$line_max\}$/ &/;ta" <<< $program_version )" # use to create padding if needed
-	# program_version=$( create_print_line "Version:" "$program_version" )
-	print_screen_output "$program_version"
 }
 
 # currently only apt using distros support this feature, but over time we can add others
