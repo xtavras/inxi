@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.42
 ####  Date: February 27 2013
-####  Patch Number: 02-bsd
+####  Patch Number: 03-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8416,6 +8416,7 @@ print_hard_disk_data()
 	IFS="$ORIGINAL_IFS"
 	local hdd_capacity="${a_hdd_basic_working[0]}"
 	local hdd_used=${a_hdd_basic_working[1]}
+	local bsd_unsupported='Hard drive data not yet supported for BSD systems.'
 
 	if [[ $B_SHOW_BASIC_DISK == 'true' || $B_SHOW_DISK == 'true' ]];then
 	## note: the output part of this should be in the print hdd data function, not here
@@ -8491,8 +8492,19 @@ print_hard_disk_data()
 			hdd_data=$( create_print_line "$Line_Starter" "${hdd_model}${CN}" )
 			print_screen_output "$hdd_data"
 		fi
+		# temporary message to indicate not yet supported
+		if [[ $BSD_TYPE == 'bsd' ]];then
+			hdd_data=$bsd_unsupported
+			hdd_data=$( create_print_line "$Line_Starter" "$hdd_data${CN}" )
+			print_screen_output "$hdd_data"
+		fi
 	else
-		hdd_data=$( create_print_line "$Line_Starter" "${C1}HDD Total Size:${C2} ${hdd_capacity} (${hdd_used})${CN}" )
+		# temporary message to indicate not yet supported
+		hdd_data="${C1}HDD Total Size:${C2} ${hdd_capacity} (${hdd_used})"
+		if [[ $BSD_TYPE == 'bsd' ]];then
+			hdd_data=$bsd_unsupported
+		fi
+		hdd_data=$( create_print_line "$Line_Starter" "$hdd_data${CN}" )
 		print_screen_output "$hdd_data"
 		Line_Starter=' '
 	fi
