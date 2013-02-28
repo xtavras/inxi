@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.42
 ####  Date: February 27 2013
-####  Patch Number: 00-gnubsd
+####  Patch Number: 01-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9965,6 +9965,7 @@ print_unmounted_partition_data()
 	eval $LOGFS
 	local a_unmounted_data='' line_starter='' unmounted_data='' full_fs=''
 	local full_dev='' full_size='' full_label='' full_uuid='' full_string=''
+	local bsd_unsupported='This feature is not yet supported for BSD systems.'
 	
 	if [[ -z ${A_PARTITION_DATA} ]];then
 		get_partition_data
@@ -10011,6 +10012,10 @@ print_unmounted_partition_data()
 				line_starter='Unmounted:'
 			else
 				line_starter=' '
+			fi
+			# temporary message to indicate not yet supported
+			if [[ $B_BSD_TYPE == 'bsd' ]];then
+				full_string=$bsd_unsupported
 			fi
 			unmounted_data=$( create_print_line "$line_starter" "$full_string" )
 			print_screen_output "$unmounted_data"
