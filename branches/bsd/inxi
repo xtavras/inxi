@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.42
 ####  Date: February 27 2013
-####  Patch Number: 03-bsd
+####  Patch Number: 04-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8497,6 +8497,7 @@ print_hard_disk_data()
 			hdd_data=$bsd_unsupported
 			hdd_data=$( create_print_line "$Line_Starter" "$hdd_data${CN}" )
 			print_screen_output "$hdd_data"
+			Line_Starter=' '
 		fi
 	else
 		# temporary message to indicate not yet supported
