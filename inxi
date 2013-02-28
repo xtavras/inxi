@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.40
 ####  Date: February 27 2013
-####  Patch Number: 01-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7565,7 +7565,8 @@ get_unmounted_partition_data()
 			a_raid_working=( ${A_RAID_DATA[i]} )
 			IFS="$ORIGINAL_IFS"
 			if [[ -n ${a_raid_working[3]} ]];then
-				raid_partitions=$( sed $SED_RX 's/(\([^\)]*\)|\[[^\]]*\])//g' | sed 's/[[:space:]]\+/|/g' )
+				raid_partitions=$( sed $SED_RX 's/(\([^\)]*\)|\[[^\]]*\])//g' <<< ${a_raid_working[3]}\
+				| sed 's/[[:space:]]\+/|/g' )
 				mounted_partitions="$mounted_partitions$separator$raid_partitions"
 			fi
 		done
