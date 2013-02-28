@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 ########################################################################
 ####  Script Name: inxi
-####  Version: 1.8.40
+####  Version: 1.8.41
 ####  Date: February 27 2013
-####  Patch Number: 02-bsd
+####  Patch Number: 00-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7547,7 +7547,7 @@ get_unmounted_partition_data()
 			get_raid_data
 		fi
 		# sr0 type cd drives are showing up now as unmounted partitions
-		mounted_partitions="sr[0-9]|cdrom[0-9]*|dvd[0-9]*"
+		mounted_partitions="scd[0-9]+|sr[0-9]+|cdrom[0-9]*|dvd[0-9]*"
 		# create list for slicing out the mounted partitions
 		for (( i=0; i < ${#A_PARTITION_DATA[@]}; i++ ))
 		do
