@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 12-gnubsd
+####  Patch Number: 13-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5774,7 +5774,11 @@ get_networking_local_ip_data()
 	fi
 	if [[ -n "$ip_tool_command" ]];then
 		if [[ $ip_tool == 'ifconfig' ]];then
-			ip_tool_data="$( $ip_tool_command )"
+			ip_tool_data="$( $ip_tool_command | gawk '
+			{
+				line=gensub(/^([a-z]+[0-9][:]?[[:space:]].*)/, "\n\\1", $0)
+				print line
+			}' )"
 		# note, ip addr does not have proper record separation, so creating new lines explicitly here at start
 		# of each IF record item. Also getting rid of the unneeded numeric line starters, now it can be parsed 
 		# like ifconfig more or less
@@ -5787,7 +5791,7 @@ get_networking_local_ip_data()
 	elif [[ -n "$ip_tool_data" ]];then
 		IFS=$'\n' # $ip_tool_command
 		A_INTERFACES_DATA=( $( 
-		gawk -v ipTool=$ip_tool '
+		gawk -v ipTool=$ip_tool -v bsdType=$BSD_TYPE '
 		BEGIN {
 			IGNORECASE=1
 			interface=""
@@ -5825,6 +5829,18 @@ get_networking_local_ip_data()
 					}
 					if (/inet6 addr:/) {
 						ifIpV6 = $3
+					}
+					if ( bsdType == "bsd" ) {
+						if ( $1 == "inet" ) {
+							ifIp = $2
+							if ( $3 == "netmask" ) {
+								ifMask = $4
+							}
+						}
+						if ( $0 ~ /inet6.*%/ ) {
+							sub(/%.*/,"",$2)
+							ifIpV6 = $2
+						}
 					}
 				}
 				else if ( ipTool == "ip" ) {
