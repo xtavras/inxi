@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 01-gnubsd
+####  Patch Number: 02-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6642,6 +6642,7 @@ EOF"
 				if ( device == "" ) {
 					device=vendor
 				}
+				
 				fullLine=class "," device "," vendor "," driver "," pciId "," chipId
 				print fullLine
 			
@@ -6677,7 +6678,7 @@ get_pciconf_card_data()
 				IFS="$ORIGINAL_IFS"
 				
 				if [[ ${a_temp[0]} == $1 ]];then
-					array_string="${a_temp[1]},${a_temp[4]},${a_temp[5]}"
+					array_string="${a_temp[2]} ${a_temp[1]},${a_temp[4]},${a_temp[5]}"
 					A_GFX_CARD_DATA[i]=$array_string
 				fi
 			done
@@ -8401,8 +8402,7 @@ print_gfx_data()
 	local loaded='' unloaded='' failed=''
 	local line_starter='Graphics:'
 	local screen_resolution="$( get_graphics_res_data )"
-	# set A_GFX_CARD_DATA
-	get_graphics_card_data
+	
 	# set A_X_DATA
 	get_graphics_x_data
 	local x_vendor=${A_X_DATA[0]}
@@ -8415,15 +8415,17 @@ print_gfx_data()
 	# note: using grep -ioE '(No|Yes)' <<< ${A_GLX_DATA[2]} did not work in Arch, no idea why
 	local glx_direct_render=$( gawk '{print $1}' <<< "${A_GLX_DATA[2]}" )
 
-	# set A_GRAPHIC_DRIVERS
+	# set A_GFX_CARD_DATA
 	if [[ $BSD_TYPE == 'bsd' ]];then
 		if [[ $B_PCICONF_SET == 'false' ]];then
 			get_pciconf_data
 		fi
 		get_pciconf_card_data 'display'
 	else
-		get_graphics_driver
+		get_graphics_card_data
 	fi
+	# set A_GRAPHIC_DRIVERS
+	get_graphics_driver
 	
 	if [[ ${#A_GRAPHIC_DRIVERS[@]} -eq 0 ]];then
 		x_driver=' N/A'
