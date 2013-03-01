@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 06-gnubsd
+####  Patch Number: 07-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6679,7 +6679,7 @@ get_pciconf_card_data()
 				
 				if [[ ${a_temp[0]} == $1 ]];then
 					# don't print the vendor if it's already in the device name
-					if [[ -z $( grep "${a_temp[2]}" <<< "${a_temp[1]}" ) ]];then
+					if [[ -z $( grep -i "${a_temp[2]}" <<< "${a_temp[1]}" ) ]];then
 						device_string="${a_temp[2]} ${a_temp[1]}"
 					else
 						device_string=${a_temp[1]}
@@ -6691,7 +6691,24 @@ get_pciconf_card_data()
 			done
 			;;
 		network)
-			:
+			for (( i=0;i<${#A_PCICONF_DATA[@]};i++ ))
+			do
+				IFS=','
+				a_temp=( ${A_PCICONF_DATA[i]} )
+				IFS="$ORIGINAL_IFS"
+				
+				if [[ ${a_temp[0]} == $1 ]];then
+					# don't print the vendor if it's already in the device name
+					if [[ -z $( grep -i "${a_temp[2]}" <<< "${a_temp[1]}" ) ]];then
+						device_string="${a_temp[2]} ${a_temp[1]}"
+					else
+						device_string=${a_temp[1]}
+					fi
+					array_string="$device_string,${a_temp[3]},,,${a_temp[4]},,,,,,${a_temp[5]}"
+					A_NETWORK_CARD_DATA[j]=$array_string
+					((j++))
+				fi
+			done
 			;;
 	esac
 	
@@ -9032,7 +9049,7 @@ print_networking_data()
 			if [[ ${#A_NETWORK_DATA[@]} -gt 1 ]];then
 				card_id="-$(( $i + 1 ))"
 			fi
-			if [[ -n ${a_network_working[1]} && $B_EXTRA_DATA == 'true' ]];then
+			if [[ -n ${a_network_working[1]} && $B_EXTRA_DATA == 'true' && $BSD_TYPE != 'bsd' ]];then
 				module_version=$( print_module_version "${a_network_working[1]}" )
 			fi
 			if [[ -n ${a_network_working[1]} ]];then
@@ -9049,7 +9066,11 @@ print_networking_data()
 					bus_usb_text='bus-ID'
 					bus_usb_id=${a_network_working[4]}
 					if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-						vendor_product=$( get_lspci_vendor_product "${a_network_working[4]}" )
+						if [[ $BSD_TYPE != 'bsd' ]];then
+							vendor_product=$( get_lspci_vendor_product "${a_network_working[4]}" )
+						else
+							vendor_product=${a_network_working[10]}
+						fi
 					fi
 				else
 					bus_usb_text='usb-ID'
