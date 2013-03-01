@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 17-bsd
+####  Patch Number: 18-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6628,7 +6628,7 @@ EOF"
 				
 				driver=gensub(/^([^@]+)@.*/, "\\1", itemData )
 				pciId=gensub(/^.*@pci([0-9\.:]+).*/, "\\1", itemData )
-				gsub(/^0:|:$/, "", pciId)
+				sub(/:$/, "", pciId)
 				itemData=$4
 				chipId=gensub(/.*chip=([0-9a-f][0-9a-f][0-9a-f][0-9a-f])([0-9a-f][0-9a-f][0-9a-f][0-9a-f]).*/, "\\2:\\1", itemData )
 				if ( $2 == "class=020000" ) {
