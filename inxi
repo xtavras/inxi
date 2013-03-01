@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 02-gnubsd
+####  Patch Number: 03-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6664,7 +6664,7 @@ EOF"
 get_pciconf_card_data()
 {
 	eval $LOGFS
-	local a_temp='' array_string=''
+	local a_temp='' array_string='' j=0
 
 	case $1 in
 		audio)
@@ -6679,7 +6679,8 @@ get_pciconf_card_data()
 				
 				if [[ ${a_temp[0]} == $1 ]];then
 					array_string="${a_temp[2]} ${a_temp[1]},${a_temp[4]},${a_temp[5]}"
-					A_GFX_CARD_DATA[i]=$array_string
+					A_GFX_CARD_DATA[j]=$array_string
+					((j++))
 				fi
 			done
 			;;
