@@ -6679,7 +6679,7 @@ get_pciconf_card_data()
 				
 				if [[ ${a_temp[0]} == $1 ]];then
 					# don't print the vendor if it's already in the device name
-					if [[ -z $( grep "${a_temp[2]}" <<< "${a_temp[1]}" ]];then
+					if [[ -z $( grep "${a_temp[2]}" <<< "${a_temp[1]}" ) ]];then
 						device_string="${a_temp[2]} ${a_temp[1]}"
 					else
 						device_string=${a_temp[1]}
