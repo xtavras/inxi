@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 11-bsd
+####  Patch Number: 12-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6610,7 +6610,7 @@ EOF"
 				chipId=""
 				itemData=$1
 				
-				driver=gensub(/^([^0-9]+)[0-9]*@.*/, "\\1", itemData )
+				driver=gensub(/^([^@]+)@.*/, "\\1", itemData )
 				pciId=gensub(/^.*@pci([0-9\.:]+).*/, "\\1", itemData )
 				gsub(/^0:|:$/, "", pciId)
 				itemData=$4
