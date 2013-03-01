@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 13-bsd
+####  Patch Number: 14-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6705,7 +6705,7 @@ get_pciconf_card_data()
 					A_GFX_CARD_DATA[j]=$array_string
 					;;
 				network)
-					array_string="$device_string,${a_temp[3]},,,${a_temp[4]},,,,,,${a_temp[5]}"
+					array_string="$device_string,${a_temp[3]},,,${a_temp[4]},${a_temp[3]},,,,,${a_temp[5]}"
 					A_NETWORK_DATA[j]=$array_string
 					;;
 			esac
