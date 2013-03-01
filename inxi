@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.44
 ####  Date: March 1 2013
-####  Patch Number: 01-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5439,7 +5439,8 @@ get_memory_data()
 			}
 		}
 		# But, it uses K here. Openbsd does not seem to have this item
-		$1 ~ /^Free Memory$|^Free Memory Pages$/ {
+		# this can be either: Free Memory OR Free Memory Pages
+		$1 ~ /^Free Memory/ {
 			gsub(/[^0-9]/,"",$NF)
 			freeMemory = $NF
 			if ( realMemory != "" ) {
