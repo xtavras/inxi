@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 15-bsd
+####  Patch Number: 16-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6724,11 +6724,11 @@ get_pciconf_card_data()
 								duplex=gensub(/.*<([^>]+)>.*/,"\\1",$0)
 							}
 							if ( $0 ~ /\(.*\)/ ) {
-								duplex=gensub(/.*\(([^<[:space:]]+).*\).*/,"\\1",$0)
+								speed=gensub(/.*\(([^<[:space:]]+).*\).*/,"\\1",$0)
 							}
 						}
 						/^[[:space:]]*status/ {
-							sub(/status[:][[:space:]]*/,"", $0)
+							sub(/.*status[:]?[[:space:]]*/,"", $0)
 							state=$0
 						}
 						END {
