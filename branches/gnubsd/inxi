@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 09-gnubsd
+####  Patch Number: 10-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6665,53 +6665,37 @@ get_pciconf_card_data()
 {
 	eval $LOGFS
 	local a_temp='' array_string='' j=0 device_string=''
-
-	case $1 in
-		audio)
-			:
-			;;
-		display)
-			for (( i=0;i<${#A_PCICONF_DATA[@]};i++ ))
-			do
-				IFS=','
-				a_temp=( ${A_PCICONF_DATA[i]} )
-				IFS="$ORIGINAL_IFS"
-				
-				if [[ ${a_temp[0]} == $1 ]];then
-					# don't print the vendor if it's already in the device name
-					if [[ -z $( grep -i "${a_temp[2]}" <<< "${a_temp[1]}" ) ]];then
-						device_string="${a_temp[2]} ${a_temp[1]}"
-					else
-						device_string=${a_temp[1]}
-					fi
+	
+	for (( i=0;i<${#A_PCICONF_DATA[@]};i++ ))
+	do
+		IFS=','
+		a_temp=( ${A_PCICONF_DATA[i]} )
+		IFS="$ORIGINAL_IFS"
+		
+		if [[ ${a_temp[0]} == $1 ]];then
+			# don't print the vendor if it's already in the device name
+			if [[ -z $( grep -i "${a_temp[2]}" <<< "${a_temp[1]}" ) ]];then
+				device_string="${a_temp[2]} ${a_temp[1]}"
+			else
+				device_string=${a_temp[1]}
+			fi
+			case $1 in
+				audio)
+					array_string="$device_string,${a_temp[3]},,,${a_temp[4]},,${a_temp[5]}"
+					A_AUDIO_DATA[j]=$array_string
+					;;
+				display)
 					array_string="$device_string,${a_temp[4]},${a_temp[5]}"
 					A_GFX_CARD_DATA[j]=$array_string
-					((j++))
-				fi
-			done
-			;;
-		network)
-			for (( i=0;i<${#A_PCICONF_DATA[@]};i++ ))
-			do
-				IFS=','
-				a_temp=( ${A_PCICONF_DATA[i]} )
-				IFS="$ORIGINAL_IFS"
-				
-				if [[ ${a_temp[0]} == $1 ]];then
-					# don't print the vendor if it's already in the device name
-					if [[ -z $( grep -i "${a_temp[2]}" <<< "${a_temp[1]}" ) ]];then
-						device_string="${a_temp[2]} ${a_temp[1]}"
-					else
-						device_string=${a_temp[1]}
-					fi
+					;;
+				network)
 					array_string="$device_string,${a_temp[3]},,,${a_temp[4]},,,,,,${a_temp[5]}"
 					A_NETWORK_DATA[j]=$array_string
-					((j++))
-				fi
-			done
-			;;
-	esac
-	
+					;;
+			esac
+			((j++))
+		fi
+	done
 	
 	eval $LOGFE
 }
@@ -8174,10 +8158,12 @@ print_audio_data()
 			if [[ ${#A_AUDIO_DATA[@]} -gt 1 ]];then
 				card_id="-$(( $i + 1 ))"
 			fi
-			if [[ -n ${a_audio_working[3]} && $B_EXTRA_DATA == 'true' ]];then
-				module_version=$( print_module_version "${a_audio_working[3]}" 'audio' )
-			elif [[ -n ${a_audio_working[1]} && $B_EXTRA_DATA == 'true' ]];then
-				module_version=$( print_module_version "${a_audio_working[1]}" 'audio' )
+			if [[ $BSD_TYPE != 'bsd' ]];then
+				if [[ -n ${a_audio_working[3]} && $B_EXTRA_DATA == 'true' ]];then
+					module_version=$( print_module_version "${a_audio_working[3]}" 'audio' )
+				elif [[ -n ${a_audio_working[1]} && $B_EXTRA_DATA == 'true' ]];then
+					module_version=$( print_module_version "${a_audio_working[1]}" 'audio' )
+				fi
 			fi
 			# we're testing for the presence of the 2nd array item here, which is the driver name
 			if [[ -n ${a_audio_working[1]} ]];then
@@ -8193,7 +8179,11 @@ print_audio_data()
 				if [[ ${a_audio_working[1]} != 'USB Audio' ]];then
 					bus_usb_text='bus-ID'
 					if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-						vendor_product=$( get_lspci_vendor_product "${a_audio_working[4]}" )
+						if [[ $BSD_TYPE != 'bsd' ]];then
+							vendor_product=$( get_lspci_vendor_product "${a_audio_working[4]}" )
+						else
+							vendor_product=
+						fi
 					fi
 				else
 					bus_usb_text='usb-ID'
