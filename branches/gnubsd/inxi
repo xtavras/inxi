@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 16-gnubsd
+####  Patch Number: 17-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6741,7 +6741,7 @@ get_pciconf_card_data()
 						speed=$( cut -d '~' -f 2 <<< $network_string )
 						duplex=$( cut -d '~' -f 4 <<< $network_string )
 					fi
-					array_string="$device_string,${a_temp[3]},,$state,${a_temp[4]},${a_temp[3]},,$speed,$duplex,$mac,${a_temp[5]}"
+					array_string="$device_string,${a_temp[3]},,,${a_temp[4]},${a_temp[3]},$state,$speed,$duplex,$mac,${a_temp[5]}"
 					A_NETWORK_DATA[j]=$array_string
 					;;
 			esac
