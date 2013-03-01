@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 08-gnubsd
+####  Patch Number: 09-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -554,7 +554,7 @@ DISTROS_OS_RELEASE_GOOD="arch-release SuSE-release"
 ### Bans Data
 # Note that \<ltd\> bans only words, not parts of strings; in \<corp\> you can't use punctuation characters like . or ,
 # we're saving about 10+% of the total script exec time by hand building the ban lists here, using hard quotes.
-BAN_LIST_NORMAL='computing|computer|corporation|communications|electronics|electrical|electric|gmbh|group|industrial|international|revision|software|technologies|technology|ltd\.|\<ltd\>|inc\.|\<inc\>|intl\.|co\.|\<co\>|corp\.|\<corp\>|\(tm\)|\(r\)|®|\(rev ..\)'
+BAN_LIST_NORMAL='components|computing|computer|corporation|communications|electronics|electrical|electric|gmbh|group|industrial|international|revision|semiconductor|software|technologies|technology|ltd\.|\<ltd\>|inc\.|\<inc\>|intl\.|co\.|\<co\>|corp\.|\<corp\>|\(tm\)|\(r\)|®|\(rev ..\)'
 BAN_LIST_CPU='@|cpu deca|dual core|dual-core|tri core|tri-core|quad core|quad-core|ennea|genuine|hepta|hexa|multi|octa|penta|processor|single|triple|[0-9\.]+ *[MmGg][Hh][Zz]'
 
 SENSORS_GPU_SEARCH='intel|radeon|nouveau'
@@ -5469,8 +5469,8 @@ get_networking_data()
 	}
 	/^[0-9a-f:\.]+ (ethernet|network) (controller|bridge)/ || /^[0-9a-f:\.]+ [^:]+: .*(ethernet|network).*$/ {
 		nic=gensub(/^[0-9a-f:\.]+ [^:]+: (.+)$/,"\\1","g",$0)
-		gsub(/realtek semiconductor/, "Realtek", nic)
-		gsub(/davicom semiconductor/, "Davicom", nic)
+		#gsub(/realtek semiconductor/, "Realtek", nic)
+		#gsub(/davicom semiconductor/, "Davicom", nic)
 		# The doublequotes are necessary because of the pipes in the variable.
 		gsub(/'"$BAN_LIST_NORMAL"'/, "", nic)
 		gsub(/,/, " ", nic)
@@ -5699,9 +5699,9 @@ get_networking_usb_data()
 				gsub( /,/, " ", $0 )
 				gsub(/'"$BAN_LIST_NORMAL"'/, "", $0)
 				gsub(/ [ \t]+/, " ", $0)
-				sub(/realtek semiconductor/, "Realtek", $0)
-				sub(/davicom semiconductor/, "Davicom", $0)
-				sub(/Belkin Components/, "Belkin", $0)
+				#sub(/realtek semiconductor/, "Realtek", $0)
+				#sub(/davicom semiconductor/, "Davicom", $0)
+				#sub(/Belkin Components/, "Belkin", $0)
 				
 				for ( i=7; i<= NF; i++ ) {
 					string = string separator $i
