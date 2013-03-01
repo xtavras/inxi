@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 18-bsd
+####  Patch Number: 19-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8160,6 +8160,7 @@ print_audio_data()
 	local i='' card_id='' audio_data='' a_audio_data='' port_data='' pci_bus_id='' card_string=''
 	local a_audio_working='' audio_driver='' alsa_data='' port_plural='' module_version=''
 	local bus_usb_text='' bus_usb_id='' line_starter='Audio:' alsa='' alsa_version='' print_data=''
+	local driver=''
 	# set A_AUDIO_DATA and get alsa data
 	if [[ $BSD_TYPE == 'bsd' ]];then
 		if [[ $B_PCICONF_SET == 'false' ]];then
@@ -8219,7 +8220,8 @@ print_audio_data()
 			fi
 			# we're testing for the presence of the 2nd array item here, which is the driver name
 			if [[ -n ${a_audio_working[1]} ]];then
-				audio_driver="${C1}driver$SEP3${C2} ${a_audio_working[1]} "
+				driver=$( sed 's/[0-9]*$//' <<< ${a_audio_working[1]} )
+				audio_driver="${C1}driver$SEP3${C2} ${driver} "
 			fi
 			if [[ -n ${a_audio_working[2]} && $B_EXTRA_DATA == 'true' ]];then
 				if [[ $( wc -w <<< ${a_audio_working[2]} ) -gt 1 ]];then
@@ -9058,6 +9060,7 @@ print_networking_data()
 	local i='' card_id='' network_data='' a_network_working='' port_data='' driver_data=''
 	local card_string='' port_plural='' module_version='' pci_bus_id='' bus_usb_text=''
 	local bus_usb_id='' line_starter='Network:' card_string='' card_data='' vendor_product=''
+	local driver=''
 	# set A_NETWORK_DATA
 	if [[ $BSD_TYPE == 'bsd' ]];then
 		if [[ $B_PCICONF_SET == 'false' ]];then
@@ -9095,7 +9098,8 @@ print_networking_data()
 				module_version=$( print_module_version "${a_network_working[1]}" )
 			fi
 			if [[ -n ${a_network_working[1]} ]];then
-				driver_data="${C1}driver$SEP3${C2} ${a_network_working[1]}$module_version "
+				driver=$( sed 's/[0-9]*$//' <<< ${a_network_working[1]} )
+				driver_data="${C1}driver$SEP3${C2} ${driver}$module_version "
 			fi
 			if [[ -n ${a_network_working[2]} && $B_EXTRA_DATA == 'true' ]];then
 				if [[ $( wc -w <<< ${a_network_working[2]} ) -gt 1 ]];then
