@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 14-gnubsd
+####  Patch Number: 15-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6681,6 +6681,8 @@ get_pciconf_card_data()
 {
 	eval $LOGFS
 	local a_temp='' array_string='' j=0 device_string=''
+	local ip_tool_command=$( type -p ifconfig )
+	local mac='' state='' speed='' duplex='' network_string=''
 	
 	for (( i=0;i<${#A_PCICONF_DATA[@]};i++ ))
 	do
@@ -6705,7 +6707,41 @@ get_pciconf_card_data()
 					A_GFX_CARD_DATA[j]=$array_string
 					;;
 				network)
-					array_string="$device_string,${a_temp[3]},,,${a_temp[4]},${a_temp[3]},,,,,${a_temp[5]}"
+					if [[ -n $ip_tool_command && -n ${a_temp[3]} ]];then
+						network_string=$( 	$ip_tool_command ${a_temp[3]} | gawk '
+						BEGIN {
+							IGNORECASE=1
+							mac=""
+							state=""
+							speed=""
+							duplex=""
+						}
+						/^[[:space:]]*ether/ {
+							mac = $2
+						}
+						/^[[:space:]]*media/ {
+							if ( $0 ~ /<.*>/ ) {
+								duplex=gensub(/.*<([^>]+)>.*/,"\\1",$0)
+							}
+							if ( $0 ~ /\(.*\)/ ) {
+								duplex=gensub(/.*\(([^<[:space:]]+).*\).*/,"\\1",$0)
+							}
+						}
+						/^[[:space:]]*status/ {
+							sub(/status[:][[:space:]]*/,"", $0)
+							state=$0
+						}
+						END {
+							print state "~" speed "~" mac "~" duplex
+						}')
+					fi
+					if [[ -n $network_string ]];then
+						mac=$( cut -d '~' -f 3 <<< $network_string )
+						state=$( cut -d '~' -f 1 <<< $network_string )
+						speed=$( cut -d '~' -f 2 <<< $network_string )
+						duplex=$( cut -d '~' -f 4 <<< $network_string )
+					fi
+					array_string="$device_string,${a_temp[3]},,$state,${a_temp[4]},${a_temp[3]},,$speed,$duplex,$mac,${a_temp[5]}"
 					A_NETWORK_DATA[j]=$array_string
 					;;
 			esac
