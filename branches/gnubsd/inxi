@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 00-gnubsd
+####  Patch Number: 01-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -230,6 +230,7 @@ A_MACHINE_DATA=''
 A_NETWORK_DATA=''
 A_OPTICAL_DRIVE_DATA=''
 A_PARTITION_DATA=''
+A_PCICONF_DATA=''
 A_PS_DATA=''
 A_RAID_DATA=''
 A_SENSORS_DATA=''
@@ -270,6 +271,7 @@ B_MAPPER_SET='false'
 B_OUTPUT_FILTER='false'
 B_OVERRIDE_FILTER='false'
 B_PCICONF='false'
+B_PCICONF_SET='false'
 # kde qdbus
 B_QDBUS='false'
 B_PORTABLE='false'
@@ -6562,13 +6564,15 @@ get_pciconf_data()
 {
 	eval $LOGFS
 	
-	local pciconf="$( type -p pciconf 2>/dev/null )"
-	local pciconf_data=''
+	local pciconf_data='' temp_array=''
 	
-	if [[ -n $pciconf ]];then
-		pciconf_data="$( $pciconf -lv 2>/dev/null )"
+	if [[ $B_PCICONF == 'true' ]];then
+		pciconf_data="$( pciconf -lv 2>/dev/null )"
 		if [[ -n $pciconf_data ]];then
 			pciconf_data=$( gawk '
+			BEGIN {
+				IGNORECASE=1
+			}
 			{
 					gsub(/'"$BAN_LIST_NORMAL"'/, "", $0)
 					gsub(/[[:space:]]+=[[:space:]]+/, "=",$0)
@@ -6578,35 +6582,112 @@ get_pciconf_data()
 					line=gensub(/(.*@.*)/,"\n\\1",$0)
 					print line
 			}' <<< "$pciconf_data" )
+			# create empty last line with this spacing trick
+			pciconf_data="$pciconf_data
+
+EOF"
+			# echo "$pciconf_data"
 			# now insert into arrays
-			# order: type, 
-			gawk '
+			IFS=$'\n'
+			A_PCICONF_DATA=( $( gawk '
 			BEGIN {
-				audio=""
-				graphics=""
-				nic=""
 				fullLine=""
 				driver=""
 				vendor=""
 				device=""
 				class=""
+				chipId=""
 				pciId=""
+				itemData=""
+				IGNORECASE=1
 			}
 			/^.*@/ {
+				pciId=""
+				vendor=""
+				class=""
+				driver=""
+				device=""
+				chipId=""
+				itemData=$1
+				
+				driver=gensub(/^([^0-9]+)[0-9]*@.*/, "\\1", itemData )
+				pciId=gensub(/^.*@pci([0-9\.:]+).*/, "\\1", itemData )
+				gsub(/^0:|:$/, "", pciId)
+				itemData=$3
+				chipId=gensub(/.*card=([0-9a-f][0-9a-f][0-9a-f][0-9a-f])([0-9a-f][0-9a-f][0-9a-f][0-9a-f]).*/, "\\2:\\1", itemData )
+				if ( $2 == "class=020000" ) {
+					class="network"
+				}
+				else if ( $2 == "class=030000" ) {
+					class="display"
+				}
+				else if ( $2 == "class=040300" ) {
+					class="audio"
+				}
+				
 				while ( getline && $1 !~ /^$/ ) {
-					driver=gensub(/^([^0-9@]).*/, "\\1", $2 )
-					if ( $2 == "class=020000" ) {
-					
+					if ( $1 ~ /^vendor/ ) {
+						sub(/^vendor=/, "", $1 )
+						vendor=$0
+					}
+					else if ( $1 ~ /^device/ ) {
+						sub(/^device=/, "", $1 )
+						device=$0
+					}
+					else if ( $1 ~ /^class=/ && class == "" ) {
+						sub(/^class=/, "", $1)
+						class=$0
 					}
 				}
-				fullLine=class "," 
+				if ( device == "" ) {
+					device=vendor
+				}
+				fullLine=class "," device "," vendor "," driver "," pciId "," chipId
+				print fullLine
 			
-			}' <<< "$pciconf_data"
+			}' <<< "$pciconf_data" ))
+			IFS="$ORIGINAL_IFS"
 		fi
 	else
 		A_PCICONF_DATA='pciconf-not-installed'
 	fi
+	B_PCICONF_SET='true'
+	temp_array=${A_PCICONF_DATA[@]}
+	log_function_data "$temp_array"
 	log_function_data "$pciconf_data"
+	eval $LOGFE
+}
+
+# packs standard card arrays using the pciconf stuff
+# args: $1 - audio/network/display - matches first item in A_PCICONF_DATA arrays
+get_pciconf_card_data()
+{
+	eval $LOGFS
+	local a_temp='' array_string=''
+
+	case $1 in
+		audio)
+			:
+			;;
+		display)
+			for (( i=0;i<${#A_PCICONF_DATA[@]};i++ ))
+			do
+				IFS=','
+				a_temp=( ${A_PCICONF_DATA[i]} )
+				IFS="$ORIGINAL_IFS"
+				
+				if [[ ${a_temp[0]} == $1 ]];then
+					array_string="${a_temp[1]},${a_temp[4]},${a_temp[5]}"
+					A_GFX_CARD_DATA[i]=$array_string
+				fi
+			done
+			;;
+		network)
+			:
+			;;
+	esac
+	
+	
 	eval $LOGFE
 }
 
@@ -8019,7 +8100,15 @@ print_audio_data()
 	local a_audio_working='' audio_driver='' alsa_data='' port_plural='' module_version=''
 	local bus_usb_text='' bus_usb_id='' line_starter='Audio:' alsa='' alsa_version='' print_data=''
 	# set A_AUDIO_DATA and get alsa data
-	get_audio_data
+	if [[ $BSD_TYPE == 'bsd' ]];then
+		if [[ $B_PCICONF_SET == 'false' ]];then
+			get_pciconf_data
+		fi
+		get_pciconf_card_data 'audio'
+	else
+		get_audio_data
+	fi
+	
 	get_audio_alsa_data
 	# alsa driver data now prints out no matter what
 	if [[ -n $A_ALSA_DATA ]];then
@@ -8325,9 +8414,16 @@ print_gfx_data()
 	# this can contain a long No case debugging message, so it's being sliced off
 	# note: using grep -ioE '(No|Yes)' <<< ${A_GLX_DATA[2]} did not work in Arch, no idea why
 	local glx_direct_render=$( gawk '{print $1}' <<< "${A_GLX_DATA[2]}" )
-	
+
 	# set A_GRAPHIC_DRIVERS
-	get_graphics_driver
+	if [[ $BSD_TYPE == 'bsd' ]];then
+		if [[ $B_PCICONF_SET == 'false' ]];then
+			get_pciconf_data
+		fi
+		get_pciconf_card_data 'display'
+	else
+		get_graphics_driver
+	fi
 	
 	if [[ ${#A_GRAPHIC_DRIVERS[@]} -eq 0 ]];then
 		x_driver=' N/A'
@@ -8411,7 +8507,11 @@ print_gfx_data()
 				if [[ -n ${a_gfx_working[1]} ]];then
 					gfx_bus_id=" ${C1}bus-ID$SEP3${C2} ${a_gfx_working[1]}"
 					if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-						vendor_product=$( get_lspci_vendor_product "${a_gfx_working[1]}" )
+						if [[ $BSD_TYPE != 'bsd' ]];then
+							vendor_product=$( get_lspci_vendor_product "${a_gfx_working[1]}" )
+						else
+							vendor_product=${a_gfx_working[2]}
+						fi
 					fi
 				else
 					gfx_bus_id=" ${C1}bus-ID$SEP3${C2} N/A"
@@ -8891,7 +8991,14 @@ print_networking_data()
 	local card_string='' port_plural='' module_version='' pci_bus_id='' bus_usb_text=''
 	local bus_usb_id='' line_starter='Network:' card_string='' card_data='' vendor_product=''
 	# set A_NETWORK_DATA
-	get_networking_data
+	if [[ $BSD_TYPE == 'bsd' ]];then
+		if [[ $B_PCICONF_SET == 'false' ]];then
+			get_pciconf_data
+		fi
+		get_pciconf_card_data 'network'
+	else
+		get_networking_data
+	fi
 
 	# will never be null because null is handled in get_network_data, but in case we change
 	# that leaving this test in place.
