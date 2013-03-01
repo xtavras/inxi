@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.43
 ####  Date: February 28 2013
-####  Patch Number: 04-gnubsd
+####  Patch Number: 05-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6614,7 +6614,7 @@ EOF"
 				pciId=gensub(/^.*@pci([0-9\.:]+).*/, "\\1", itemData )
 				gsub(/^0:|:$/, "", pciId)
 				itemData=$4
-				chipId=gensub(/.*card=([0-9a-f][0-9a-f][0-9a-f][0-9a-f])([0-9a-f][0-9a-f][0-9a-f][0-9a-f]).*/, "\\2:\\1", itemData )
+				chipId=gensub(/.*chip=([0-9a-f][0-9a-f][0-9a-f][0-9a-f])([0-9a-f][0-9a-f][0-9a-f][0-9a-f]).*/, "\\2:\\1", itemData )
 				if ( $2 == "class=020000" ) {
 					class="network"
 				}
