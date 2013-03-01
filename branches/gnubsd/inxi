@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.44
 ####  Date: March 1 2013
-####  Patch Number: 02-gnubsd
+####  Patch Number: 03-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5448,8 +5448,14 @@ get_memory_data()
 			}
 		}
 		END {
-			used = realMemory - freeMemory
-			printf("%.1f/%.1fMB\n", used/1024, realMemory/1024)
+			# hack: temp fix for openbsd: in case no free mem was detected but we have physmem
+			if ( freeMemory == "" && realMemory != "" ) {
+				printf("NA/%.1fMB\n", realMemory/1024)
+			}
+			else if ( freeMemory != "" && realMemory != "" ) {
+				used = realMemory - freeMemory
+				printf("%.1f/%.1fMB\n", used/1024, realMemory/1024)
+			}
 		}' )
 	fi
 	echo "$memory"
