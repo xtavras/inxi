@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 1.8.44
 ####  Date: March 1 2013
-####  Patch Number: 03-gnubsd
+####  Patch Number: 04-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3294,9 +3294,10 @@ get_cpu_core_count()
 			gawk_fs='='
 		fi
 		cpu_core_count=$( gawk -F "$gawk_fs" '
-		# note: on openbsd this is actually hw.ncpufound
+		# note: on openbsd can also be hw.ncpufound so exit after first
 		/^hw.ncpu/ {
 			print $NF
+			exit
 		}' <<< "$Sysctl_a_Data" )
 		if [[ -n $( grep -E '^[0-9]+$' <<< "$cpu_core_count" ) ]];then
 			cpu_alpha_count=$( get_cpu_core_count_alpha "$cpu_core_count" )
@@ -6173,6 +6174,7 @@ get_partition_data()
 	( $1 ~ /^\/dev\/|:\/|\/\// ) && ( devBase == "" ) {
 		devBase=gensub( /^(\/dev\/)(.+)$/, "\\2", 1, $1 )
 	}
+	# this handles zfs type devices/partitions, which do not start with / but contain /
 	( bsdType != "" && devBase == "" && $1 ~ /^[^\/]+\/.+/ ) {
 		devBase=gensub( /^([^\/]+\/)([^\/]+)$/, "non-dev-\\1\\2", 1, $1 )
 	}
