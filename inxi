@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 ########################################################################
 ####  Script Name: inxi
-####  Version: 1.8.44
-####  Date: March 1 2013
-####  Patch Number: 04-gnubsd
+####  Version: 1.8.45
+####  Date: March 2 2013
+####  Patch Number: 00-gnubsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8268,7 +8268,12 @@ print_audio_data()
 			fi
 			# we're testing for the presence of the 2nd array item here, which is the driver name
 			if [[ -n ${a_audio_working[1]} ]];then
-				driver=$( sed 's/[0-9]*$//' <<< ${a_audio_working[1]} )
+				# note: linux drivers can have numbers, like tg3
+				if [[ $BSD_TYPE == 'bsd' ]];then
+					driver=$( sed 's/[0-9]$//' <<< ${a_audio_working[1]} )
+				else
+					driver=${a_audio_working[1]}
+				fi
 				audio_driver="${C1}driver$SEP3${C2} ${driver} "
 			fi
 			if [[ -n ${a_audio_working[2]} && $B_EXTRA_DATA == 'true' ]];then
@@ -9146,7 +9151,12 @@ print_networking_data()
 				module_version=$( print_module_version "${a_network_working[1]}" )
 			fi
 			if [[ -n ${a_network_working[1]} ]];then
-				driver=$( sed 's/[0-9]*$//' <<< ${a_network_working[1]} )
+				# note: linux drivers can have numbers, like tg3
+				if [[ $BSD_TYPE == 'bsd' ]];then
+					driver=$( sed 's/[0-9]*$//' <<< ${a_network_working[1]} )
+				else
+					driver=${a_network_working[1]}
+				fi
 				driver_data="${C1}driver$SEP3${C2} ${driver}$module_version "
 			fi
 			if [[ -n ${a_network_working[2]} && $B_EXTRA_DATA == 'true' ]];then
