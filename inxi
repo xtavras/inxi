@@ -3491,9 +3491,15 @@ get_cpu_data_bsd()
 		gsub(/^ +| +$|\"/, "", $NF)
 		gsub(/ [ \t]+/, " ", $NF)
 		cpuModel=$NF
+		if ( cpuClock != "" ) {
+			exit
+		}
 	}
 	/^hw.(clock|cpuspeed)/ {
 		cpuClock=$NF
+		if ( cpuModel != "" ) {
+			exit
+		}
 	}
 	END {
 		print cpuModel "," cpuClock "," cpuCache "," cpuFlags "," cpuBogomips ","  cpuVendor
