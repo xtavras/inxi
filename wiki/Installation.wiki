@@ -4,6 +4,10 @@ I can't track all the Linux distributions, these are the ones I know about as of
 
 Please note that inxi will always support all Linux distributions as long as they have gawk and the other recommended applications, and inxi dependencies will never require the latest of anything, so you can always safely install inxi on a system then update it to latest inxi version no matter what. In other words, if inxi runs the first time you install it, after updating dependencies, inxi will always run on your system, as long as the project remains in these hands.
 
+If you use your distributions package management system to install inxi, then you will have the man pages, if you install it manually, then just run inxi -U one time and it will grab the man page as well during the update.
+
+See bottom of page for directions on setting up Konversation links so you can just type in /inxi [options] to show inxi in IRC.
+
  * As of Debian Jesse, Debian Sid/Testing - inxi is in apt, so just do: 
   {{{ 
   apt-get install inxi 
@@ -37,11 +41,11 @@ Please note that inxi will always support all Linux distributions as long as the
    But generally if you use Debian use the apt version unless you want to make sure you always have the latest inxi, this would be particularly relevant in Stable. 
 
 ----
- * For most others, use(except in Arch or Pardus):
+ * For most others, use (except in Arch or Pardus):
 
 as root: cd /usr/local/bin && wget -Nc smxi.org/inxi && chmod +x inxi
 
- * For Arch and Pardus, use:
+ * For Arch and Pardus manual inxi install, use:
 
    as root: 
 {{{
