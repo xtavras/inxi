@@ -10,7 +10,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
  * inxi supports the following options. These options are included as of inxi 1.7.5. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
 
  * If you start inxi with no arguments, it will show the short form. The following options if used without -b, -F or -v  + number will show just that complete line:
-   * A,C,D,G,I,M,N,P,S,f,i,n,o,p,l,u,r,s,t - you can use these together or alone to show just the line(s) you want to see.
+   * A,C,D,G,I,M,N,P,R,S,W,f,i,n,o,p,l,u,r,s,t,w - you can use these together or alone to show just the line(s) you want to see.
    * If you use them with either a -v + level, a -b, or with -F, it will show the full output for that line along with the output for the chosen verbosity level.
    * NOTE: as of version 1.6.5, the old basic output option -d was changed to -b, for basic. -d is now used for the extended disk option, showing cdrom/dvd information as well.
 
@@ -18,7 +18,8 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -A  Show Audio/sound card information.
   * -b  Shows basic (b for basic - version 1.7.5 or later. Earlier versions used: -d) output, short form. Similar to inxi -v 2. Shows -S -M  -C -G -N -D and -R (short forms), and -I. -R does not show if no raid devices found.
   * -c  Available color schemes. Scheme number is required. Color selectors run a color selector option prior to inxi starting which lets you set the config file value for the selection.
-    * Supported color schemes: 0-32 Example: inxi -c 11
+    * Supported color schemes: 0-32 Example: inxi -c 11 
+      * Note: if you want to turn off all script colors, use -c 0 This is useful if you are for example piping output and don't want the color code characters.
     * Supported color selectors. NOTE: irc and global only show safe color set. (version 1.5.x or later only)
       * 94 - Console, out of X
       * 95 - Terminal, running in X - like xTerm
@@ -49,6 +50,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
         * APT (Debian, Ubuntu + derived versions)
         * PACMAN (Arch Linux + derived versions)
         * PISI (Pardus + derived versions)
+        * URPMQ (Mandriva, Mageia + derived versions)
         * YUM. (Fedora, Redhat, maybe Suse + derived versions)
         * (as distro data is collected more will be added. If your's is missing please show us how to get this information and we'll try to add it.)
   * -R  Show RAID data. Shows RAID devices, states, levels, and components, and extra data with -x/-xx. If device is resyncing, shows resync progress line as well.
@@ -74,6 +76,8 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * 5 - Adds audio card (-A); sensors (-s), partition label (-l) and UUID (-u), short form of optical drives, and standard raid data (-R).
       * 6 - Adds full partition data (-p), unmounted partition data (-o), -d full disk data, including CD/DVD information.
       * 7 - Adds network IP data (-i); triggers -xx.
+  * -w  Local weather data/time. To check an alternate location, see: -W [location]. For extra weather data options see -x, -xx, and -xxx.
+  * -W  [location] - [location] supported options: postal code; city,[state/country]; latitude,longitude. Only use if you want the weather somewhere other than the machine running inxi. Use only ascii characters, replace spaces in city/state/country names with +: new+york,ny
   * -x  Show extra data: 
       * -C - Bogomips on Cpu
       * -d - Shows more information if present on cd/dvd devices.
@@ -89,13 +93,18 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * -R - Shows component raid id. Adds second RAID Info line: raid level; report on drives (like 5/5); blocks; chunk size; bitmap (if present). Resync line, shows blocks synced/total blocks.
       * -S - Shows toolkit (QT or GTK) if GNOME, KDE, or XFCE. Shows kernel gcc version. 
       * -t - Adds memory use output to cpu (-xt c, and cpu use to memory (-xt m).
+      * -w/-W - Wind speed and time zone (time zone, -w only).
   * -xx Show extra, extra data (only works with verbose or line output, not short form). You can also trigger it with -Fx (but not -xF) (Version 1.6.x and later)
      * -D - Adds disk serial number.
      * -I - Adds other detected installed gcc versions to primary gcc output (if present).
      * -M - Adds chassis information, if any data for that is available.
      * -N -A -G - Shows vendor:product ID for Audio, Network, Graphics
      * -R - Adds superblock (if present); algorythm, U data. Adds system info line (kernel support, read ahead, raid events). Adds if present, unused device line. Resync line, shows progress bar. 
+     *  -w/-W - Humidity, barometric pressure.
      * -xx -@ [11-14] - Automatically uploads debugger data tar.gz file to ftp.techpatterns.com.
+  * -xxx Show extra, extra, extra data (only works with verbose or line output, not short form):
+     * -S - Panel/shell information in desktop output, if in X (like gnome-shell, cinnamon, mate-panel).
+     * -w/-W - Location (uses -z/irc filter), weather observation time, wind chill, heat index, dew point (shows extra lines for data where relevant).
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
   * -Z  Absolute override for output filters. Useful for debugging networking issues in irc for example.
 
