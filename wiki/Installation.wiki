@@ -1,37 +1,64 @@
-#summary How to install inxi using a variety of methods.
-* For debian systems use cathbards repo:
+=Summary How to install inxi using a variety of methods:=
 
-{{{ wget ftp://cathbard.com/binary/inxi*.deb }}}
+I can't track all the Linux distributions, these are the ones I know about as of 2013-10-05. 
 
-* Or if you have cathbards repos ( [http://cathbard.com/cathbard-repo-howto.html add cathbard repos] ) in your apt sources.list:
+Please note that inxi will always support all Linux distributions as long as they have gawk and the other recommended applications, and inxi dependencies will never require the latest of anything, so you can always safely install inxi on a system then update it to latest inxi version no matter what. In other words, if inxi runs the first time you install it, after updating dependencies, inxi will always run on your system, as long as the project remains in these hands.
 
-apt-get update && apt-get install inxi
+ * As of Debian Jesse, Debian Sid/Testing - inxi is in apt, so just do: 
+  {{{ 
+  apt-get install inxi 
+  }}}
+  If in doubt, just search for it in apt, it's there, install it.
+  {{{ 
+  apt-cache search inxi 
+  }}}
+  A few other Debian based distributions also package inxi, or include the inxi installer in their base systems, like Mint.
+ * Ubuntu users, check if it's in your basic repositories with this command:
+  {{{ 
+  apt-cache search inxi 
+  }}}
+  If it is, just install it with apt.
+ * Arch Linux users: inxi is in the Community Repos, which most Arch installs have enabled by default, so just install inxi as you normally would any other package.
+ * Mageia/Mandriva/OpenSuse also have inxi in their repositories I believe, though I'm not certain.
+ * For other distros, check your repositories first before manually installing it, many have it available either in the main repositories, or as a third party repository.
+ * For Debian Wheezy or older systems, use the generally out of date cathbards repo:
+  {{{
+  wget ftp://cathbard.com/binary/inxi*.deb 
+  }}}
+ * Or if you have cathbards repos ( [http://cathbard.com/cathbard-repo-howto.html add cathbard repos] ) in your apt sources.list:
+  {{{ 
+  apt-get update && apt-get install inxi 
+  }}}
 
 ----
-* For smxi users, follow the steps here: 
+ * For smxi users, follow the steps here: 
 
-[http://smxi.org/site/install.htm#inxi smxi-inxi]
+   [http://smxi.org/site/install.htm#inxi smxi-install-directions]
+   But generally if you use Debian use the apt version unless you want to make sure you always have the latest inxi, this would be particularly relevant in Stable. 
 
 ----
-* For most others, use(except in Arch or Pardus):
+ * For most others, use(except in Arch or Pardus):
 
 as root: cd /usr/local/bin && wget -Nc smxi.org/inxi && chmod +x inxi
 
-* For Arch and Pardus, use:
+ * For Arch and Pardus, use:
 
-as root: cd /usr/bin && wget -Nc smxi.org/inxi && chmod +x inxi
-
+   as root: 
+{{{
+cd /usr/bin && wget -Nc smxi.org/inxi && chmod +x inxi
+}}}
 ----
-* For usage in Konversation (as root):
+ * For usage in Konversation (as root):
 
-  * KDE3:
-
+   * KDE3:
+{{{
 ln -s /usr/local/bin/inxi /usr/share/apps/konversation/scripts/inxi
+}}}
 
-  * KDE4:
-
+   * KDE4:
+{{{
 ln -s /usr/local/bin/inxi /usr/share/kde4/apps/konversation/scripts/inxi
-
+}}}
 ----
 
 If you did not use a distribution installed package to install inxi, then you might want to run inxi again to update the man pages as well, with this command:
