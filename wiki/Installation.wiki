@@ -45,12 +45,10 @@ See bottom of page for directions on setting up Konversation links so you can ju
 
 as root: cd /usr/local/bin && wget -Nc smxi.org/inxi && chmod +x inxi
 
- * For Arch and Pardus manual inxi install, use:
-
-   as root: 
-{{{
-cd /usr/bin && wget -Nc smxi.org/inxi && chmod +x inxi
-}}}
+ * For Arch and Pardus manual inxi install, use, as root:
+   {{{
+   cd /usr/bin && wget -Nc smxi.org/inxi && chmod +x inxi
+   }}}
 ----
  * For usage in Konversation (as root):
 
