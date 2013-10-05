@@ -9,18 +9,18 @@ If you use your distributions package management system to install inxi, then yo
 See bottom of page for directions on setting up Konversation links so you can just type in /inxi [options] to show inxi in IRC.
 
  * As of Debian Jesse, Debian Sid/Testing - inxi is in apt, so just do: 
-  {{{ 
-  apt-get install inxi 
-  }}}
-  If in doubt, just search for it in apt, it's there, install it.
-  {{{ 
-  apt-cache search inxi 
-  }}}
-  A few other Debian based distributions also package inxi, or include the inxi installer in their base systems, like Mint.
+ {{{ 
+ apt-get install inxi 
+ }}}
+ If in doubt, just search for it in apt, it's there, install it.
+ {{{ 
+ apt-cache search inxi 
+ }}}
+ A few other Debian based distributions also package inxi, or include the inxi  installer in their base systems, like Mint.
  * Ubuntu users, check if it's in your basic repositories with this command:
-  {{{ 
-  apt-cache search inxi 
-  }}}
+ {{{ 
+ apt-cache search inxi 
+ }}}
   If it is, just install it with apt.
  * Arch Linux users: inxi is in the Community Repos, which most Arch installs have enabled by default, so just install inxi as you normally would any other package.
  * Mageia/Mandriva/OpenSuse also have inxi in their repositories I believe, though I'm not certain.
@@ -33,13 +33,8 @@ See bottom of page for directions on setting up Konversation links so you can ju
   {{{ 
   apt-get update && apt-get install inxi 
   }}}
-
 ----
- * For smxi users, follow the steps here: 
-
-   [http://smxi.org/site/install.htm#inxi smxi-install-directions]
-   But generally if you use Debian use the apt version unless you want to make sure you always have the latest inxi, this would be particularly relevant in Stable. 
-
+ * For smxi users, follow the steps here: [http://smxi.org/site/install.htm#inxi] But generally if you use Debian use the apt version unless you want to make sure you always have the latest inxi, this would be particularly relevant in Stable. 
 ----
  * For most others, use (except in Arch or Pardus), as root:
    {{{
