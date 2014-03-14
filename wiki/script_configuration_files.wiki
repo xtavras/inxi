@@ -121,7 +121,7 @@ You can tweak slightly the output of the default inxi short form output by chang
 SEP1='~'
 }}}
 
-If you're shy and don't want to show people your hostname in the -S line, you can set this to false, and it won't show that information. Please be aware that there is no way to override this unless you remove the entry or comment it out. There is no script option that forces showing of hostname, that is.
+If you're shy and don't want to show people your hostname in the -S line, you can set this to false, and it won't show that information. If you want to temporarily override this, use: inxi -! 32
 {{{
 B_SHOW_HOST='false'
 }}}
