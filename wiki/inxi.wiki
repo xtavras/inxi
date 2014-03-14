@@ -7,10 +7,10 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
 [http://inxi.googlecode.com/ http://smxi.org/img/screenshots/inxi-Fz-1.5.7.png]
 
 ==Full List of Inxi Options==
- * inxi supports the following options. These options are included as of inxi 1.7.5. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
+ * inxi supports the following options. These options are included as of inxi 2.1.0. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
 
  * If you start inxi with no arguments, it will show the short form. The following options if used without -b, -F or -v  + number will show just that complete line:
-   * A,C,D,G,I,M,N,P,R,S,W,f,i,n,o,p,l,u,r,s,t,w - you can use these together or alone to show just the line(s) you want to see.
+   * A, C, D, G, I, M, N, P, R, S, f, i, n, o, p, l, u, r, s, t, w, W - you can use these together or alone to show just the line(s) you want to see.
    * If you use them with either a -v + level, a -b, or with -F, it will show the full output for that line along with the output for the chosen verbosity level.
    * NOTE: as of version 1.6.5, the old basic output option -d was changed to -b, for basic. -d is now used for the extended disk option, showing cdrom/dvd information as well.
 
@@ -78,14 +78,14 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -w  Local weather data/time. To check an alternate location, see: -W [location]. For extra weather data options see -x, -xx, and -xxx.
   * -W  [location] - [location] supported options: postal code; city,[state/country]; latitude,longitude. Only use if you want the weather somewhere other than the machine running inxi. Use only ascii characters, replace spaces in city/state/country names with +: new+york,ny
   * -x  Show extra data: 
-      * -C - Bogomips on Cpu
+      * -C - Bogomips on Cpu; CPU flags short list
       * -d - Shows more information if present on cd/dvd devices.
        * -D - Shows hdd temp with disk data if you have hddtemp installed, if you are root OR if you have added to /etc/sudoers (sudo v. 1.7 or newer): 
            * < username > ALL = NOPASSWD: /usr/sbin/hddtemp (sample)
       * -G - Direct rendering status for Graphics (in X). Only works with verbose or line output;
       * -G - Shows (for single gpu, nvidia driver) screen number gpu is running on.
       * -i - Show IPv6 as well for LAN interface (IF) devices.
-      * -I - Show system GCC, default. With -xx, also show other installed GCC versions.
+      * -I - Show system GCC, default. With -xx, also show other installed GCC versions. Show Init type, if detected, like systemd, Upstart, SysVinit, init (bsd), Epoch, runit. Show runlevel/target if present.
       * -N, -A - driver version (if available) for Network/Audio;
       * -N, -A - Shows port for card/device, if available.
       * -N -A -G - Shows pci Bus ID / Usb ID for Audio, Network, Graphics
@@ -95,7 +95,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * -w/-W - Wind speed and time zone (time zone, -w only).
   * -xx Show extra, extra data (only works with verbose or line output, not short form). You can also trigger it with -Fx (but not -xF) (Version 1.6.x and later)
      * -D - Adds disk serial number.
-     * -I - Adds other detected installed gcc versions to primary gcc output (if present).
+     * -I - Adds other detected installed gcc versions to primary gcc output (if present). Shows init type version if found, and default runlevel/target if found.
      * -M - Adds chassis information, if any data for that is available.
      * -N -A -G - Shows vendor:product ID for Audio, Network, Graphics
      * -R - Adds superblock (if present); algorythm, U data. Adds system info line (kernel support, read ahead, raid events). Adds if present, unused device line. Resync line, shows progress bar. 
@@ -124,6 +124,8 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * 12 - With xorg conf and log data, xrandr, xprop, xdpyinfo, glxinfo etc.
       * 13 - With data from dev, disks, partitions etc.
       * 14 - Everything, all the data available.
+  * -! 31 - Turns off hostname in output. Useful if showing output from servers etc.
+  * -! 32 - Turns on hostname in output. Overrides global B_SHOW_HOST='false'
 
 ----
 To go to wiki list try clicking
