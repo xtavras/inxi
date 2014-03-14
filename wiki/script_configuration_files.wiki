@@ -50,13 +50,23 @@ FILTER_STRING='<filter>'
 }}}
 
 ===Inxi Line Lengths===
-These can be used to alter how long the lines are, in characters, before they wrap. Most of the lines will wrap when they have enough data to form a new line. Usually you want to leave IRC as is, or even shorter, because you have no control over how wide other IRC user's displays are. However, for your own systems, you might find it useful to alter the LINE_MAX_CONSOLE to suite your taste.
+These can be used to alter how long the lines are, in characters, before they wrap. Most of the lines will wrap when they have enough data to form a new line. Usually you want to leave IRC as is, or even shorter, because you have no control over how wide other IRC user's displays are. However, for your own systems, you might find it useful to alter the COLS_MAX_CONSOLE to suite your taste.
 
+COLS_MAX_CONSOLE will also set the default max width for the help/version output.
+
+However, for help/version, that width is set dynamically to fit into your terminal/console width, as will more of the inxi line widths in the main output (improved line wraps based on dynamic sizing in console/terminal started 2014-03-13, should be done by 2014-04). Note that the max number dictates the maximum columns that will be used in the output.
+
+2014-03-14: Changed variable names to be more sensible.
+{{{
+COLS_MAX_CONSOLE='115'
+COLS_MAX_IRC='105'
+}}}
+
+NOTE: the following variables are deprecated, but they will keep working if you have already created a conf option for default widths. inxi translates those internally to the new COLS ones.
 {{{
 LINE_MAX_CONSOLE='115'
 LINE_MAX_IRC='105'
 }}}
-
 
 ===Data Field Separators===
 This value adds separators to output, for example:
