@@ -1,3 +1,8 @@
+Main readme for /etc/os-release
+http://www.freedesktop.org/software/systemd/man/os-release.html
+
+==========================================================================
+
 linux mint debian:
 
 $ cat /etc/os-release
@@ -44,7 +49,7 @@ DISTRIB_DESCRIPTION="SolusOS Eveline 64-bit"
 
 
 ==========================================================================
-
+crunchbang
 
 $ cat /etc/lsb-release-crunchbang 
 DISTRIB_ID=CrunchBang
@@ -113,6 +118,14 @@ ANSI_COLOR="1;32"
 HOME_URL="http://www.gentoo.org/"
 SUPPORT_URL="http://www.gentoo.org/main/en/support.xml"
 BUG_REPORT_URL="https://bugs.gentoo.org/"
+
+File: /etc/os-release
+
+NAME=Gentoo
+ID=gentoo
+PRETTY_NAME=Gentoo GNU/Linux
+ANSI_COLOR=1;34
+
 
 cat /etc/gentoo-release
 Gentoo Base System release 1.12.11.1
