@@ -7,8 +7,9 @@ Some things are not obvious, so here's a few questions and answers.
 
 == List of Frequently Asked (or 'Could be Asked') Questions ==
 -----
-*Q:* inxi output piped to *more* looks weird. 
-If I use
+===*Q:* inxi output piped to *more* looks weird.===
+
+If I use *more* to give convenient screen height blocks of output
 {{{
 inxi <options> | more
 }}} 
