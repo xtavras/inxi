@@ -1,0 +1,22 @@
+#summary While nobody may have asked these questions, it's still nice to know the answer if you were wondering.
+
+= inxi FAQs =
+
+Some things are not obvious, so here's a few questions and answers.
+
+
+== List of Frequently Asked (or 'Could be Asked') Questions ==
+-----
+*Q:* inxi output piped to *more* looks weird. 
+If I use
+{{{
+inxi <options> | more
+}}} 
+the lines don't wrap correctly, long lines get shoved to the next line   the terminal/console output, but it's messy.
+
+*A:* That's correct, I noticed this recently when testing long line output in shell. There is nothing I know of that can fix this for 'more', what is happening is that more is counting the the color code as well as the actual text as it handles the length of each line. The solution in this case is to set the inxi colors to -c 0, for example: 
+{{{
+inxi -v7 -c 0
+}}}
+Then the output will wrap neatly as intended. This is useful to remember if you are out of X, in a terminal with very narrow width, for example default 80 columns.
+-----
