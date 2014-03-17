@@ -7,7 +7,7 @@ Some things are not obvious, so here's a few questions and answers.
 
 == List of Frequently Asked (or 'Could be Asked') Questions ==
 -----
-===*Q:* inxi output piped to *more* looks weird.===
+===Q: inxi output piped to 'more' looks weird===
 
 If I use *more* to give convenient screen height blocks of output
 {{{
@@ -20,4 +20,15 @@ the lines don't wrap correctly, long lines get shoved to the next line   the ter
 inxi -v7 -c 0
 }}}
 Then the output will wrap neatly as intended. This is useful to remember if you are out of X, in a terminal with very narrow width, for example default 80 columns.
+-----
+===Q: Does inxi support BSDs?===
+*A:* Yes, sort of. FreeBSD support is decent though incomplete. OpenBSD support is weaker, because each BSD insists on using its own set of tools, that have different syntaxes, so trying to actually support the BSDs completely is essentially impossible, at least if you want a life. 
+
+I spent quite a while working on BSD support but in the end, I decided I'd test to make sure basic functionality works on FreeBSD, and after that, I don't really care about the other BSDs. The user base for each is simply too small and fragmented to warrant any more dev time, though FreeBSD/PCBSD are the largest, but the core functions do more or less work in some cases. For example, -R works for zfs raid, very well. But some things you just can't get easily from BSDs at all as regular user, and I don't like adding too many things that require root to get data for. 
+
+As of 2014-03-16 -s does not work, no lm-sensors type app in BSDs, -D does not work, -d does not work, -o does not work. -M works with dmidecode as root. 
+
+In general now inxi is not going to get much more dev time for BSDs, but I will spend time maintaining current support in FreeBSD. Given that inxi is GPL and BSDs are enthusiastic about BSD licenses, I don't see any huge rush to adopt it among BSD users, but stranger things have happened. 
+
+Patches are accepted as long as they are coherent. Speaking only for myself, my time looking at the completely pointless differences and variations between each BSD convinced that getting the differences handled more completely is a bad way to spend my finite time, and it would pointless bloat out the inxi code for almost no gain to probably 99.99% of people who use inxi. Interesting experiment, but I'm sticking with GNU/Linux dev work/time from now on.
 -----
