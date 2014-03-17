@@ -15,11 +15,15 @@ inxi <options> | more
 }}} 
 the lines don't wrap correctly, long lines get shoved to the next line   the terminal/console output, but it's messy.
 
-*A:* That's correct, I noticed this recently when testing long line output in shell. There is nothing I know of that can fix this for 'more', what is happening is that more is counting the the color code as well as the actual text as it handles the length of each line. The solution in this case is to set the inxi colors to -c 0, for example: 
+*A:* That's correct, I noticed this recently when testing long line output in shell. There is nothing I know of that can fix this for 'more', what is happening, I think, is that "more" is ignoring the color code characters when calculating the line width, instead of just using the width of the actual text as it handles the length of each line. In other words, if the output is 100 characters, *more* thinks that the output is actually 100+all the characters of the color code variables, which will then make the bad wraps as more tries to handle that. I had no idea *more* could create this type of issue, but apparently it can. 
+
+The solution in this case is to set the inxi colors to -c 0, for example: 
 {{{
 inxi -v7 -c 0
 }}}
-Then the output will wrap neatly as intended. This is useful to remember if you are out of X, in a terminal with very narrow width, for example default 80 columns.
+Then the output will wrap neatly as intended since there are no longer any color code characters in the physical string. This is useful to remember if you are out of X, in a terminal with very narrow width, for example default 80 columns.
+
+My feeling is that this may be a bug in *more* but you never know, it could be intended behavior, but why anyone would intend to break the output of a line is beyond me.
 -----
 ===Q: Does inxi support BSDs?===
 *A:* Yes, sort of. FreeBSD support is decent though incomplete. OpenBSD support is weaker, because each BSD insists on using its own set of tools, that have different syntaxes, so trying to actually support the BSDs completely is essentially impossible, at least if you want a life. 
