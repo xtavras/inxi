@@ -25,6 +25,36 @@ Then the output will wrap neatly as intended since there are no longer any color
 
 My feeling is that this may be a bug in *more* but you never know, it could be intended behavior, but why anyone would intend to break the output of a line is beyond me.
 -----
+===Q: The inxi help menu shoots off the screen when I run it.===
+
+Yes, it's long. Not as long as the man page, but it's long. If you are out of X and can't scroll your terminal client (like Konsole, Xterm, Aterm, Gnome-terminal), all you have to do is use the *more* command, like so:
+{{{
+inxi -Fxx -fr | more
+}}} 
+As you read down the screen, you'll note the help output stopped at exactly one screen height. To get to the next screen, just hit your space bar, and it will show the next screen of output. Or to move down one line at a time, use your *enter* key, that moves it one line at a time.
+
+Now you can scroll down at your own pace.
+
+They claim *more* allows scrolling up again, but it doesn't work on my installs.
+
+If you want to go up and down the menu, use *less*. The scroll down options are the same as *more*, but the up options also work.
+
+{{{
+inxi -Fxx -fr | less
+}}} 
+
+To scroll back up, hit the *b* key, or *ctrl + b* - *u* or *ctrl + u* goes up half a screen. You can also use a number for *u*, like: *5u*
+
+If you use a number, that will become the new default up count of lines to go up with each *u*.
+
+See: *man less* 
+for more information.
+
+To get out of *less*, hit the *q* key.
+
+Now you know.
+
+-----
 ===Q: Does inxi support BSDs?===
 *A:* Yes, sort of. FreeBSD support is decent though incomplete. OpenBSD support is weaker, because each BSD insists on using its own set of tools, that have different syntaxes, so trying to actually support the BSDs completely is essentially impossible, at least if you want a life. 
 
