@@ -32,6 +32,8 @@ B_ALLOW_UPDATE='true'
 then when you try to update inxi with: *inxi -U* as root, everything will be fine. You also get a new man page with this update.
 
 NOTE: remember, however, that the package management system does NOT know about this change, so next time you upgrade your system, whatever current inxi version is in the repo if it's been updated since your last upgrade will replace your existing one, which you can tell because the inxi version number will change.
+
+But this edit will stay 'sticky', and you can then just update inxi as usual, the preference set here will not be replaced, at least not usually.
 -----
 ===Q: inxi output piped to 'more' looks weird===
 
