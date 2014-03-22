@@ -9,7 +9,7 @@ Some things are not obvious, so here's a few questions and answers.
 -----
 ===Q: I want to update to latest svn inxi version but I get an error message saying updates have been disabled===
 
-That's right, if you installed inxi using a Debian / Ubuntu package, and maybe other repositories too, some distributions have a rule that things like -U should not exist because the package manager should always do the updating. This is a fine rule, but sometimes you really just need or want a newer inxi version, either for testing, or because of a new feature, or a fixed bug.
+*A:* That's right, if you installed inxi using a Debian / Ubuntu package, and maybe other repositories too, some distributions have a rule that things like -U should not exist because the package manager should always do the updating. This is a fine rule, but sometimes you really just need or want a newer inxi version, either for testing, or because of a new feature, or a fixed bug.
 
 Luckily, it's super easy to fix this, simply run this command, as root:
 
