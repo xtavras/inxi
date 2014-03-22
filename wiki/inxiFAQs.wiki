@@ -7,6 +7,32 @@ Some things are not obvious, so here's a few questions and answers.
 
 == List of Frequently Asked (or 'Could be Asked') Questions ==
 -----
+===Q: I want to update to latest svn inxi version but I get an error message saying updates have been disabled===
+
+That's right, if you installed inxi using a Debian / Ubuntu package, and maybe other repositories too, some distributions have a rule that things like -U should not exist because the package manager should always do the updating. This is a fine rule, but sometimes you really just need or want a newer inxi version, either for testing, or because of a new feature, or a fixed bug.
+
+Luckily, it's super easy to fix this, simply run this command, as root:
+
+{{{
+touch /etc/inxi.conf && echo 'B_ALLOW_UPDATE=true' >> /etc/inxi.conf
+
+# if your system requires sudo (root disabled), then do this:
+# (I think, not sure if you need a sudo on the echo item too)
+sudo touch /etc/inxi.conf && echo 'B_ALLOW_UPDATE=true' >> /etc/inxi.conf
+}}}
+What this does is create the /etc/inxi.conf file if it's not present, though it probably is, then add as the last line the reset of the variable.
+
+Alternately, you can open /etc/inxi.conf and simply change:
+{{{
+B_ALLOW_UPDATE='false'
+## to
+B_ALLOW_UPDATE='true'
+}}}
+
+then when you try to update inxi with: *inxi -U* as root, everything will be fine. You also get a new man page with this update.
+
+NOTE: remember, however, that the package management system does NOT know about this change, so next time you upgrade your system, whatever current inxi version is in the repo if it's been updated since your last upgrade will replace your existing one, which you can tell because the inxi version number will change.
+-----
 ===Q: inxi output piped to 'more' looks weird===
 
 If I use *more* to give convenient screen height blocks of output
