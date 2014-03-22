@@ -22,7 +22,7 @@ sudo touch /etc/inxi.conf && echo 'B_ALLOW_UPDATE=true' >> /etc/inxi.conf
 }}}
 What this does is create the /etc/inxi.conf file if it's not present, though it probably is, then add as the last line the reset of the variable.
 
-Alternately, you can open /etc/inxi.conf and simply change:
+Alternately, you can open /etc/inxi.conf (check first to see if it exists with *cat /etc/inxi.conf* if you see the variable there, then do the following. If you do not see it, use the above procedure, they probably edited inxi itself) and simply change:
 {{{
 B_ALLOW_UPDATE='false'
 ## to
