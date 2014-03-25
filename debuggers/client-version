@@ -2,7 +2,7 @@
 LINE='------------------------------------------------------'
 echo $LINE
 echo "debugger: client-version"
-echo "version: 1.1"
+echo "version: 1.2"
 echo "date: 2014-03-25"
 echo $LINE
 #echo PATH: $PATH
