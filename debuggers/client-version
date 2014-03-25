@@ -48,6 +48,8 @@ if [[ -e /proc/$PPID/exe ]];then
 						echo 'file: -f present: ' /proc/$PPPID/exe
 						if [[ $PPPID == 1 ]];then
 							echo "PPPID is equal to 1"
+							echo "showing ps aux data"
+							echo "$(ps aux)"
 						fi
 					fi
 				fi
