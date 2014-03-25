@@ -7,6 +7,11 @@ PS_PATH=$(type -p ps)
 RL_PATH=$(type -p readlink )
 echo "Starting client version debugger"
 echo '------------------------------------------------------'
+if tty &>/dev/null; then
+	echo "Client running in shell"
+else
+	echo "Client running in IRC"
+fi
 if [[ -n $PPID ]];then
 	echo EXISTS PPID: $PPID
 else
@@ -33,9 +38,19 @@ if [[ -e /proc/$PPID/exe ]];then
 				CLIENT_WORKING_NAME=${PATH_LOWER##*/}
 				echo PPPID CLIENT WORKING NAME: $CLIENT_WORKING_NAME
 			else
-				echo 'Getting pppid client path failed for this reason'
-				echo PPPID: $PPPID
-				echo 'file: -f did not show present: ' /proc/$PPPID/exe
+				echo 'Getting pppid client path failed for these reasons:'
+				if [[ -z $PPPID ]];then
+					echo "PPPID null: $PPPID"
+				else
+					if [[ ! -f /proc/$PPPID/exe ]];then
+						echo 'file: -f not present: ' /proc/$PPPID/exe
+					else
+						echo 'file: -f present: ' /proc/$PPPID/exe
+						if [[ $PPPID == 1 ]];then
+							echo "PPPID is equal to 1"
+						fi
+					fi
+				fi
 			fi
 			;;
 	esac
