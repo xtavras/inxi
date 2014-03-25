@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+echo "debugger: client-version"
+echo "version: 1.0"
+echo "date: 2014-03-25"
 #echo PATH: $PATH
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin:/usr/local/sbin:/usr/local/bin:/usr/games:."
 #echo PATH: $PATH
