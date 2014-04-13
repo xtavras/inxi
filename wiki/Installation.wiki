@@ -1,10 +1,12 @@
 =Summary How to install inxi using a variety of methods:=
 
-I can't track all the Linux distributions, these are the ones I know about as of 2013-10-05. 
+I can't track all the Linux distributions, these are the ones I know about as of 2014-04-13. 
 
 Please note that inxi will always support all Linux distributions as long as they have gawk and the other recommended applications, and inxi dependencies will never require the latest of anything, so you can always safely install inxi on a system then update it to latest inxi version no matter what. In other words, if inxi runs the first time you install it, after updating dependencies, inxi will always run on your system, as long as the project remains in these hands.
 
 If you use your distributions package management system to install inxi, then you will have the man pages, if you install it manually, then just run inxi -U one time and it will grab the man page as well during the update.
+
+Because inxi is spreading widely through the distribution ecosystem, always first check to see if a primary or secondary repository for your distribution has inxi before installing it manually, though some distributions have seriously out of data inxi versions, so you might want to install the package, then update it manually with -U. See the [inxiFAQs] page for directions on how to override distribution blocks of -U.
 
 See bottom of page for directions on setting up Konversation links so you can just type in /inxi [options] to show inxi in IRC.
 
@@ -21,17 +23,27 @@ See bottom of page for directions on setting up Konversation links so you can ju
  {{{ 
  apt-cache search inxi 
  }}}
-  If it is, just install it with apt.
- * Arch Linux users: inxi is in the Community Repos, which most Arch installs have enabled by default, so just install inxi as you normally would any other package.
+  If it is, just install it with apt. If it is not, add the unit193 repository like so:
+  {{{
+  sudo apt-add-repository ppa:unit193/inxi && apt-get update
+  ## then just install inxi
+  apt-get install inxi
+  }}}
+ * Arch Linux users: inxi is in the Community Repos, which most Arch installs have enabled by default, so just install inxi as you normally would any other package. Arch maintainer does a very good job keeping up with latest inxi versions, so you can usually rely on his stuff being up to date.
  * Mageia/Mandriva/OpenSuse also have inxi in their repositories I believe, though I'm not certain.
  * For other distros, check your repositories first before manually installing it, many have it available either in the main repositories, or as a third party repository.
- * For Debian Wheezy or older systems, use the generally out of date cathbards repo:
+ * For Debian Wheezy or older systems, I rocommend using the direct download install via wget, but if you must use apt to install it, use the Unit193 repository (Unit193 is the actual maintainer of the Debian inxi package), which is also the most current one available for apt systems usually. Add the following line (first of course check to see if you don't already have inxi available, or that you have an inxi repo.:
   {{{
-  wget ftp://cathbard.com/binary/inxi*.deb 
+  echo 'deb http://ppa.launchpad.net/unit193/inxi/ubuntu trusty main' > /etc/apt/sources.list.d/unit193-inxi.list
   }}}
- * Or if you have cathbards repos ( [http://cathbard.com/cathbard-repo-howto.html add cathbard repos] ) in your apt sources.list:
-  {{{ 
-  apt-get update && apt-get install inxi 
+  Alternately, siduction inxi is also pretty current usually, so you can use theirs instead if you want a strictly Debian inxi package, though there should be basically no difference, but siduction does a good job  too as 2014-04-13:
+  {{{
+  echo 'deb http://packages.siduction.org/base unstable main' > /etc/apt/sources.list.d/siduction.list
+  }}}
+  then just update and install inxi:
+  {{{
+  apt-get update
+  apt-get install inxi
   }}}
 ----
  * For smxi users, follow the steps here: [http://smxi.org/site/install.htm#inxi] But generally if you use Debian use the apt version unless you want to make sure you always have the latest inxi, this would be particularly relevant in Stable. 
