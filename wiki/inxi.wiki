@@ -7,7 +7,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
 [http://inxi.googlecode.com/ http://smxi.org/img/screenshots/inxi-Fz-1.5.7.png]
 
 ==Full List of Inxi Options==
- * inxi supports the following options. These options are included as of inxi 2.1.0. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
+ * inxi supports the following options. These options are included as of inxi 2.2.20. Earlier versions may not have every option. You can combine these options, or list them one by one: Examples: inxi -v4 -c6 OR inxi -bDc 6
 
  * If you start inxi with no arguments, it will show the short form. The following options if used without -b, -F or -v  + number will show just that complete line:
    * A, C, D, G, I, M, N, P, R, S, f, i, n, o, p, l, u, r, s, t, w, W - you can use these together or alone to show just the line(s) you want to see.
