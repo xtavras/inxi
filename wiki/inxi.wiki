@@ -104,6 +104,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
   * -xxx Show extra, extra, extra data (only works with verbose or line output, not short form):
      * -S - Panel/shell information in desktop output, if in X (like gnome-shell, cinnamon, mate-panel).
      * -w/-W - Location (uses -z/irc filter), weather observation time, wind chill, heat index, dew point (shows extra lines for data where relevant).
+  * -y (plus integer >= 80) This  is  an  absolute  width  override  which  sets  the  output line width max. Overrides COLS_MAX_IRC / COLS_MAX_CONSOLE globals, or the actual widths of the terminal. If used with -h or -c 94-99, put -y option first  or  the  override  will  be  ignored.  Cannot  be used with --help / --version / --recommends type long options. Example: inxi -y 130 -Fxx
   * -z Adds security filters for IP addresses, Mac, and user home directory name. Default on for irc clients.
   * -Z  Absolute override for output filters. Useful for debugging networking issues in irc for example.
 
