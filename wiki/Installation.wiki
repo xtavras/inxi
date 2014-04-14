@@ -31,6 +31,7 @@ See bottom of page for directions on setting up Konversation links so you can ju
   }}}
  * Arch Linux users: inxi is in the Community Repos, which most Arch installs have enabled by default, so just install inxi as you normally would any other package. Arch maintainer does a very good job keeping up with latest inxi versions, so you can usually rely on his stuff being up to date.
  * Mageia/Mandriva/OpenSuse also have inxi in their repositories I believe, though I'm not certain.
+ * Fedora as of 19 has inxi, and it's also in EPEL, I believe the next EPL, Redhat/Centos will have inxi, but you can install it via EPEL for now in Redhat/Centos etc.
  * For other distros, check your repositories first before manually installing it, many have it available either in the main repositories, or as a third party repository.
  * For Debian Wheezy or older systems, I rocommend using the direct download install via wget, but if you must use apt to install it, use the Unit193 repository (Unit193 is the actual maintainer of the Debian inxi package), which is also the most current one available for apt systems usually. Add the following line (first of course check to see if you don't already have inxi available, or that you have an inxi repo.:
   {{{
