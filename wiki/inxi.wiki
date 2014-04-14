@@ -36,7 +36,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
         * If you are going to use this for public posting of  your data, consider running it with the -z option for filtering. IRC filters by default. 
   * -I (upper case i) Show Information: processes, uptime, memory, irc client, inxi version.
   * -l (lower case l, el) Show partition labels. Default: short partition -P. For full -p output, use: -pl (or -plu).
-  * -M  Show machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo) (version 1.6.x and later). Older systems/kernels without the required /sys data can use dmidecode instead, run as root.
+  * -M  Show machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo) (version 1.6.x and later). Older systems/kernels without the required /sys data can use dmidecode instead, run as root. -! 33 forces use of dmidecode, which might be of some utility in certain fringe cases where dmidecode has more data than /sys.
   * -n  Show Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state (version 1.5.x and later).
   * -N  Show Network card information. Shows card and driver. Includes support for USB networking devices. Also shows busID/USB-ID, ports, driver version with -x
   * -o  Show unmounted partition information (includes UUID and LABEL if available).
@@ -127,7 +127,7 @@ Here is a screenshot of typical output for inxi -Fz (-z filters certain output l
       * 14 - Everything, all the data available.
   * -! 31 - Turns off hostname in output. Useful if showing output from servers etc.
   * -! 32 - Turns on hostname in output. Overrides global B_SHOW_HOST='false'
-
+  * -! 33 - Force use of dmidecode. This will override /sys data in some lines, like -M.
 ----
 To go to wiki list try clicking
 [http://code.google.com/p/inxi/w/list here]
