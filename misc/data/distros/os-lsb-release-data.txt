@@ -1,1 +1,0 @@
-/home/harald/bin/scripts/inxi/svn/modules/data/os-lsb-release-data.txt
