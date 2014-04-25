@@ -1,0 +1,4 @@
+Reviews and articles about inxi
+
+* http://www.linuxandlife.com/2012/01/inxi-awesome-tool-to-check-hardware.html
+* http://www.binarytides.com/inxi-system-information-linux/
