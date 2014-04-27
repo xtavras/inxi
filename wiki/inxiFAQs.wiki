@@ -86,6 +86,8 @@ Now you know.
 ===Q: Does inxi support BSDs?===
 *A:* Yes, sort of. FreeBSD support is decent though incomplete. OpenBSD support is weaker, because each BSD insists on using its own set of tools, that have different syntaxes, so trying to actually support the BSDs completely is essentially impossible, at least if you want a life. 
 
+IMPORTANT: do NOT use the branches/bsd version, that is only for testing and debugging purposes, use the main trunk/inxi version of inxi, native bsd support was added a long time ago.
+
 To see what works in your BSD flavor, just run:
 {{{
 inxi -rfv7
