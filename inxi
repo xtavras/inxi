@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.25
 ####  Date: 2014-05-01
-####  Patch Number: 06-darwin
+####  Patch Number: 07-darwin
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1896,7 +1896,7 @@ check_recommends_user_output()
 	echo "Python version: $python_version"
 	echo $Line
 	
-	echo "Test One: Required System Directories."
+	echo "Test One: Required System Directories (Linux Only)."
 	print_lines_basic "0" "" "If one of these system directories is missing, $SCRIPT_NAME cannot operate:"
 	echo 
 	check_recommends_items 'required-dirs'
@@ -3895,7 +3895,7 @@ get_cpu_data_bsd()
 				exit
 			}
 		}
-		/^hw.(clock|cpuspeed)/ {
+		/^hw.(clock|cpufrequency)/ {
 			cpuClock=$NF
 			if ( cpuModel != "" ) {
 				exit
@@ -3914,12 +3914,13 @@ get_cpu_data_bsd()
 			sub(/[[:space:]]*@.*/,"",$NF)
 			cpuModel=$NF
 		}
-		/^machdep.tsc.frequency/ {
+		/^hw.cpufrequency/ {
 			cpuClock = $NF / 1000000
 			cpuClock = cpuClock " Mhz"
 		}
-		/^machdep.cpu.cache.size/ {
-			cpuCache=$NF " kB"
+		/^hw.l2cachesize/ {
+			cpuCache=$NF/1000
+			cpuCache=cpuCache " kB"
 		}
 		END {
 			print cpuModel "," cpuClock "," cpuCache "," cpuFlags "," cpuBogomips ","  cpuVendor
