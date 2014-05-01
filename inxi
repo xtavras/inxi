@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.25
 ####  Date: 2014-05-01
-####  Patch Number: 01-darwin
+####  Patch Number: 02-darwin
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1047,7 +1047,7 @@ check_required_apps()
 	
 	if [[ -z $BSD_TYPE  ]];then
 		depends="$depends lspci"
-	elif [[ $BSD_TYPE == 'bsd' ]];then
+	elif [[ $BSD_TYPE == 'bsd' || $BSD_TYPE == 'darwin-bsd' ]];then
 		depends="$depends sysctl"
 		# debian-bsd has lspci but you must be root to run it
 	elif [[ $BSD_TYPE == 'debian-bsd' ]];then
@@ -3860,6 +3860,7 @@ get_cpu_data_bsd()
 			cpuCache=""
 			cpuBogomips=""
 			cpuVendor=""
+			bMach="false"
 		}
 		/^hw.model/ {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
@@ -3879,6 +3880,27 @@ get_cpu_data_bsd()
 				exit
 			}
 		}
+		/^machdep.cpu.vendor/ {
+			cpuVendor=$NF
+		}
+		/^machdep.cpu.brand_string/ {
+			sub(/CPU.*/,"",$NF)
+			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
+			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
+			sub(//,"",$NF)
+			sub(/[a-z]+-core/, "", $NF )
+			gsub(/^ +| +$|\"/, "", $NF)
+			gsub(/ [ \t]+/, " ", $NF)
+			sub(/[[:space:]]*@.*/,"",$NF)
+			cpuModel=$NF
+		}
+		/^machdep.tsc.frequency/ {
+			cpuClock = $NF / 100000
+			cpuClock = cpuClock " Mhz"
+		}
+		/^machdep.cpu.cache.size/ {
+			cpuCache=$NF " kB"
+		}
 		END {
 			print cpuModel "," cpuClock "," cpuCache "," cpuFlags "," cpuBogomips ","  cpuVendor
 			print "N/A"
@@ -3894,9 +3916,13 @@ get_cpu_flags_bsd()
 	eval $LOGFS
 	
 	local cpu_flags=''
+	local gawk_fs=':'
+	if [[ $BSD_VERSION == 'openbsd' ]];then
+		gawk_fs='='
+	fi
 	
 	if [[ -n $Dmesg_Boot_Data ]];then
-		cpu_flags=$( gawk -F '=' '
+		cpu_flags=$( gawk -F "=" '
 		BEGIN {
 			IGNORECASE=1
 			cpuFlags=""
@@ -3916,6 +3942,17 @@ get_cpu_flags_bsd()
 			print cpuFlags
 			exit
 		}' <<< "$Dmesg_Boot_Data" )
+	elif [[ -n $Sysctl_a_Data ]];then
+		cpu_flags=$( gawk -F "$gawk_fs" '
+		BEGIN {
+			IGNORECASE=1
+			cpuFlags=""
+		}
+		/^machdep.cpu.features/ {
+			cpuFlags=tolower($NF)
+			print cpuFlags
+			exit
+		}' <<< "$Sysctl_a_Data" )
 	fi
 	echo $cpu_flags
 	log_function_data "$cpu_flags"
