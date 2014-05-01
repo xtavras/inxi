@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.25
 ####  Date: 2014-05-01
-####  Patch Number: 05-darwin
+####  Patch Number: 06-darwin
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3905,7 +3905,6 @@ get_cpu_data_bsd()
 			cpuVendor=$NF
 		}
 		/^machdep.cpu.brand_string/ {
-			sub(/CPU.*/,"",$NF)
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
 			sub(//,"",$NF)
@@ -9690,10 +9689,14 @@ print_cpu_data()
 			## note: this handles how intel reports L2, total instead of per core like AMD does
 			# note that we need to multiply by number of actual cpus here to get true cache size
 			if [[ -n ${a_cpu_working[2]} ]];then
-				if [[ $cpu_vendor != 'intel' ]];then
-					cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$(( $cpu_core_count * $cpu_physical_count ))"  )
+				if [[ -z $BSD_TYPE ]];then
+					if [[ $cpu_vendor != 'intel' ]];then
+						cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$(( $cpu_core_count * $cpu_physical_count ))"  )
+					else
+						cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$cpu_physical_count"  )
+					fi
 				else
-					cpu_cache=$( calculate_multicore_data "${a_cpu_working[2]}" "$cpu_physical_count"  )
+					cpu_cache=${a_cpu_working[2]}
 				fi
 			else
 				cpu_cache='N/A'
