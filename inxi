@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.25
 ####  Date: 2014-05-01
-####  Patch Number: 08-darwin
+####  Patch Number: 09-darwin
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3902,9 +3902,11 @@ get_cpu_data_bsd()
 				exit
 			}
 		}
+		/^machdep/ {
+			FS=":"
+		}
 		/^hw.cpufrequency/ {
 			cpuClock = $NF / 1000000
-			cpuClock = cpuClock " Mhz"
 		}
 		/^hw.l2cachesize/ {
 			cpuCache=$NF/1000
@@ -3912,9 +3914,6 @@ get_cpu_data_bsd()
 		}
 		/^machdep.cpu.vendor/ {
 			cpuVendor=$NF
-		}
-		/^machdep/ {
-			FS=":"
 		}
 		/^machdep.cpu.brand_string/ {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
