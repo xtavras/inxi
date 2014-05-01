@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.25
 ####  Date: 2014-05-01
-####  Patch Number: 03-darwin
+####  Patch Number: 04-darwin
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3642,14 +3642,21 @@ get_cpu_core_count()
 		if [[ $BSD_VERSION == 'openbsd' ]];then
 			gawk_fs='='
 		fi
-		cpu_core_count=$( gawk -F "$gawk_fs" '
+		cpu_core_count=$( gawk -F "$gawk_fs" -v bsdType=$BSD_TYPE '
 		# note: on openbsd can also be hw.ncpufound so exit after first
-		/^hw.ncpu/ {
-			print $NF
-			exit
+		BEGIN {
+			coreCount=""
+		}
+		/^hw.ncpu$/ {
+			coreCount=$NF
+			# incredibly, they actually change field separators on some systems. 
+			FS = ":"
 		}
 		/^machdep.cpu.core_count/ {
-			print $NF
+			coreCount=$NF
+		}
+		END {
+			print coreCount
 		}' <<< "$Sysctl_a_Data" )
 		cores_per_cpu=$( gawk -F "$gawk_fs" '
 		/^machdep.cpu.cores_per_package/ {
