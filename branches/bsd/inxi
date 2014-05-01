@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.25
 ####  Date: 2014-05-01
-####  Patch Number: 02-darwin
+####  Patch Number: 03-darwin
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3620,7 +3620,7 @@ get_audio_alsa_data()
 get_cpu_core_count()
 {
 	eval $LOGFS
-	local cpu_physical_count='' cpu_core_count='' cpu_type='' cpu_alpha_count=''
+	local cpu_physical_count='' cpu_core_count='' cpu_type='' cpu_alpha_count='' cores_per_cpu=''
 	if [[ $B_CPUINFO_FILE == 'true' ]]; then
 		# load the A_CPU_TYPE_PCNT_CCNT core data array
 		get_cpu_ht_multicore_smp_data
@@ -3647,14 +3647,26 @@ get_cpu_core_count()
 		/^hw.ncpu/ {
 			print $NF
 			exit
+		}
+		/^machdep.cpu.core_count/ {
+			print $NF
 		}' <<< "$Sysctl_a_Data" )
+		cores_per_cpu=$( gawk -F "$gawk_fs" '
+		/^machdep.cpu.cores_per_package/ {
+			print $NF
+		}' <<< "$Sysctl_a_Data" )
+		
 		if [[ -n $( grep -E '^[0-9]+$' <<< "$cpu_core_count" ) ]];then
 			cpu_alpha_count=$( get_cpu_core_count_alpha "$cpu_core_count" )
 			if [[ $cpu_core_count -gt 1 ]];then
 				cpu_type='SMP'
 			fi
 		fi
-		cpu_physical_count=1
+		if [[ -n $cores_per_cpu ]];then
+			cpu_physical_count=$(( $cpu_core_count / $cores_per_cpu ))
+		else
+			cpu_physical_count=1
+		fi
 		A_CPU_CORE_DATA=( "$cpu_physical_count" "$cpu_alpha_count" "$cpu_type" "$cpu_core_count" )
 	fi
 	a_temp=${A_CPU_CORE_DATA[@]}
@@ -3895,7 +3907,7 @@ get_cpu_data_bsd()
 			cpuModel=$NF
 		}
 		/^machdep.tsc.frequency/ {
-			cpuClock = $NF / 100000
+			cpuClock = $NF / 1000000
 			cpuClock = cpuClock " Mhz"
 		}
 		/^machdep.cpu.cache.size/ {
@@ -9647,7 +9659,7 @@ print_cpu_data()
 	# 				bmip_data="${a_cpu_working[4]}"
 	# 			fi
 				# bogomips are a linux thing, but my guess is over time bsds will use them somewhere anyway
-				if [[ $BSD_TYPE == 'bsd' && -z $bmip_data ]];then
+				if [[ -n $BSD_TYPE && -z $bmip_data ]];then
 					bmip_data=''
 				else
 					bmip_data="${C1}bmips$SEP3${C2} $bmip_data "
