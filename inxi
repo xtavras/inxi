@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 ########################################################################
 ####  Script Name: inxi
-####  Version: 2.1.22
-####  Date: 2014-04-27
-####  Patch Number: 00
+####  Version: 2.1.25
+####  Date: 2014-05-01
+####  Patch Number: 01-darwin
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -795,10 +795,12 @@ initialize_data()
 	eval $LOGFS
 	BSD_VERSION=$( uname -s 2>/dev/null | tr '[A-Z]' '[a-z]' )
 	# note: archbsd says they are a freebsd distro, so assuming it's the same as freebsd
-	if [[ -z ${BSD_VERSION/*bsd*/} ]];then
+	if [[ -z ${BSD_VERSION/*bsd*/} || -z ${BSD_VERSION/*darwin*/} ]];then
 		# GNU/kfreebsd will by definition have GNU tools like sed/grep
 		if [[ -z ${BSD_VERSION/*kfreebsd*/} ]];then
 			BSD_TYPE='debian-bsd' # debian gnu bsd
+		elif [[ -z ${BSD_VERSION/*darwin*/} ]];then
+			BSD_TYPE='darwin-bsd' # debian gnu bsd
 		else
 			BSD_TYPE='bsd' # all other bsds
 			SED_I="-i ''"
@@ -1775,8 +1777,13 @@ debug_data_collector()
 			df -H &> $debug_data_dir/bsd-df-H-no-excludes.txt
 			df -k -T &> $debug_data_dir/bsd-df-k-T-no-excludes.txt
 			df -k &> $debug_data_dir/bsd-df-k-no-excludes.txt
+			atacontrol list &> $debug_data_dir/bsd-atacontrol-list.txt
+			camcontrol devlist &> $debug_data_dir/bsd-camcontrol-devlist.txt
 			# bsd tool
 			mount &> $debug_data_dir/mount.txt
+			btrfs filesystem show  &> $debug_data_dir/btrfs-filesystem-show.txt
+			btrfs filesystem show --mounted  &> $debug_data_dir/btrfs-filesystem-show-mounted.txt
+			# btrfs filesystem show --all-devices  &> $debug_data_dir/btrfs-filesystem-show-all-devices.txt
 			gpart list &> $debug_data_dir/bsd-gpart-list.txt
 			gpart show &> $debug_data_dir/bsd-gpart-show.txt
 			gpart status &> $debug_data_dir/bsd-gpart-status.txt
@@ -2622,7 +2629,7 @@ show_options()
 	print_lines_basic "2" "99" "Global - Overrides/removes all settings. Setting specific removes global."
 	print_lines_basic "1" "-C" "CPU output, including per CPU clockspeed (if available)."
 	print_lines_basic "1" "-d" "Optical drive data. Same as -Dd. See also -x and -xx."
-	print_lines_basic "1" "-D" "Full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB. See also -x and -xx."
+	print_lines_basic "1" "-D" "Full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB. See also -x and -xx. Disk total used percentage includes swap partition size(s)."
 	print_lines_basic "1" "-f" "All cpu flags, triggers -C. Not shown with -F to avoid spamming. ARM cpus show 'features'."
 	print_lines_basic "1" "-F" "Full output for $SCRIPT_NAME. Includes all Upper Case line letters, plus -s and -n. Does not show extra verbose options like -x -d -f -u -l -o -p -t -r"
 	print_lines_basic "1" "-G" "Graphic card information (card, display server type/version, resolution, glx renderer, version)."
@@ -5406,34 +5413,62 @@ get_graphics_display_server_version()
 get_hdd_data_basic()
 {
 	eval $LOGFS
-	local hdd_used='' a_temp='' df_string='' df_total=''
-	local hdd_data='' df_test='' b_total='false'
+	local hdd_used='' a_temp='' df_string=''
+	local hdd_data='' df_test='' swap_size=0
 	
 	if [[ -z $BSD_TYPE ]];then
 		## NOTE: older df do not have --total (eg: v: 6.10 2008)
 		## keep in mind the only value of use with --total is 'used' in blocks, which
 		## we can use later to calculate the real percentags based on disk sizes, not
-		## mounted partitions
-		if df -P -T --total &>/dev/null;then
-			b_total='true'
-			df_total=' --total'
-		fi
+		## mounted partitions. Not using --total because it's more reliable to exclude non /dev
 		df_string="df -P -T --exclude-type=aufs --exclude-type=devfs --exclude-type=devtmpfs 
-		--exclude-type=fdescfs --exclude-type=iso9660 --exclude-type=linprocfs --exclude-type=procfs
-		--exclude-type=squashfs --exclude-type=sysfs --exclude-type=tmpfs --exclude-type=unionfs $df_total"
+		--exclude-type=fdescfs --exclude-type=iso9660 --exclude-type=linprocfs --exclude-type=nfs
+		--exclude-type=nfs3 --exclude-type=nfs4 --exclude-type=nfs5 --exclude-type=procfs  --exclude-type=smbfs
+		--exclude-type=squashfs --exclude-type=sysfs --exclude-type=tmpfs --exclude-type=unionfs"
+		if swapon -s &>/dev/null;then
+			swap_size=$( swapon -s 2>/dev/null | gawk '
+			BEGIN { 
+			swapSize=0
+			total=0
+			}
+			( $2 == "partition" ) && ( $3 ~ /^[0-9]+$/ ) {
+				total += ( 1000 / 1024 ) * $3
+			}
+			END {
+				# result in kB, change to 1024 Byte blocks
+				total = total * 1000 / 1024
+				total = sprintf( "%.1f", total )
+				print total
+			}' )
+		fi
 	else
 		# default size is 512, , so use -k for 1024 -H only for size in human readable format
 		# older bsds don't support -T, pain, so we'll use partial output there
-		df_test=$( df -k -T 2>/dev/null )
-		if df -H -T &>/dev/null;then
+		if df -k -T &>/dev/null;then
 			df_string='df -k -T'
 		else
 			df_string='df -k'
 		fi
+		if swapctl -l &>/dev/null;then
+			swap_size=$( swapctl -l 2>/dev/null | gawk '
+			BEGIN { 
+			swapSize=0
+			total=0
+			}
+			( $1 ~ /^\/dev/ ) && ( $2 ~ /^[0-9]+$/ ) {
+				total += $2
+			}
+			END {
+				# result in blocks already
+				print total
+			}' )
+		fi
 	fi
+	# echo ss: $swap_size
 	hdd_data="$( eval $df_string )"
+	# eval $df_string | awk 'BEGIN{tot=0} !/total/ {tot+=$4} END{print tot}'
 	log_function_data 'raw' "hdd_data:\n$hdd_data"
-	hdd_used=$( echo "$hdd_data" | gawk -v bsdType=$BSD_TYPE -v bTotal=$b_total '
+	hdd_used=$( echo "$hdd_data" | gawk -v bsdType=$BSD_TYPE -v swapSize=$swap_size '
 	BEGIN {
 		# this is used for specific cases where bind, or incorrect multiple mounts to same partitions,
 		# is present. The value is searched for an earlier appearance of that partition and if it is 
@@ -5443,27 +5478,18 @@ get_hdd_data_basic()
 		devSet=""
 		devWorking=""
 		mountWorking=""
-	}
-	# do this first to skip the other tests, if we have the totals, we do not need to calculate them
-	# note there is a risk to this because if a new fs to exclude is present but not excluded
-	# this will include that size data. So far bsd df does not support --exculde-type
-	( bsdType == "" ) && ( bTotal == "true" ) {
-		while ( $1 !~ /^total/ ) {
-			next 
-		}
-		if ($1 ~ /^total/ && $4 ~ /^[0-9]+$/ ) {
-			used = $4
-		}
+		used=0
 	}
 	# using $1, not $2, because older bsd df do not have -T, filesystem type
-	( bsdType != "" ) && $1 ~ /^(aufs|devfs|devtmpfs|fdescfs|filesystem|iso9660|linprocfs|procfs|squashfs|sysfs|tmpfs|type|unionfs)$/ {
+	( bsdType != "" ) && $1 ~ /^(aufs|devfs|devtmpfs|fdescfs|filesystem|iso9660|linprocfs|nfs|nfs3|nfs4|nfs5|procfs|squashfs|smbfs|sysfs|tmpfs|type|unionfs)$/ {
 		# note use next, not getline or it does not work right
 		next 
 	}
 	# also handles odd dm-1 type, from lvm, and mdraid, and some other bsd partition syntax
 	# note that linux 3.2.45-grsec-9th types kernels have this type of partition name: /dev/xvdc (no number, letter)
 	# note: btrfs does not seem to use partition integers, just the primary /dev/sdx identifier
-	( bTotal == "false" ) && /^\/dev\/(mapper\/|[hsv]d[a-z][0-9]*|dm[-]?[0-9]+|ada[0-9]+p[0-9]+.*|md[0-9]+|[aw]d[0-9]+s.*|xvd[a-z])[[:space:]]/ {
+	# df can also show /dev/disk/(by-label|by-uuid etc)
+	/^\/dev\/(disk\/|mapper\/|[hsv]d[a-z][0-9]*|dm[-]?[0-9]+|ada[0-9]+p[0-9]+.*|md[0-9]+|[aw]d[0-9]+s.*|xvd[a-z])/ {
 		# this handles the case where the first item is too long
 		# and makes df wrap output to next line, so here we advance
 		# it to the next line for that single case. Using df -P should
@@ -5505,7 +5531,9 @@ get_hdd_data_basic()
 		}
 	}
 	END {
-		print used
+		used=used + swapSize
+		used = sprintf( "%.1f", used )
+		print used 
 	}' )
 	# echo hdu:$hdd_used
 	if [[ -z $hdd_used ]];then
@@ -5519,7 +5547,7 @@ get_hdd_data_basic()
 
 	if [[ $B_PARTITIONS_FILE == 'true' ]];then
 		A_HDD_DATA=( $(
-		gawk -v hddUsed="$hdd_used" '
+		gawk -v hddUsed=$hdd_used '
 		/[hsv]d[a-z]$/ {
 			driveSize = $(NF - 1)*1024/1000**3
 			gsub(/,/, " ", driveSize)
@@ -5557,6 +5585,7 @@ get_hdd_data_basic()
 	fi
 	IFS="$ORIGINAL_IFS"
 	a_temp=${A_HDD_DATA[@]}
+	# echo ${a_temp[@]}
 	log_function_data "A_HDD_DATA: $a_temp"
 	eval $LOGFE
 }
@@ -8152,7 +8181,8 @@ get_sensors_data()
   		gawk -F ':' -v userCpuNo="$SENSORS_CPU_NO" '
 		BEGIN {
 			IGNORECASE=1
-			core0Temp="" # only if all else fails...
+			core0Temp="" # these only if all else fails...
+			cpuPeciTemp="" # use if temps are missing or wrong
 			cpuTemp=""
 			cpuTempReal=""
 			fanWorking=""
@@ -8167,6 +8197,8 @@ get_sensors_data()
 			sysFanString=""
 			temp1=""
 			temp2=""
+			temp3=""
+			tempDiff=20 # for C, handled for F after that is determined
 			tempFanType="" # set to 1 or 2
 			tempUnit=""
 			tempWorking=""
@@ -8195,8 +8227,17 @@ get_sensors_data()
 				tempUnit=tempWorkingUnit
 			}
 		}
+		# issue 58 msi/asus show wrong for CPUTIN so overwrite it if PECI 0 is present
+		# http://www.spinics.net/lists/lm-sensors/msg37308.html
 		/^CPU(.*)\+([0-9]+)(.*)[ \t°](C|F)/ && $2 ~ /^[ \t]*\+([0-9]+)/ {
 			cpuTemp=gensub( /[ \t]+\+([0-9\.]+)(.*)/, "\\1", 1, $2 )
+			tempWorkingUnit=gensub( /[ \t]+\+([0-9\.]+)[ \t°]+([CF])(.*)/, "\\2", 1, $2 )
+			if ( tempWorkingUnit ~ /^C|F$/ && tempUnit == "" ){
+				tempUnit=tempWorkingUnit
+			}
+		}
+		/^PECI[[:space:]]Agent[[:space:]]0(.*)\+([0-9]+)(.*)[ \t°](C|F)/ && $2 ~ /^[ \t]*\+([0-9]+)/ {
+			cpuPeciTemp=gensub( /[ \t]+\+([0-9\.]+)(.*)/, "\\1", 1, $2 )
 			tempWorkingUnit=gensub( /[ \t]+\+([0-9\.]+)[ \t°]+([CF])(.*)/, "\\2", 1, $2 )
 			if ( tempWorkingUnit ~ /^C|F$/ && tempUnit == "" ){
 				tempUnit=tempWorkingUnit
@@ -8209,9 +8250,10 @@ get_sensors_data()
 				tempUnit=tempWorkingUnit
 			}
 		}
+		# for temp1/2 only use temp1/2 if they are null or greater than the last ones
 		$1 ~ /^temp1$/ && $2 ~ /^[ \t]*\+([0-9]+)/ {
 			tempWorking=gensub( /[ \t]+\+([0-9\.]+)(.*)/, "\\1", 1, $2 )
-			if ( temp1 == "" || tempWorking > 0 ) {
+			if ( temp1 == "" || ( tempWorking != "" && tempWorking > 0 ) ) {
 				temp1=tempWorking
 			}
 			tempWorkingUnit=gensub( /[ \t]+\+([0-9\.]+)[ \t°]+([CF])(.*)/, "\\2", 1, $2 )
@@ -8221,7 +8263,7 @@ get_sensors_data()
 		}
 		$1 ~ /^temp2$/ && $2 ~ /^[ \t]*\+([0-9]+)/ {
 			tempWorking=gensub( /[ \t]+\+([0-9\.]+)(.*)/, "\\1", 1, $2 )
-			if ( temp2 == "" || tempWorking > 0 ) {
+			if ( temp2 == "" || ( tempWorking != "" && tempWorking > 0 ) ) {
 				temp2=tempWorking
 			}
 			tempWorkingUnit=gensub( /[ \t]+\+([0-9\.]+)[ \t°]+([CF])(.*)/, "\\2", 1, $2 )
@@ -8229,12 +8271,22 @@ get_sensors_data()
 				tempUnit=tempWorkingUnit
 			}
 		}
-		
+		# temp3 is only used as an absolute override for systems with all 3 present
+		$1 ~ /^temp3$/ && $2 ~ /^[ \t]*\+([0-9]+)/ {
+			tempWorking=gensub( /[ \t]+\+([0-9\.]+)(.*)/, "\\1", 1, $2 )
+			if ( temp3 == "" || ( tempWorking != "" && tempWorking > 0 ) ) {
+				temp3=tempWorking
+			}
+			tempWorkingUnit=gensub( /[ \t]+\+([0-9\.]+)[ \t°]+([CF])(.*)/, "\\2", 1, $2 )
+			if ( tempWorkingUnit ~ /^C|F$/ && tempUnit == "" ){
+				tempUnit=tempWorkingUnit
+			}
+		}
 		# final fallback if all else fails, funtoo user showed sensors putting
 		# temp on wrapped second line, not handled
-		/^(core0|core 0)(.*)\+([0-9]+)(.*)[ \t°](C|F)/ && $2 ~ /^[ \t]*\+([0-9]+)/ {
+		/^(core0|core 0|Physical id 0)(.*)\+([0-9]+)(.*)[ \t°](C|F)/ && $2 ~ /^[ \t]*\+([0-9]+)/ {
 			tempWorking=gensub( /[ \t]+\+([0-9\.]+)(.*)/, "\\1", 1, $2 )
-			if ( core0Temp == "" || tempWorking > 0 ) {
+			if ( tempWorking != "" && core0Temp == "" && tempWorking > 0 ) {
 				core0Temp=tempWorking
 			}
 			tempWorkingUnit=gensub( /[ \t]+\+([0-9\.]+)[ \t°]+([CF])(.*)/, "\\2", 1, $2 )
@@ -8242,7 +8294,6 @@ get_sensors_data()
 				tempUnit=tempWorkingUnit
 			}
 		}
-		
 		# note: can be cpu fan:, cpu fan speed:, etc. Some cases have no space before
 		# $2 starts (like so :1234 RPM), so skip that space test in regex
 		/^CPU(.*)[ \t]*([0-9]+)[ \t]RPM/ {
@@ -8300,17 +8351,18 @@ get_sensors_data()
 				}
 			}
 		}
-		
 		END {
 			# first we need to handle the case where we have to determine which temp/fan to use for cpu and mobo:
 			# note, for rare cases of weird cool cpus, user can override in their prefs and force the assignment
+			# this is wrong for systems with > 2 tempX readings, but the logic is too complex with 3 variables
+			# so have to accept that it will be wrong in some cases, particularly for motherboard temp readings.
 			if ( temp1 != "" && temp2 != "" ){
 				if ( userCpuNo != "" && userCpuNo ~ /(1|2)/ ) {
 					tempFanType=userCpuNo
 				}
 				else {
 					# first some fringe cases with cooler cpu than mobo: assume which is cpu temp based on fan speed
-					# but only if other fan speed is 0
+					# but only if other fan speed is 0.
 					if ( temp1 >= temp2 && 1 in aFanDefault && 2 in aFanDefault && aFanDefault[1] == 0 && aFanDefault[2] > 0 ) {
 						tempFanType=2
 					}
@@ -8338,38 +8390,91 @@ get_sensors_data()
 					tempFanType=1
 				}
 			}
-			
-			# then get the real cpu temp, best guess is hottest is real
-			if ( cpuTemp != "" ){
-				cpuTempReal=cpuTemp
+			# convert the diff number for F, it needs to be bigger that is
+			if ( tempUnit == "F" ) {
+				tempDiff = tempDiff * 1.8
 			}
-			else if ( tempFanType != "" ){
-				if ( tempFanType == 1 ){
-					cpuTempReal=temp1
+			if ( cpuTemp != "" ) {
+				# specific hack to handle broken CPUTIN temps with PECI
+				if ( cpuPeciTemp != "" && ( cpuTemp - cpuPeciTemp ) > tempDiff ){
+					cpuTempReal=cpuPeciTemp
 				}
+				# then get the real cpu temp, best guess is hottest is real
 				else {
-					cpuTempReal=temp2
+					cpuTempReal=cpuTemp
 				}
 			}
 			else {
-				cpuTempReal=temp1
+				if ( tempFanType != "" ){
+					# there are some weird scenarios
+					if ( tempFanType == 1 ){
+						if ( temp1 != "" && temp2 != "" && temp2 > temp1 ) {
+							cpuTempReal=temp2
+						}
+						else {
+							cpuTempReal=temp1
+						}
+					}
+					else {
+						if ( temp1 != "" && temp2 != "" && temp1 > temp2 ) {
+							cpuTempReal=temp1
+						}
+						else {
+							cpuTempReal=temp2
+						}
+					}
+				}
+				else {
+					cpuTempReal=temp1 # can be null, that is ok
+				}
+				if ( cpuTempReal != "" ) {
+					# using temp3 is just not reliable enough, more errors caused than fixed imo
+					#if ( temp3 != "" && temp3 > cpuTempReal ) {
+					#	cpuTempReal=temp3
+					#}
+					# there are some absurdly wrong temp1: acpitz-virtual-0 temp1: +13.8°C
+					if ( core0Temp != "" && (core0Temp - cpuTempReal) > tempDiff ) {
+						cpuTempReal=core0Temp
+					}
+				}
 			}
-			# if all else fails, use core0 temp if it is present and cpu is null
-			if ( cpuTempReal == "" && core0Temp != "" ) {
-				cpuTempReal=core0Temp
+			# if all else fails, use core0/peci temp if present and cpu is null
+			if ( cpuTempReal == "" ) {
+				if ( core0Temp != "" ) {
+					cpuTempReal=core0Temp
+				}
+				# note that peci temp is known to be colder than the actual system
+				# sometimes so it is the last fallback we want to use even though in theory
+				# it is more accurate, but fact suggests theory wrong.
+				else if ( cpuPeciTemp != "" ) {
+					cpuTempReal=cpuPeciTemp
+				}
 			}
-
 			# then the real mobo temp
 			if ( moboTemp != "" ){
 				moboTempReal=moboTemp
 			}
 			else if ( tempFanType != "" ){
 				if ( tempFanType == 1 ) {
-					moboTempReal=temp2
+					if ( temp1 != "" && temp2 != "" && temp2 > temp1 ) {
+						moboTempReal=temp1
+					}
+					else {
+						moboTempReal=temp2
+					}
 				}
 				else {
-					moboTempReal=temp1
+					if ( temp1 != "" && temp2 != "" && temp1 > temp2 ) {
+						moboTempReal=temp2
+					}
+					else {
+						moboTempReal=temp1
+					}
 				}
+				## NOTE: not safe to assume temp3 is the mobo temp, sad to say
+				#if ( temp1 != "" && temp2 != "" && temp3 != "" && temp3 < moboTempReal ) {
+				#	moboTempReal= temp3
+				#}
 			}
 			else {
 				moboTempReal=temp2
@@ -8387,7 +8492,6 @@ get_sensors_data()
 					aFanDefault[2]=""
 				}
 			}
-
 			# then we need to get the actual numeric max array count for both fan arrays
 			for (i = 0; i <= 29; i++) {
 				if ( i in aFanMain && i > indexCountaFanMain ) {
@@ -8399,7 +8503,6 @@ get_sensors_data()
 					indexCountaFanDefault=i
 				}
 			}
-			
 			# clear out any duplicates. Primary fan real trumps fan working always if same speed
 			for (i = 1; i <= indexCountaFanMain; i++) {
 				if ( i in aFanMain && aFanMain[i] != "" && aFanMain[i] != 0 ) {
@@ -8410,7 +8513,6 @@ get_sensors_data()
 					}
 				}
 			}
-
 			# now see if you can find the fast little mobo fan, > 5000 rpm and put it as mobo
 			# note that gawk is returning true for some test cases when aFanDefault[j] < 5000
 			# which has to be a gawk bug, unless there is something really weird with arrays
@@ -8429,7 +8531,6 @@ get_sensors_data()
 					}
 				}
 			}
-
 			# then construct the sys_fan string for echo, note that iteration 1
 			# makes: fanDefaultString separator null, ie, no space or ,
 			for (j = 1; j <= indexCountaFanDefault; j++) {
@@ -8450,7 +8551,6 @@ get_sensors_data()
 			if ( cpuTempReal != "" ) {
 				cpuTempReal = cpuTempReal tempUnit
 			}
-			
 			# if they are ALL null, print error message. psFan is not used in output currently
 			if ( cpuTempReal == "" && moboTempReal == "" && aFanMain[1] == "" && aFanMain[2] == "" && aFanMain[3] == "" && fanDefaultString == "" ) {
 				print "No active sensors found. Have you configured your sensors yet?"
@@ -11296,7 +11396,6 @@ print_raid_data()
 							recovery_speed=" ${C1}speed$SEP3${C2} ${a_raid_working[15]}"
 						fi
 					fi
-					
 					a_raid_data[$raid_counter]="${C1}Recovering$SEP3${C2} $recovery_percent$recovery_progress_bar$recovered_sectors$finish_time$recovery_speed"
 					(( raid_counter++ ))
 				fi
