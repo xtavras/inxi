@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.26
 ####  Date: 2014-05-01
-####  Patch Number: 02-bsd
+####  Patch Number: 03-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3899,7 +3899,7 @@ get_cpu_data_bsd()
 			cpuVendor=""
 			bSwitchFs="false"
 		}
-		( bsdVersion != "darwin" ) && /^hw.model/ {
+		 /^hw.model/ && ( bsdVersion != "darwin" ) {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
 			sub(//,"",$NF)
@@ -3917,7 +3917,7 @@ get_cpu_data_bsd()
 				exit
 			}
 		}
-		( bSwitchFs != "true" &&  ) && ( bsdVersion == "darwin" ) && ( /^machdep/ || /^kern.osrelease/ ) {
+		( /^machdep/ || /^kern.osrelease/ ) && ( bSwitchFs != "true" && bsdVersion == "darwin" ) {
 			FS=":"
 			bSwitchFs="true"
 		}
@@ -6243,8 +6243,8 @@ get_memory_data()
 		log_function_data 'cat' "$FILE_MEMINFO"
 	elif [[ $B_SYSCTL == 'true' && -n $Sysctl_a_Data ]];then
 		local gawk_fs=': '
-	
-		if [[ $BSD_VERSION == 'openbsd' ]];then
+		# darwin sysctl is broken and uses both : and = and repeats these items
+		if [[ $BSD_VERSION == 'openbsd' || $BSD_VERSION == 'darwin' ]];then
 			gawk_fs='='
 		fi
 		memory=$( grep -i 'mem' <<< "$Sysctl_a_Data" | gawk -F "$gawk_fs"  '
@@ -6253,7 +6253,7 @@ get_memory_data()
 			freeMemory=""
 		}
 		# freebsd seems to use bytes here
-		/^hw.physmem/ {
+		/^hw.physmem/ && ( realMemory != "" ) {
 			gsub(/^[^0-9]+|[^0-9]+$/,"",$2)
 			realMemory = $2/1024
 			if ( freeMemory != "" ) {
