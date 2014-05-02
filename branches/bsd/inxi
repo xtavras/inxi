@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.26
 ####  Date: 2014-05-01
-####  Patch Number: 01-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3897,7 +3897,7 @@ get_cpu_data_bsd()
 			cpuCache=""
 			cpuBogomips=""
 			cpuVendor=""
-			bMach="false"
+			bSwitchFs="false"
 		}
 		( bsdVersion != "darwin" ) && /^hw.model/ {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
@@ -3911,17 +3911,17 @@ get_cpu_data_bsd()
 				exit
 			}
 		}
-		/^hw.(clock|cpufrequency)$/ {
+		/^hw.clock/ {
 			cpuClock=$NF
 			if ( cpuModel != "" ) {
 				exit
 			}
 		}
-		( bMach != "true" ) && /^machdep/ {
+		( bSwitchFs != "true" &&  ) && ( bsdVersion == "darwin" ) && ( /^machdep/ || /^kern.osrelease/ ) {
 			FS=":"
-			bMach="true"
+			bSwitchFs="true"
 		}
-		/^hw.cpufrequency/ {
+		/^hw.cpufrequency/ { # first hit on darwin will be wrong due to = FS
 			cpuClock = $NF / 1000000
 		}
 		/^hw.l2cachesize/ {
@@ -3984,7 +3984,6 @@ get_cpu_flags_bsd()
 	elif [[ -n $Sysctl_a_Data ]];then
 		cpu_flags=$( gawk -F "$gawk_fs" '
 		BEGIN {
-			IGNORECASE=1
 			cpuFlags=""
 		}
 		/^machdep.cpu.features/ {
