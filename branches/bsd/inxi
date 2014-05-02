@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.26
 ####  Date: 2014-05-01
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3878,8 +3878,7 @@ get_cpu_data_bsd()
 	local bsd_cpu_flags=$( get_cpu_flags_bsd )
 	local gawk_fs=': '
 	
-	# note, in darwin, they switch fs from = to : ... sigh
-	if [[ $BSD_VERSION == 'openbsd' || $BSD_VERSION == 'darwin' ]];then
+	if [[ $BSD_VERSION == 'openbsd' ]];then
 		gawk_fs='='
 	fi
 	# avoid setting this for systems where you have no read/execute permissions
@@ -6238,7 +6237,7 @@ get_memory_data()
 	elif [[ $B_SYSCTL == 'true' && -n $Sysctl_a_Data ]];then
 		local gawk_fs=': '
 		# darwin sysctl is broken and uses both : and = and repeats these items
-		if [[ $BSD_VERSION == 'openbsd' || $BSD_VERSION == 'darwin' ]];then
+		if [[ $BSD_VERSION == 'openbsd' ]];then
 			gawk_fs='='
 		fi
 		memory=$( grep -i 'mem' <<< "$Sysctl_a_Data" | gawk -F "$gawk_fs"  '
