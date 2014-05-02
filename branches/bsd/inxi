@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 ########################################################################
 ####  Script Name: inxi
-####  Version: 2.1.25
+####  Version: 2.1.26
 ####  Date: 2014-05-01
-####  Patch Number: 09-darwin
+####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -796,15 +796,16 @@ initialize_data()
 	BSD_VERSION=$( uname -s 2>/dev/null | tr '[A-Z]' '[a-z]' )
 	# note: archbsd says they are a freebsd distro, so assuming it's the same as freebsd
 	if [[ -z ${BSD_VERSION/*bsd*/} || -z ${BSD_VERSION/*darwin*/} ]];then
+		if [[ -z ${BSD_VERSION/*openbsd*/} ]];then
+			BSD_VERSION='openbsd'
+		elif [[ -z ${BSD_VERSION/*darwin*/} ]];then
+			BSD_VERSION='darwin'
+		fi
 		# GNU/kfreebsd will by definition have GNU tools like sed/grep
 		if [[ -z ${BSD_VERSION/*kfreebsd*/} ]];then
 			BSD_TYPE='debian-bsd' # debian gnu bsd
 		else
-			if [[ -z ${BSD_VERSION/*darwin*/} ]];then
-				BSD_TYPE='darwin-bsd' # debian gnu bsd
-			else
-				BSD_TYPE='bsd' # all other bsds
-			fi
+			BSD_TYPE='bsd' # all other bsds
 			SED_I="-i ''"
 			SED_RX='-E'
 			ESC=$(echo | tr '\n' '\033')
@@ -972,7 +973,7 @@ initialize_paths()
 {
 	local path='' added_path='' b_path_found='' sys_path=''
 	# Extra path variable to make execute failures less likely, merged below
-	local extra_paths="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+	local extra_paths="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/opt/local/bin"
 	
 	# this needs to be set here because various options call the parent initialize function directly.
 	SCRIPT_PATH=$( dirname $0 )
@@ -1049,7 +1050,7 @@ check_required_apps()
 	
 	if [[ -z $BSD_TYPE  ]];then
 		depends="$depends lspci"
-	elif [[ $BSD_TYPE == 'bsd' || $BSD_TYPE == 'darwin-bsd' ]];then
+	elif [[ $BSD_TYPE == 'bsd' ]];then
 		depends="$depends sysctl"
 		# debian-bsd has lspci but you must be root to run it
 	elif [[ $BSD_TYPE == 'debian-bsd' ]];then
@@ -1572,7 +1573,7 @@ script_self_updater()
 debug_data_collector()
 {
 	local xiin_app='' xiin_data_file='' xiin_download='' error='' b_run_xiin='false'
-	local debug_data_dir='' bsd_string='' xorg_d_files='' xorg_file=''
+	local debug_data_dir='' bsd_string='' xorg_d_files='' xorg_file='' a_distro_ids=''
 	local completed_gz_file='' xiin_file='xiin.py' ftp_upload='ftp.techpatterns.com/incoming'
 	local Line='-------------------------'
 	local start_directory=$( pwd )
@@ -1612,12 +1613,26 @@ debug_data_collector()
 		echo 'Collecting system info: sensors, lsusb, lspci, lspci -v data, plus /proc data'
 		echo 'also checking for dmidecode data: note, you must be root to have dmidecode work.'
 		echo "Data going into: $SCRIPT_DATA_DIR/$debug_data_dir"
-		# bsd tools
+		# bsd tools http://cb.vu/unixtoolbox.xhtml
+		pciconf -l -cv &> $debug_data_dir/bsd-pciconf-cvl.txt
 		pciconf -vl &> $debug_data_dir/bsd-pciconf-vl.txt
+		pciconf -l &> $debug_data_dir/bsd-pciconf-l.txt
 		sysctl -a &> $debug_data_dir/bsd-sysctl-a.txt
-		
+		usbdevs -v  &> $debug_data_dir/bsd-usbdevs-v.txt
+		kldstat  &> $debug_data_dir/bsd-kldstat.txt
+		# diskinfo -v <disk>
+		# fdisk <disk>
 		dmidecode &> $debug_data_dir/dmidecode.txt
 		
+		if type -p shopt &>/dev/null;then
+			shopt -s nullglob;a_distro_ids=(/etc/*[-_]{release,version});shopt -u nullglob;echo ${a_distro_ids[@]} &> $debug_data_dir/etc-distro-files.txt
+			for distro_file in ${a_distro_ids[@]} /etc/issue
+			do
+				if [[ -f $distro_file ]];then
+					cat $distro_file &> $debug_data_dir/distro-file${distro_file//\//-}
+				fi
+			done
+		fi
 		lscpu &> $debug_data_dir/lscpu.txt
 		lspci &> $debug_data_dir/lspci.txt
 		lspci -k &> $debug_data_dir/lspci-k.txt
@@ -3644,7 +3659,7 @@ get_cpu_core_count()
 		if [[ $BSD_VERSION == 'openbsd' ]];then
 			gawk_fs='='
 		fi
-		cpu_core_count=$( gawk -F "$gawk_fs" -v bsdType=$BSD_TYPE '
+		cpu_core_count=$( gawk -F "$gawk_fs" -v bsdType=$BSD_VERSION '
 		# note: on openbsd can also be hw.ncpufound so exit after first
 		BEGIN {
 			coreCount=""
@@ -3866,7 +3881,7 @@ get_cpu_data_bsd()
 	local gawk_fs=': '
 	
 	# note, in darwin, they switch fs from = to : ... sigh
-	if [[ $BSD_VERSION == 'openbsd' || $BSD_VERSION == 'darwin-bsd' ]];then
+	if [[ $BSD_VERSION == 'openbsd' || $BSD_VERSION == 'darwin' ]];then
 		gawk_fs='='
 	fi
 	# avoid setting this for systems where you have no read/execute permissions
@@ -3874,7 +3889,7 @@ get_cpu_data_bsd()
 	if [[ -n $Sysctl_a_Data || -n $bsd_cpu_flags ]];then
 		IFS=$'\n'
 		A_CPU_DATA=( $( 
-		gawk -F "$gawk_fs" -v bsdType=$BSD_TYPE -v cpuFlags="$bsd_cpu_flags" '
+		gawk -F "$gawk_fs" -v bsdVersion=$BSD_VERSION -v cpuFlags="$bsd_cpu_flags" '
 		BEGIN {
 			IGNORECASE=1
 			cpuModel=""
@@ -3884,7 +3899,7 @@ get_cpu_data_bsd()
 			cpuVendor=""
 			bMach="false"
 		}
-		( bsdType != "darwin-bsd" ) && /^hw.model/ {
+		( bsdVersion != "darwin" ) && /^hw.model/ {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
 			sub(//,"",$NF)
@@ -3902,8 +3917,9 @@ get_cpu_data_bsd()
 				exit
 			}
 		}
-		/^machdep/ {
+		( bMach != "true" ) && /^machdep/ {
 			FS=":"
+			bMach="true"
 		}
 		/^hw.cpufrequency/ {
 			cpuClock = $NF / 1000000
@@ -3925,7 +3941,6 @@ get_cpu_data_bsd()
 			sub(/[[:space:]]*@.*/,"",$NF)
 			cpuModel=$NF
 		}
-		
 		END {
 			print cpuModel "," cpuClock "," cpuCache "," cpuFlags "," cpuBogomips ","  cpuVendor
 			print "N/A"
@@ -3945,7 +3960,6 @@ get_cpu_flags_bsd()
 	if [[ $BSD_VERSION == 'openbsd' ]];then
 		gawk_fs='='
 	fi
-	
 	if [[ -n $Dmesg_Boot_Data ]];then
 		cpu_flags=$( gawk -F "=" '
 		BEGIN {
@@ -4032,7 +4046,6 @@ get_cpu_ht_multicore_smp_data()
 			}
 		}
 		# array of logical processors, both HT and physical
-		
 		/^processor/ {
 			gsub(/,/, " ", $NF)
 			gsub(/^ +| +$/, "", $NF)
@@ -4052,7 +4065,6 @@ get_cpu_ht_multicore_smp_data()
 				a_processor_id[proc_iter] = nr
 			}
 		}
-		
 		# array of physical cpu ids, note, this will be unset for vm cpus in many cases
 		# because they have no physical cpu, so we cannot assume this will be here.
 		/^physical/ {
@@ -4087,7 +4099,6 @@ get_cpu_ht_multicore_smp_data()
 			for ( i in a_physical_id ) {
 				num_of_physical_cpus++
 			}
-			
 			i = 0
 			## count unique cores ##
 			for ( i in a_core_id ) {
@@ -4567,13 +4578,14 @@ get_distro_data()
 	
 	# may need modification if archbsd / debian can be id'ed with /etc files
 	if [[ -n $BSD_TYPE ]];then
-		if [[ $BSD_TYPE != 'darwin-bsd' ]];then
+		if [[ $BSD_VERSION != 'darwin' ]];then
 			distro=$( uname -sr )
 		else
 			if [[ -f /System/Library/CoreServices/SystemVersion.plist ]];then
 				distro=$( grep -A1 -E '(ProductName|ProductVersion)' /System/Library/CoreServices/SystemVersion.plist  | grep '<string>' | sed -E 's/<[\/]?string>//g' )
 				distro=$( echo $distro )
-			else
+			fi
+			if [[ -z $distro ]];then
 				distro='Mac OS X'
 			fi
 		fi
@@ -4965,17 +4977,6 @@ get_dmesg_boot_data()
 	echo "$dmsg_boot_data"
 	# log_function_data "$dmsg_boot_data"
 	eval $LOGFE
-}
-
-get_gcc_kernel_version()
-{
-	# note that we use gawk to get the last part because beta, alpha, git versions can be non-numeric
-	local gccVersion=''
-	
-	if [[ -e /proc/version ]];then
-		gccVersion=$( grep -Eio 'gcc[[:space:]]*version[[:space:]]*([^ \t]*)' /proc/version 2>/dev/null | gawk '{print $3}' )
-	fi
-	echo $gccVersion
 }
 
 get_gcc_system_version()
@@ -5897,9 +5898,9 @@ get_init_data()
 			# epoch version == Epoch Init System 1.0.1 "Sage"
 			init_version=$( get_program_version 'epoch' '^Epoch' '4' )
 		elif type -p launchctl &>/dev/null;then
-			init_type='Launchctl'
-			# epoch version == Epoch Init System 1.0.1 "Sage"
-			# init_version=$( get_program_version 'Launchctl' '^Launchctl' '4' )
+			init_type='launchd'
+			#  / launchd/ version.plist /etc/launchd.conf
+			# init_version=$( get_program_version 'Launchd' '^Launchd' '4' )
 		# missing data: 
 		# http://smarden.org/runit/sv.8.html
 		elif [[ -e /sbin/runit-init || -e /etc/runit || -n $( type -p sv ) ]];then
@@ -5954,6 +5955,49 @@ get_init_data()
 	eval $LOGFE
 }
 
+get_kernel_compiler_version()
+{
+	# note that we use gawk to get the last part because beta, alpha, git versions can be non-numeric
+	local compiler_version='' compiler_type=''
+	
+	if [[ -e /proc/version ]];then
+		compiler_version=$( grep -Eio 'gcc[[:space:]]*version[[:space:]]*([^ \t]*)' /proc/version 2>/dev/null | gawk '{print $3}' )
+		if [[ -n $compiler_version ]];then
+			compiler_type='gcc'
+		fi
+	else
+		if [[ $BSD_VERSION == 'darwin' ]];then
+			if type -p gcc &>/dev/null;then
+				compiler_version=$( get_program_version 'gcc' 'Apple[[:space:]]LLVM' '4' )
+				if [[ -n $compiler_version ]];then
+					compiler_type='LLVM-GCC'
+				fi
+			fi
+		else
+			if [[ -f /etc/src.conf ]];then
+				compiler_type=$( grep '^CC' /etc/src.conf | cut -d '=' -f 2 )
+			elif [[ -f /etc/make.conf ]];then
+				compiler_type=$( grep '^CC' /etc/make.conf | cut -d '=' -f 2 )
+			fi
+			if [[ -n $compiler_type ]];then
+				if type -p $compiler_type &>/dev/null;then
+					if [[ $compiler_type == 'gcc' ]];then
+						compiler_version=$( get_program_version 'gcc' '^gcc' '3' )
+					elif [[ $compiler_type == 'clang' ]];then
+						# FreeBSD clang version 3.0 (tags/RELEASE_30/final 145349) 20111210
+						compiler_version=$( get_program_version 'clang' 'clang' '4' )
+					fi
+				fi
+			fi
+		fi
+	fi
+	if [[ -n $compiler_version ]];then
+		compiler_version="$compiler_type-$compiler_version"
+	fi
+	echo $compiler_version
+}
+
+
 get_kernel_version()
 {
 	eval $LOGFS
@@ -5961,7 +6005,9 @@ get_kernel_version()
 	local kernel_version='' ksplice_kernel_version=''
 	
 	kernel_version=$( uname -rm )
-	
+	if [[ $BSD_VERSION == 'darwin' ]];then
+		kernel_version="Darwin $kernel_version"
+	fi
 	if [[ -n $( type -p uptrack-uname ) && -n $kernel_version ]];then
 		ksplice_kernel_version=$( uptrack-uname -rm )
 		if [[ $kernel_version != $ksplice_kernel_version ]];then
@@ -7065,7 +7111,7 @@ get_partition_data()
 		dev_item=${a_partition_working[6]} # reset each loop
 		fs_type=${a_partition_working[5]}
 		# older bsds have df minus -T so can't get fs type easily, try using mount instead
-		if [[ $BSD_TYPE == 'bsd' && -z $fs_type && -n $dev_item ]];then
+		if [[ $BSD_TYPE == 'bsd' ]] && [[ -z $fs_type && -n $dev_item ]];then
 			dev_bsd_item=$( sed -e 's/non-dev-//' -e 's|/|\\/|g' <<< "$dev_item" )
 			fs_type=$( gawk -F '(' '
 			/'$dev_bsd_item'/ {
@@ -10232,7 +10278,7 @@ print_info_data()
 	local processes=$(( $( wc -l <<< "$Ps_aux_Data" ) - 1 ))
 	local up_time="$( get_uptime )"
 	local patch_version_number=$( get_patch_version_string )
-	local gcc_string='' gcc_installed='' gcc_others='' closing_data='' 
+	local gcc_installed='' gcc_others='' closing_data='' 
 	
 	if [[ -z $memory ]];then
 		memory='N/A'
@@ -11782,7 +11828,7 @@ print_system_data()
 	local host_name=$HOSTNAME
 	local current_kernel=$( get_kernel_version ) 
 	local distro="$( get_distro_data )"
-	local tty_session=''
+	local tty_session='' compiler_string=''
 	
 	# I think these will work, maybe, if logged in as root and in X
 	if [[ $B_RUNNING_IN_DISPLAY == 'true' ]];then
@@ -11823,9 +11869,9 @@ print_system_data()
 		fi
 	fi
 	if [[ $B_EXTRA_DATA == 'true' ]];then
-		gcc_string=$( get_gcc_kernel_version )
-		if [[ -n $gcc_string ]];then
-			gcc_string=" ${C1}gcc$SEP3${C2} $gcc_string"
+		compiler_string=$( get_kernel_compiler_version )
+		if [[ -n $compiler_string ]];then
+			compiler_string=" ${C1}${compiler_string%%-*}$SEP3${C2} ${compiler_string#*-}"
 		fi
 	fi
 	# check for 64 bit first
@@ -11834,7 +11880,7 @@ print_system_data()
 	else
 		bits="32"
 	fi
-	bits=" ($bits bit$gcc_string)"
+	bits=" ($bits bit$compiler_string)"
 	if [[ $B_SHOW_HOST == 'true' ]];then
 		if [[ -z $HOSTNAME ]];then
 			if [[ -n $( type p hostname ) ]];then
