@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.1.26
 ####  Date: 2014-05-01
-####  Patch Number: 05-bsd
+####  Patch Number: 06-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5984,7 +5984,7 @@ get_kernel_compiler_version()
 		fi
 	fi
 	if [[ -n $compiler_version ]];then
-		compiler_version="$compiler_type-$compiler_version"
+		compiler_version="$compiler_type^$compiler_version"
 	fi
 	echo $compiler_version
 }
@@ -11868,7 +11868,7 @@ print_system_data()
 	if [[ $B_EXTRA_DATA == 'true' ]];then
 		compiler_string=$( get_kernel_compiler_version )
 		if [[ -n $compiler_string ]];then
-			compiler_string=" ${C1}${compiler_string%%-*}$SEP3${C2} ${compiler_string#*-}"
+			compiler_string=" ${C1}${compiler_string%^*}$SEP3${C2} ${compiler_string#*^}"
 		fi
 	fi
 	# check for 64 bit first
