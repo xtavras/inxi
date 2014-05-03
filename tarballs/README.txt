@@ -1,6 +1,6 @@
-README for tarballs directory in svn
+README for svn/tarballs directory.
 
-This directory  is intended to be a repository of older .gz/.tar.gz files 
+This directory is intended to be a repository of older .gz/.tar.gz files 
 from svn trunk. Tarballs contain the following (as of version 1.8.34, 
 pre 1.8 the .gz is just inxi itself):
 
@@ -15,7 +15,8 @@ maintainers can always grab the same file without having to poke around.
 
 -- trunk is always by definition, the current stable live files. 
 
--- Only one command to grab the currrent tarball, wget -Nc inxi.tar.gz
+-- Only one command to grab the currrent tarball (inxi.tar.gz):
+   wget -Nc https://inxi.googlecode.com/svn/trunk/inxi.tar.gz 
    This will never change, so you can set your update / packaging scripts
    to use that url always.
 
