@@ -1,7 +1,8 @@
 README for tarballs
 
 This folder is intended to be a repository of older tarballs from svn trunk/
-Tarballs contain the following:
+Tarballs contain the following (as of version 1.8.34, pre 1.8 the gz is just 
+inxi itself):
 
 inxi
 inxi.1 (non gzipped man page)
@@ -47,6 +48,11 @@ The fourth, "6", is extra information from Tarball maintainer, when either the
 third digit has not changed, but there is a change or a patch comes out, 
 and the Tarball maintainer has time to pack the change. I don't usually use this last one.
  
-Purpose: To provide a "kind of" audit trail of most tarballs. 
-Act as a repository of older tarballs. 
-Users must always use the most recent tarball for support
+This 'tarballs' directory provides a "kind of" audit trail of inxi releases, and
+is a sort of repository of older inxi versions. Note that inxi did not have .tar.gz
+until the man page was added, version 1.8.2. Before that, the gz is just the gz
+of inxi itself, nothing more. inxi_1.8.34.tar.gz is the first version that
+includes the inxi.1 and inxi change log files as well.
+ 
+Users must always use the most recent version of for support.
+
