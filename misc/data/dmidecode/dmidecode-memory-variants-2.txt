@@ -325,7 +325,8 @@ Memory Device
 
 
 ## item 3 ##
-## Machine:   Mobo: Gigabyte model: 8I915PL-G inxi-ava-20140705-173511-all
+## Mobo: Gigabyte model: 8I915PL-G 
+## inxi-ava-20140705-173511-all
 
 SMBIOS 2.7 present.
 96 structures occupying 3598 bytes.
@@ -2211,7 +2212,7 @@ Memory Device
 	Part Number: Array1_PartNumber3
 	Rank: Unknown
 
-## Item 18 ** mixed up order
+## Item 18 ## ** mixed up order
 ## inxi-zaldaryn-20140816-092239-all-root
 ## Mobo: ASUSTeK model: CM6330_CM6630_CM6730_CM6830
 ## http://www.crucial.com/usa/en/compatible-upgrade-for/ASUS/cm6330cm6630cm6730cm6830
@@ -2481,3 +2482,326 @@ Memory Device
 	Asset Tag: AssetTagNum1
 	Part Number: PartNum1
 
+## item 21 ##
+## inxi-decembr_kde-20140818-211119-all-root
+## Dell Studio 1737 (  0P786H )
+## http://www.crucial.com/usa/en/compatible-upgrade-for/Dell/studio-1737
+## Maximum memory: 8192MB Slots: 2 (2 banks of 1)
+
+# dmidecode 2.12
+SMBIOS 2.5 present.
+51 structures occupying 2022 bytes.
+Table at 0x000F0FE0.
+
+## cap right
+
+Handle 0x0015, DMI type 16, 15 bytes
+Physical Memory Array
+	Location: System Board Or Motherboard
+	Use: System Memory
+	Error Correction Type: None
+	Maximum Capacity: 8 GB
+	Error Information Handle: Not Provided
+	Number Of Devices: 2
+
+Handle 0x0016, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x0015
+	Error Information Handle: No Error
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 2048 MB
+	Form Factor: SODIMM
+	Set: 1
+	Locator: DIMM_A
+	Bank Locator: Not Specified
+	Type: DDR2
+	Type Detail: Synchronous
+	Speed: 800 MHz
+	Manufacturer: AD00000000000000
+	Serial Number: 00002077
+	Asset Tag: 41410850
+	Part Number: HYMP125S64CP8-S6  
+
+Handle 0x0017, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x0015
+	Error Information Handle: No Error
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 2048 MB
+	Form Factor: SODIMM
+	Set: 1
+	Locator: DIMM_B
+	Bank Locator: Not Specified
+	Type: DDR2
+	Type Detail: Synchronous
+	Speed: 800 MHz
+	Manufacturer: AD00000000000000
+	Serial Number: 00003059
+	Asset Tag: 41410850
+	Part Number: HYMP125S64CP8-S6  
+
+## item 22 ##
+## inxi-websvr***-20140818-210744-all-root
+## ASRock Q1900-ITX
+## http://www.crucial.com/usa/en/compatible-upgrade-for/ASRock/q1900-itx
+## Maximum memory: 16384MB Slots: 2 (2 banks of 1)
+
+# dmidecode 2.11
+SMBIOS 2.8 present.
+# SMBIOS implementations newer than version 2.7 are not
+# fully supported by this version of dmidecode.
+19 structures occupying 1176 bytes.
+Table at 0x000EBD40.
+
+## cap wrong, actual 16gb
+
+Handle 0x000B, DMI type 16, 23 bytes
+Physical Memory Array
+	Location: System Board Or Motherboard
+	Use: System Memory
+	Error Correction Type: None
+	Maximum Capacity: 64 GB
+	Error Information Handle: Not Provided
+	Number Of Devices: 2
+
+Handle 0x000D, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x000B
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 4096 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: A1_DIMM0
+	Bank Locator: A1_BANK0
+	Type: DDR3
+	Type Detail: Unknown
+	Speed: 1333 MHz
+	Manufacturer: Corsair         
+	Serial Number: 00000000  
+	Asset Tag: A1_AssetTagNum0
+	Part Number: CMSO4GX3M1A1333C9 
+	Rank: 1
+	Configured Clock Speed: 1333 MHz
+
+Handle 0x000F, DMI type 17, 40 bytes
+Memory Device
+	Array Handle: 0x000B
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 4096 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: A1_DIMM1
+	Bank Locator: A1_BANK1
+	Type: DDR3
+	Type Detail: Unknown
+	Speed: 1333 MHz
+	Manufacturer: Corsair         
+	Serial Number: 00000000  
+	Asset Tag: A1_AssetTagNum1
+	Part Number: CMSO4GX3M1A1333C9 
+	Rank: 1
+	Configured Clock Speed: 1333 MHz
+
+## item 23 ##
+## inxi-web*siek*-20140818-215820-all-root
+## MICRO-STAR INTERNATIONA MS-96B3
+## 
+## 
+
+# dmidecode 2.11
+SMBIOS 2.5 present.
+48 structures occupying 1891 bytes.
+Table at 0x0009F400.
+
+Handle 0x0024, DMI type 16, 15 bytes
+Physical Memory Array
+	Location: System Board Or Motherboard
+	Use: System Memory
+	Error Correction Type: None
+	Maximum Capacity: 8 GB
+	Error Information Handle: Not Provided
+	Number Of Devices: 4
+
+Handle 0x0026, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x0024
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 1024 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM0
+	Bank Locator: BANK0
+	Type: DDR2
+	Type Detail: Synchronous
+	Speed: 400 MHz
+	Manufacturer: Manufacturer0
+	Serial Number: SerNum0
+	Asset Tag: AssetTagNum0
+	Part Number: PartNum0
+
+Handle 0x0028, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x0024
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 1024 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM1
+	Bank Locator: BANK1
+	Type: DDR2
+	Type Detail: Synchronous
+	Speed: 400 MHz
+	Manufacturer: Manufacturer1
+	Serial Number: SerNum1
+	Asset Tag: AssetTagNum1
+	Part Number: PartNum1
+
+Handle 0x002A, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x0024
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 1024 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM2
+	Bank Locator: BANK2
+	Type: DDR2
+	Type Detail: Synchronous
+	Speed: 400 MHz
+	Manufacturer: Manufacturer2
+	Serial Number: SerNum2
+	Asset Tag: AssetTagNum2
+	Part Number: PartNum2
+
+Handle 0x002C, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x0024
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 1024 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM3
+	Bank Locator: BANK3
+	Type: DDR2
+	Type Detail: Synchronous
+	Speed: 400 MHz
+	Manufacturer: Manufacturer3
+	Serial Number: SerNum3
+	Asset Tag: AssetTagNum3
+	Part Number: PartNum3
+
+## item 24 ##
+## inxi-dev.siduct*-20140818-213715-all-root
+## ASUSTeK P8B WS
+## http://www.crucial.com/usa/en/compatible-upgrade-for/ASUS/p8b-ws
+## Maximum memory: 32768MB Slots: 4 (2 banks of 2)
+
+# dmidecode 2.11
+SMBIOS 2.6 present.
+101 structures occupying 3553 bytes.
+Table at 0x000EB0F0.
+
+## cap right
+
+Handle 0x0024, DMI type 16, 15 bytes
+Physical Memory Array
+	Location: System Board Or Motherboard
+	Use: System Memory
+	Error Correction Type: None
+	Maximum Capacity: 32 GB
+	Error Information Handle: No Error
+	Number Of Devices: 4
+
+Handle 0x0027, DMI type 17, 28 bytes
+Memory Device
+	Array Handle: 0x0024
+	Error Information Handle: No Error
+	Total Width: 72 bits
+	Data Width: 64 bits
+	Size: 4096 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM0
+	Bank Locator: BANK0
+	Type: DDR3
+	Type Detail: Synchronous
+	Speed: 1333 MHz
+	Manufacturer: Kingston     
+	Serial Number: 5B0ECD3
+	Asset Tag: AssetTagNum0
+	Part Number: 9965525-010.A00LF 
+	Rank: 2
+
+Handle 0x002A, DMI type 17, 28 bytes
+Memory Device
+	Array Handle: 0x0024
+	Error Information Handle: No Error
+	Total Width: 72 bits
+	Data Width: 64 bits
+	Size: 4096 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM1
+	Bank Locator: BANK1
+	Type: DDR3
+	Type Detail: Synchronous
+	Speed: 1333 MHz
+	Manufacturer: Kingston     
+	Serial Number: 5C0E2C3
+	Asset Tag: AssetTagNum1
+	Part Number: 9965525-010.A00LF 
+	Rank: 2
+
+Handle 0x002D, DMI type 17, 28 bytes
+Memory Device
+	Array Handle: 0x0024
+	Error Information Handle: No Error
+	Total Width: 72 bits
+	Data Width: 64 bits
+	Size: 4096 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM2
+	Bank Locator: BANK2
+	Type: DDR3
+	Type Detail: Synchronous
+	Speed: 1333 MHz
+	Manufacturer: Kingston     
+	Serial Number: 740EEC3
+	Asset Tag: AssetTagNum2
+	Part Number: 9965525-010.A00LF 
+	Rank: 2
+
+Handle 0x0030, DMI type 17, 28 bytes
+Memory Device
+	Array Handle: 0x0024
+	Error Information Handle: No Error
+	Total Width: 72 bits
+	Data Width: 64 bits
+	Size: 4096 MB
+	Form Factor: DIMM
+	Set: None
+	Locator: DIMM3
+	Bank Locator: BANK3
+	Type: DDR3
+	Type Detail: Synchronous
+	Speed: 1333 MHz
+	Manufacturer: Kingston     
+	Serial Number: 900E281
+	Asset Tag: AssetTagNum3
+	Part Number: 9965525-010.A00LF 
+	Rank: 2
