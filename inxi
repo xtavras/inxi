@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 ########################################################################
 ####  Script Name: inxi
-####  Version: 2.1.26
-####  Date: 2014-05-01
-####  Patch Number: 09-bsd
+####  Version: 2.2.1
+####  Date: 2014-08-20
+####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1575,7 +1575,7 @@ debug_data_collector()
 	local xiin_app='' xiin_data_file='' xiin_download='' error='' b_run_xiin='false'
 	local debug_data_dir='' bsd_string='' xorg_d_files='' xorg_file='' a_distro_ids=''
 	local completed_gz_file='' xiin_file='xiin.py' ftp_upload='ftp.techpatterns.com/incoming'
-	local Line='-------------------------'
+	local Line='-------------------------' root_string=''
 	local start_directory=$( pwd )
 	local host=$( tr '[A-Z]' '[a-z]' <<< "$HOSTNAME" )
 	if [[ -n $host ]];then
@@ -1586,8 +1586,11 @@ debug_data_collector()
 	if [[ -n $BSD_TYPE ]];then
 		bsd_string="-$BSD_TYPE"
 	fi
+	if [[ $( whoami ) == 'root' ]];then
+		root_string='-root'
+	fi
 	
-	debug_data_dir="inxi$bsd_string-$host-$(date +%Y%m%d-%H%M%S)-$1" 
+	debug_data_dir="inxi$bsd_string-$host-$(date +%Y%m%d-%H%M%S)-$1$root_string" 
 	
 	if [[ $B_IRC == 'false' ]];then
 		if [[ -n $ALTERNATE_FTP ]];then
@@ -1669,6 +1672,8 @@ debug_data_collector()
 		ls /usr/bin/gcc* &> $debug_data_dir/gcc-sys-versions.txt
 		gcc --version &> $debug_data_dir/gcc-version.txt
 		clang --version &> $debug_data_dir/clang-version.txt
+		cat /etc/src.conf &> $debug_data_dir/bsd-etc-src-conf.txt
+		cat /etc/make.conf &> $debug_data_dir/bsd-etc-make-conf.txt
 		cat /etc/issue &> $debug_data_dir/etc-issue.txt
 		cat $FILE_LSB_RELEASE &> $debug_data_dir/lsb-release.txt
 		cat $FILE_OS_RELEASE &> $debug_data_dir/os-release.txt
@@ -1827,7 +1832,7 @@ debug_data_collector()
 		echo 'Creating inxi output file now. This can take a few seconds...'
 		echo "Starting $SCRIPT_NAME from: $start_directory"
 		cd $start_directory
-		$SCRIPT_PATH/$SCRIPT_NAME -FRfrploudxxx -c 0 -@ 8 -y 120 > $SCRIPT_DATA_DIR/$debug_data_dir/inxi-FRfrploudxxxy120.txt
+		$SCRIPT_PATH/$SCRIPT_NAME -FRfrploudmxxx -c 0 -@ 8 -y 120 > $SCRIPT_DATA_DIR/$debug_data_dir/inxi-FRfrploudmxxxy120.txt
 		cp $LOG_FILE $SCRIPT_DATA_DIR/$debug_data_dir
 		if [[ -f $SCRIPT_DATA_DIR/$debug_data_dir.tar.gz ]];then
 			echo "Found and removing previous tar.gz data file: $debug_data_dir.tar.gz"
@@ -2161,8 +2166,9 @@ print_screen_output()
 create_print_line()
 {
 	eval $LOGFS
-	local line=${2% } #trim off trailing space if present, note: ${CN} may hide the actual trailing end space
-	printf "${C1}%-${INDENT}s${C2} %s" "$1" "$line"
+	# convoluted, yes, but it works to trim spaces off end
+	local line=${2%${2##*[![:space:]]}}
+	printf "${C1}%-${INDENT}s${C2} %s" "$1" "$line${CN}"
 	eval $LOGFE
 }
 
@@ -2405,6 +2411,7 @@ get_parameters()
 					if [[ $OPTARG -ge 5 ]];then
 						B_SHOW_AUDIO='true'
 						B_SHOW_BASIC_OPTICAL='true'
+						B_SHOW_MEMORY='true'
 						B_SHOW_SENSORS='true'
 						B_SHOW_LABELS='true'
 						B_SHOW_UUIDS='true'
@@ -2629,7 +2636,7 @@ show_options()
 	# print_screen_output " "
 	print_lines_basic "0" "" "$SCRIPT_NAME supports the following options. You can combine them, or list them one by one. Examples: $SCRIPT_NAME^-v4^-c6 OR $SCRIPT_NAME^-bDc^6. If you start $SCRIPT_NAME with no arguments, it will show the short form."
 	print_screen_output " "
-	print_lines_basic "0" "" "The following options if used without -F, -b, or -v will show just option line(s): A, C, D, G, I, M, N, P, R, S, f, i, n, o, p, l, u, r, s, t - you can use these alone or together to show just the line(s) you want to see. If you use them with -v^[level], -b or -F, it will show the full output for that line along with the output for the chosen verbosity level."
+	print_lines_basic "0" "" "The following options if used without -F, -b, or -v will show just option line(s): A, C, D, G, I, M, N, P, R, S, f, i, m, n, o, p, l, u, r, s, t - you can use these alone or together to show just the line(s) you want to see. If you use them with -v^[level], -b or -F, it will show the full output for that line along with the output for the chosen verbosity level."
 	print_screen_output "- - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 	print_screen_output "Output Control Options:"
 	print_lines_basic "1" "-A" "Audio/sound card information."
@@ -2649,12 +2656,13 @@ show_options()
 	print_lines_basic "1" "-d" "Optical drive data. Same as -Dd. See also -x and -xx."
 	print_lines_basic "1" "-D" "Full hard Disk info, not only model, ie: /dev/sda ST380817AS 80.0GB. See also -x and -xx. Disk total used percentage includes swap partition size(s)."
 	print_lines_basic "1" "-f" "All cpu flags, triggers -C. Not shown with -F to avoid spamming. ARM cpus show 'features'."
-	print_lines_basic "1" "-F" "Full output for $SCRIPT_NAME. Includes all Upper Case line letters, plus -s and -n. Does not show extra verbose options like -x -d -f -u -l -o -p -t -r"
+	print_lines_basic "1" "-F" "Full output for $SCRIPT_NAME. Includes all Upper Case line letters, plus -s and -n. Does not show extra verbose options like -d -f -l -m -o -p -r -t -u -x"
 	print_lines_basic "1" "-G" "Graphic card information (card, display server type/version, resolution, glx renderer, version)."
 	print_lines_basic "1" "-i" "Wan IP address, and shows local interfaces (requires ifconfig 
 	network tool). Same as -Nni. Not shown with -F for user security reasons, you shouldn't paste your local/wan IP."
 	print_lines_basic "1" "-I" "Information: processes, uptime, memory, irc client (or shell type), $SCRIPT_NAME version."
 	print_lines_basic "1" "-l" "$partition_string_u labels. Default: short $partition_string -P. For full -p output, use: -pl (or -plu)."
+	print_lines_basic "1" "-m" "Memory (RAM) data. Physical system memory array(s), capacity, how many devices (slots) supported, and individual memory devices (sticks of memory etc). For devices, shows device locator, size, speed, type (like: DDR3). Also see -x, -xx, -xxx"
 	print_lines_basic "1" "-M" "Machine data. Motherboard, Bios, and if present, System Builder (Like Lenovo). Older systems/kernels without the required /sys data can use dmidecode instead, run as root. Dmidecode can be forced with -! 33"
 	print_lines_basic "1" "-n" "Advanced Network card information. Same as -Nn. Shows interface, speed, mac id, state, etc."
 	print_lines_basic "1" "-N" "Network card information. With -x, shows PCI BusID, Port number."
@@ -2675,7 +2683,7 @@ show_options()
 	print_lines_basic "2" "2" "Networking card (-N), Machine (-M) data, shows basic hard disk data (names only), and, if present, basic raid (devices only, and if inactive, notes that). similar to: $SCRIPT_NAME^-b"
 	print_lines_basic "2" "3" "Advanced CPU (-C), network (-n) data, and switches on -x advanced data option."
 	print_lines_basic "2" "4" "$partition_string_u size/filled data (-P) for (if present): /, /home, /var/, /boot. Shows full disk data (-D)."
-	print_lines_basic "2" "5" "Audio card (-A); sensors^(-s), $partition_string label^(-l) and UUID^(-u), short form of optical drives, standard raid data (-R)."
+	print_lines_basic "2" "5" "Audio card (-A); sensors^(-s), memory/ram^(-m), $partition_string label^(-l) and UUID^(-u), short form of optical drives, standard raid data (-R)."
 	print_lines_basic "2" "6" "Full $partition_string (-p), unmounted $partition_string (-o), optical drive (-d), full raid; triggers -xx."
 	print_lines_basic "2" "7" "Network IP data (-i); triggers -xxx."
 	
@@ -2692,6 +2700,7 @@ show_options()
 	print_lines_basic "2" "-G" "(for single gpu, nvidia driver) screen number gpu is running on."
 	print_lines_basic "2" "-i" "IPv6 as well for LAN interface (IF) devices."
 	print_lines_basic "2" "-I" "System GCC, default. With -xx, also show other installed GCC versions. If running in console, not in IRC client, shows shell version number, if detected. Init/RC Type and runlevel (if available)."
+	print_lines_basic "2" "-m" "Part number; Max memory module size (if available)."
 	print_lines_basic "2" "-N -A" "Version/port(s)/driver version (if available) for Network/Audio;"
 	print_lines_basic "2" "-N -A -G" "Network, audio, graphics, shows PCI Bus ID/Usb ID number of card."
 	print_lines_basic "2" "-R" "md-raid: Shows component raid id. Adds second RAID Info line: raid level; report on drives (like 5/5); blocks; chunk size; bitmap (if present). Resync line, shows blocks synced/total blocks. zfs-raid:	Shows raid array full size; available size; portion allocated to RAID"
@@ -2705,6 +2714,7 @@ show_options()
 	print_lines_basic "2" "-D" "Disk serial number."
 	print_lines_basic "2" "-G" "Chip vendor:product ID for each video card."
 	print_lines_basic "2" "-I" "Other detected installed gcc versions (if present). System default runlevel. Adds parent program (or tty) for shell info if not in IRC (like Konsole or Gterm). Adds Init/RC (if found) version number."
+	print_lines_basic "2" "-m" "Manufacturer, Serial Number, single/double bank (if found)."
 	print_lines_basic "2" "-M" "Chassis information, bios rom size (dmidecode only), if data for either is available."
 	print_lines_basic "2" "-N" "Chip vendor:product ID for each nic."
 	print_lines_basic "2" "-R" "md-raid: Superblock (if present); algorythm, U data. Adds system info line (kernel support,read ahead, raid events). If present, adds unused device line. Resync line, shows progress bar."
@@ -2714,6 +2724,7 @@ show_options()
 	fi
 	print_lines_basic "2" "-@ 11-14" "Automatically uploads debugger data tar.gz file to ftp.techpatterns.com. EG: $SCRIPT_NAME^-xx@14"
 	print_lines_basic "1" "-xxx" "Show extra, extra, extra data (only works with verbose or line output, not short form):"
+	print_lines_basic "2" "-m" "Width of memory bus, data and total (if present and greater than data); Detail, if present, for Type; module voltage, if available."
 	print_lines_basic "2" "-S" "Panel/shell information in desktop output, if in X (like gnome-shell, cinnamon, mate-panel)."
 	if [[ $B_ALLOW_WEATHER == 'true' ]];then
 		print_lines_basic "2" "-w -W" "Location (uses -z/irc filter), weather observation time, wind chill, heat index, dew point (shows extra lines for data where relevant)."
@@ -3462,7 +3473,7 @@ get_audio_data()
 			else if (/kernel modules:/) {
 				modules[audioCard] = modules[audioCard] gensub( /(.*): (.*)/ ,"\\2" ,"g" ,$0 ) ""
 			}
-			else if (/I\/O/) {
+			else if (/^[[:space:]]*I\/O/) {
 				portsTemp = gensub(/\t*I\/O ports at (.*) \[.*\]/,"\\1","g",$0)
 				ports[audioCard] = ports[audioCard] portsTemp " "
 			}
@@ -3871,7 +3882,6 @@ get_cpu_speed_hack()
 	echo $speed
 }
 
-
 get_cpu_data_bsd()
 {
 	eval $LOGFS
@@ -3919,7 +3929,7 @@ get_cpu_data_bsd()
 			cpuClock = $NF / 1000000
 		}
 		/^hw.l2cachesize/ {
-			cpuCache=$NF/1000
+			cpuCache=$NF/1024
 			cpuCache=cpuCache " kB"
 		}
 		/^machdep.cpu.vendor/ {
@@ -4165,7 +4175,7 @@ get_desktop_environment()
 	eval $LOGFS
 	
 	# set the default, this function only runs in X, if null, don't print data out
-	local desktop_environment='' xprop_root=''
+	local desktop_environment='' xprop_root='' version2=''
 	local version='' version_data='' toolkit=''
 
 	# works on 4, assume 5 will id the same, why not, no need to update in future
@@ -4251,7 +4261,7 @@ get_desktop_environment()
 			desktop_environment="MATE"
 		# note, GNOME_DESKTOP_SESSION_ID is deprecated so we'll see how that works out
 		# https://bugzilla.gnome.org/show_bug.cgi?id=542880
-		elif [[ -n $GNOME_DESKTOP_SESSION_ID ]]; then
+		elif [[ -n $GNOME_DESKTOP_SESSION_ID || $XDG_CURRENT_DESKTOP == 'GNOME' ]]; then
 			if type -p gnome-shell &>/dev/null;then
 				version=$( get_program_version 'gnome-shell' 'gnome' '3' )
 			elif type -p gnome-about &>/dev/null;then
@@ -4304,6 +4314,27 @@ get_desktop_environment()
 						fi
 					fi
 					desktop_environment="Xfce"
+				# case where no xfce number exists, just xfce
+				elif [[ -n $( grep -is 'xfce' <<< "$xprop_root" ) ]];then
+					version=$( get_program_version 'xfdesktop' 'xfdesktop[[:space:]]version' '5' )
+					# arch linux reports null, so use alternate if null
+					if [[ -z $version ]];then
+						version=$( get_program_version 'xfce4-panel' '^xfce5-panel' '2' )
+						if [[ -z $version ]];then
+							# version=$( get_program_version 'xfce5-panel' '^xfce5-panel' '2' )
+							#if [[ -z $version ]];then
+							#	version='5'
+							#fi
+							version='4'
+						fi
+					fi
+					if [[ $B_EXTRA_DATA == 'true' ]];then
+						toolkit=$( get_program_version 'xfdesktop' 'Built[[:space:]]with[[:space:]]GTK' '4' )
+						if [[ -n $toolkit ]];then
+							version="$version (Gtk $toolkit)"
+						fi
+					fi
+					desktop_environment="Xfce"
 				elif [[ -n $( grep -is 'BLACKBOX_PID' <<< "$xprop_root" ) ]];then
 					if [[ -n $( grep -is 'fluxbox' <<< "$Ps_aux_Data" ) ]];then
 						version=$( get_program_version 'fluxbox' '^fluxbox' '2' )
@@ -4315,18 +4346,25 @@ get_desktop_environment()
 					# note: openbox-lxde --version may be present, but returns openbox data
 					version=$( get_program_version 'openbox' '^openbox' '2' )
 					if [[ $XDG_CURRENT_DESKTOP == 'LXDE' || \
-							-n $( grep -is 'lxde' <<< "$Ps_aux_Data" ) ]];then
+							-n $( grep -is '/lxsession' <<< "$Ps_aux_Data" ) ]];then
 						if [[ -n $version ]];then
 							version="(Openbox $version)"
 						fi
 						desktop_environment='LXDE'
-					elif [[ -n $( grep -is 'razor-desktop' <<< "$Ps_aux_Data" ) ]];then
+					elif [[  $XDG_CURRENT_DESKTOP == 'Razor' || $XDG_CURRENT_DESKTOP == 'LXQt' ]] || \
+						[[ -n $( grep -Eis '(razor-desktop|lxqt-session)' <<< "$Ps_aux_Data" ) ]];then
+						if [[ -n $( grep -is 'lxqt-session' <<< "$Ps_aux_Data" ) ]];then
+							desktop_environment='LXQt'
+						elif [[ -n $( grep -is 'razor-desktop' <<< "$Ps_aux_Data" ) ]];then
+							desktop_environment='Razor-Qt'
+						else
+							desktop_environment='LX-Qt-Variant'
+						fi
 						if [[ -n $version ]];then
 							version="(Openbox $version)"
 						fi
-						desktop_environment='Razor-QT'
 					else
-						desktop_environment='Openbox'
+						desktop_environment='Openbox' 
 					fi
 				elif [[ -n $( grep -is 'ICEWM' <<< "$xprop_root" ) ]];then
 					version=$( get_program_version 'icewm' '^icewm' '2' )
@@ -4872,17 +4910,24 @@ get_dmidecode_data()
 {
 	eval $LOGFS
 	
-	local dmidecodePath=''
+	local dmiData="" b_debugger='false'
 
 	if [[ $B_DMIDECODE_SET != 'true' ]];then
 		dmidecodePath=$( type -p dmidecode 2>/dev/null )
-		if [[ -n $dmidecodePath ]];then
+		if [[ -z $dmidecodePath ]];then
+			DMIDECODE_DATA='dmidecode-error-not-installed'
+		else
 			# note stripping out these lines: Handle 0x0016, DMI type 17, 27 bytes
 			# but NOT deleting them, in case the dmidecode data is missing empty lines which will be
 			# used to separate results. Then we remove the doubled empty lines to keep it clean and
-			# strip out all the stuff we don't want to see in the results.
-			DMIDECODE_DATA="$( $dmidecodePath 2>/dev/null \
-			| gawk -F ':' '
+			# strip out all the stuff we don't want to see in the results. We want the error data in 
+			# stdout for error handling
+			if [[ $b_debugger == 'true' && $HOSTNAME == 'yawn' ]];then
+				dmiData="$( cat ~/bin/scripts/inxi/svn/misc/data/dmidecode/dmidecode-memory-variants-2.txt )"
+			else 
+				dmiData="$( $dmidecodePath 2>&1 )"
+			fi
+			DMIDECODE_DATA="$( echo "$dmiData" | gawk -F ':' '
 			BEGIN {
 				IGNORECASE=1
 				cutExtraTab="false"
@@ -4903,11 +4948,12 @@ get_dmidecode_data()
 					sub(/^\tDMI type.*/, "", $0)
 					cutExtraTab="true"
 				}
+				
 				gsub(/'"$BAN_LIST_NORMAL"'/, "", twoData)
-				gsub(/,/, " ", $0)
+				gsub(/,/, " ", twoData)
 				# clean out Handle line
 				# sub(/^Handle.*/,"", $0)
-				sub(/^[[:space:]]*Inactive.*/,"",$0)
+				sub(/^[[:space:]]*Inactive.*/,"",twoData)
 				# yes, there is a typo in a user data set, unknow
 				# Base Board Version|Base Board Serial Number
 				# Chassis Manufacturer|Chassis Version|Chassis Serial Number
@@ -4915,8 +4961,8 @@ get_dmidecode_data()
 				# To Be Filled By O.E.M.
 				# strip out starting white space so that the following stuff will clear properly
 				sub(/^[[:space:]]+/, "", twoData)
-				sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*/, "", twoData) 
-				sub(/(AssetTagNum|Manufacturer| Or Motherboard|PartNum|SerNum).*/, "", twoData)
+				sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*|^0x[0]+$|\[Empty\]|<Bad Index>|^\.\.$/, "", twoData) 
+				sub(/.*(AssetTagNum|Manufacturer| Or Motherboard|PartNum.*|SerNum).*/, "", twoData)
 				gsub(/bios|acpi/, "", twoData)
 				sub(/http:\/\/www.abit.com.tw\//, "Abit", twoData)
 				
@@ -4929,15 +4975,17 @@ get_dmidecode_data()
 				else {
 					sub(/^\t\t+/, "~", oneData)
 				}
-				
+				gsub(/ [ \t]+/, " ", twoData)
 				gsub(/^[[:space:]]+|[[:space:]]+$/, "", twoData)
 				gsub(/^[[:space:]]+|[[:space:]]+$/, "", oneData)
-				gsub(/ [ \t]+/, " ", twoData)
+				
 				# reconstructing the line for processing so gawk can use -F : again
 				if ( oneData != "" && twoHolder == "true" ) {
 					print oneData ":" twoData
 				}
 				else {
+					# make sure all null lines have no spaces in them!
+					gsub(/^[[:space:]]+|[[:space:]]+$/,"",$0)
 					print $0
 				}
 			}' \
@@ -4946,9 +4994,23 @@ N
 /^\n$/D
 }' \
 			)"
+			# echo ":${DMIDECODE_DATA}:"
+			log_function_data "DMIDECODE_DATA (PRE): $DMIDECODE_DATA"
+			if [[ ${#DMIDECODE_DATA} -lt 100  ]];then
+				if [[ -z ${DMIDECODE_DATA/*Permission denied*/} ]];then
+				# if [[ -n $( grep -i 'Permission denied' <<< "$DMIDECODE_DATA" ) ]];then
+					DMIDECODE_DATA='dmidecode-error-requires-root'
+				# this handles very old systems, like Lenny 2.6.26, with dmidecode, but no data
+				elif [[ -n $( grep -i 'no smbios ' <<< "$DMIDECODE_DATA" ) ]];then
+					DMIDECODE_DATA='dmidecode-error-no-smbios-dmi-data'
+				else
+					echo $DMIDECODE_DATA
+					DMIDECODE_DATA='dmidecode-error-unknown-error'
+				fi
+			fi
 		fi
 		B_DMIDECODE_SET='true'
-		log_function_data "DMIDECODE_DATA: $DMIDECODE_DATA"
+		log_function_data "DMIDECODE_DATA (POST): $DMIDECODE_DATA"
 	fi
 
 	eval $LOGFE
@@ -4984,8 +5046,7 @@ get_gcc_system_version()
 	/^gcc/ {
 		print $2
 		exit
-	}' 	)
-
+	}' )
 	# can't use xargs -L basename because not all systems support thats
 	if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
 		gcc_others=$( ls /usr/bin/gcc-* 2>/dev/null )
@@ -5894,11 +5955,6 @@ get_init_data()
 			init_type='launchd'
 			#  / launchd/ version.plist /etc/launchd.conf
 			# init_version=$( get_program_version 'Launchd' '^Launchd' '4' )
-		# missing data: 
-		# http://smarden.org/runit/sv.8.html
-		elif [[ -e /sbin/runit-init || -e /etc/runit || -n $( type -p sv ) ]];then
-			init_type='runit' # lower case
-			# no data on version yet
 		elif [[ -f /etc/inittab ]];then
 			init_type='SysVinit'
 			if type -p strings &>/dev/null;then
@@ -5907,6 +5963,11 @@ get_init_data()
 			if [[ -n $strings_init_version ]];then
 				init_version=$( gawk '{print $2}' <<< "$strings_init_version" )
 			fi
+		# missing data: note, runit can install as a dependency without being the init system
+		# http://smarden.org/runit/sv.8.html
+		elif [[ -e /sbin/runit-init || -e /etc/runit || -n $( type -p sv ) ]];then
+			init_type='runit' # lower case
+			# no data on version yet
 		# freebsd at least
 		elif [[ -f /etc/ttys ]];then
 			init_type='init (bsd)'
@@ -6062,7 +6123,6 @@ get_machine_data()
 	board_vendor board_name board_version board_serial 
 	bios_vendor bios_version bios_date 
 	"
-
 	if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
 		machine_files="$machine_files
 		chassis_vendor chassis_type chassis_version chassis_serial
@@ -6099,120 +6159,120 @@ get_machine_data()
 	else
 		get_dmidecode_data
 		if [[ -n $DMIDECODE_DATA ]];then
-			if [[ $B_ROOT == 'true' ]];then
-				# this handles very old systems, like Lenny 2.6.26, with dmidecode, but no data
-				if [[ -n $( grep -i 'no smbios ' <<< "$DMIDECODE_DATA" ) ]];then
-					array_string='dmidecode-no-smbios-dmi-data'
-				# please note: only dmidecode version 2.11 or newer supports consistently the -s flag
-				else
-					array_string=$( gawk -F ':' '
-					BEGIN {
-						IGNORECASE=1
-						baseboardManufacturer=""
-						baseboardProductName=""
-						baseboardSerialNumber=""
-						baseboardVersion=""
-						biosReleaseDate=""
-						biosRevision="" # only available from dmidecode
-						biosRomSize="" # only available from dmidecode
-						biosVendor=""
-						biosVersion=""
-						chassisManufacturer=""
-						chassisSerialNumber=""
-						chassisType=""
-						chassisVersion=""
-						systemManufacturer=""
-						systemProductName=""
-						systemVersion=""
-						systemSerialNumber=""
-						systemUuid=""
-						bItemFound="" # we will only output if at least one item was found
-						fullString=""
-						testString=""
-						bSys=""
-						bCha=""
-						bBio=""
-						bBas=""
-					}
-					/^Bios Information/ {
-						while ( getline && !/^$/ ) {
-							if ( $1 ~ /^Release Date/ ) { biosReleaseDate=$2 }
-							if ( $1 ~ /^BIOS Revision/ ) { biosRevision=$2 }
-							if ( $1 ~ /^ROM Size/ ) { biosRomSize=$2 }
-							if ( $1 ~ /^Vendor/ ) { biosVendor=$2 }
-							if ( $1 ~ /^Version/ ) { biosVersion=$2 }
-						}
-						testString=biosReleaseDate biosRevision biosRomSize biosVendor biosVersion
-						if ( testString != ""  ) {
-							bItemFound="true"
-						}
-						bBio="true"
-					}
-					/^Base Board Information/ {
-						while ( getline && !/^$/ ) {
-							if ( $1 ~ /^Manufacturer/ ) { baseboardManufacturer=$2 }
-							if ( $1 ~ /^Product Name/ ) { baseboardProductName=$2 }
-							if ( $1 ~ /^Serial Number/ ) { baseboardSerialNumber=$2 }
-						}
-						testString=baseboardManufacturer baseboardProductName baseboardSerialNumber
-						if ( testString != ""  ) {
-							bItemFound="true"
-						}
-						bBas="true"
-					}
-					/^Chassis Information/ {
-						while ( getline && !/^$/ ) {
-							if ( $1 ~ /^Manufacturer/ ) { chassisManufacturer=$2 }
-							if ( $1 ~ /^Serial Number/ ) { chassisSerialNumber=$2 }
-							if ( $1 ~ /^Type/ ) { chassisType=$2 }
-							if ( $1 ~ /^Version/ ) { chassisVersion=$2 }
-						}
-						testString=chassisManufacturer chassisSerialNumber chassisType chassisVersion
-						if ( testString != ""  ) {
-							bItemFound="true"
-						}
-						bCha="true"
-					}
-					/^System Information/ {
-						while ( getline && !/^$/ ) {
-							if ( $1 ~ /^Manufacturer/ ) { systemManufacturer=$2 }
-							if ( $1 ~ /^Product Name/ ) { systemProductName=$2 }
-							if ( $1 ~ /^Version/ ) { systemVersion=$2 }
-							if ( $1 ~ /^Serial Number/ ) { systemSerialNumber=$2 }
-							if ( $1 ~ /^UUID/ ) { systemUuid=$2 }
-						}
-						testString=systemManufacturer systemProductName systemVersion systemSerialNumber systemUuid
-						if ( testString != ""  ) {
-							bItemFound="true"
-						}
-						bSys="true"
-					}
-					( bSys == "true" && bCha="true" && bBio == "true" && bBas == "true" ) {
-						exit # stop the loop
-					}
-					END {
-						if ( bItemFound == "true" ) {
-							fullString = systemManufacturer "," systemProductName "," systemVersion "," systemSerialNumber 
-							fullString = fullString "," systemUuid "," baseboardManufacturer "," baseboardProductName 
-							fullString = fullString "," baseboardVersion "," baseboardSerialNumber "," biosVendor
-							fullString = fullString "," biosVersion "," biosReleaseDate "," chassisManufacturer
-							fullString = fullString "," chassisType "," chassisVersion "," chassisSerialNumber 
-							fullString = fullString ","  biosRevision "," biosRomSize
-							
-							print fullString
-						}
-					}' <<< "$DMIDECODE_DATA" )
-				fi
+			if [[ $DMIDECODE_DATA == 'dmidecode-error-'* ]];then
+				array_string=$DMIDECODE_DATA
+			# please note: only dmidecode version 2.11 or newer supports consistently the -s flag
 			else
-				array_string='dmidecode-non-root-user'
+				array_string=$( gawk -F ':' '
+				BEGIN {
+					IGNORECASE=1
+					baseboardManufacturer=""
+					baseboardProductName=""
+					baseboardSerialNumber=""
+					baseboardVersion=""
+					biosReleaseDate=""
+					biosRevision="" # only available from dmidecode
+					biosRomSize="" # only available from dmidecode
+					biosVendor=""
+					biosVersion=""
+					chassisManufacturer=""
+					chassisSerialNumber=""
+					chassisType=""
+					chassisVersion=""
+					systemManufacturer=""
+					systemProductName=""
+					systemVersion=""
+					systemSerialNumber=""
+					systemUuid=""
+					bItemFound="" # we will only output if at least one item was found
+					fullString=""
+					testString=""
+					bSys=""
+					bCha=""
+					bBio=""
+					bBas=""
+				}
+				/^Bios Information/ {
+					while ( getline && !/^$/ ) {
+						if ( $1 ~ /^Release Date/ ) { biosReleaseDate=$2 }
+						if ( $1 ~ /^BIOS Revision/ ) { biosRevision=$2 }
+						if ( $1 ~ /^ROM Size/ ) { biosRomSize=$2 }
+						if ( $1 ~ /^Vendor/ ) { biosVendor=$2 }
+						if ( $1 ~ /^Version/ ) { biosVersion=$2 }
+					}
+					testString=biosReleaseDate biosRevision biosRomSize biosVendor biosVersion
+					if ( testString != ""  ) {
+						bItemFound="true"
+					}
+					bBio="true"
+				}
+				/^Base Board Information/ {
+					while ( getline && !/^$/ ) {
+						if ( $1 ~ /^Manufacturer/ ) { baseboardManufacturer=$2 }
+						if ( $1 ~ /^Product Name/ ) { baseboardProductName=$2 }
+						if ( $1 ~ /^Serial Number/ ) { baseboardSerialNumber=$2 }
+					}
+					testString=baseboardManufacturer baseboardProductName baseboardSerialNumber
+					if ( testString != ""  ) {
+						bItemFound="true"
+					}
+					bBas="true"
+				}
+				/^Chassis Information/ {
+					while ( getline && !/^$/ ) {
+						if ( $1 ~ /^Manufacturer/ ) { chassisManufacturer=$2 }
+						if ( $1 ~ /^Serial Number/ ) { chassisSerialNumber=$2 }
+						if ( $1 ~ /^Type/ ) { chassisType=$2 }
+						if ( $1 ~ /^Version/ ) { chassisVersion=$2 }
+					}
+					testString=chassisManufacturer chassisSerialNumber chassisType chassisVersion
+					if ( testString != ""  ) {
+						bItemFound="true"
+					}
+					bCha="true"
+				}
+				/^System Information/ {
+					while ( getline && !/^$/ ) {
+						if ( $1 ~ /^Manufacturer/ ) { systemManufacturer=$2 }
+						if ( $1 ~ /^Product Name/ ) { systemProductName=$2 }
+						if ( $1 ~ /^Version/ ) { systemVersion=$2 }
+						if ( $1 ~ /^Serial Number/ ) { systemSerialNumber=$2 }
+						if ( $1 ~ /^UUID/ ) { systemUuid=$2 }
+					}
+					testString=systemManufacturer systemProductName systemVersion systemSerialNumber systemUuid
+					if ( testString != ""  ) {
+						bItemFound="true"
+					}
+					bSys="true"
+				}
+				( bSys == "true" && bCha="true" && bBio == "true" && bBas == "true" ) {
+					exit # stop the loop
+				}
+				END {
+					# sys_vendor product_name product_version product_serial product_uuid 
+					# board_vendor board_name board_version board_serial 
+					# bios_vendor bios_version bios_date 
+					if ( bItemFound == "true" ) {
+						fullString = systemManufacturer "," systemProductName "," systemVersion "," systemSerialNumber 
+						fullString = fullString "," systemUuid "," baseboardManufacturer "," baseboardProductName 
+						fullString = fullString "," baseboardVersion "," baseboardSerialNumber "," biosVendor
+						fullString = fullString "," biosVersion "," biosReleaseDate "," chassisManufacturer
+						fullString = fullString "," chassisType "," chassisVersion "," chassisSerialNumber 
+						fullString = fullString ","  biosRevision "," biosRomSize
+						
+						print fullString
+					}
+				}' <<< "$DMIDECODE_DATA" )
 			fi
 		fi
 	fi
+	# echo $array_string
 	IFS=','
 	A_MACHINE_DATA=( $array_string )
 	IFS="$ORIGINAL_IFS"
-	a_temp=${A_MACHINE_DATA[@]}
-# 	echo ${a_temp[@]}
+	# echo ${A_MACHINE_DATA[5]}
+	a_temp=( ${A_MACHINE_DATA[@]} )
+ 	# echo ${#a_temp[@]}
 	log_function_data "A_MACHINE_DATA: $a_temp"
 	eval $LOGFE
 }
@@ -6309,6 +6369,7 @@ get_module_version_number()
 	eval $LOGFE
 }
 
+
 ## create array of network cards
 get_networking_data()
 {
@@ -6319,72 +6380,64 @@ get_networking_data()
 	IFS=$'\n'
 	A_NETWORK_DATA=( $( 
 	echo "$Lspci_v_Data" | gawk '
+	# NOTE: see version 2.1.28 or earlier for old logic if for some reason it is needed again
+	# that used a modified string made from nic name for index, why, I have no idea, makes no sense and leads
+	# to wrong ordered output as well. get_audio_data uses the old logic for now too.
 	BEGIN {
 		IGNORECASE=1
-		counter=0 # required to handle cases of > 1 instance of the same chipset
+		counter=0 
 	}
-	/^[0-9a-f:\.]+ (ethernet|network) (controller|bridge)/ || /^[0-9a-f:\.]+ [^:]+: .*(ethernet|network).*$/ {
-		nic=gensub(/^[0-9a-f:\.]+ [^:]+: (.+)$/,"\\1","g",$0)
-		#gsub(/realtek semiconductor/, "Realtek", nic)
-		#gsub(/davicom semiconductor/, "Davicom", nic)
+	/^[0-9a-f:\.]+ ((ethernet|network) (controller|bridge)|infiniband)/ || /^[0-9a-f:\.]+ [^:]+: .*(ethernet|infiniband|network).*$/ {
+		aNic[counter]=gensub(/^[0-9a-f:\.]+ [^:]+: (.+)$/,"\\1","g",$0)
+		#gsub(/realtek semiconductor/, "Realtek", aNic[counter])
+		#gsub(/davicom semiconductor/, "Davicom", aNic[counter])
 		# The doublequotes are necessary because of the pipes in the variable.
-		gsub(/'"$BAN_LIST_NORMAL"'/, "", nic)
-		gsub(/,/, " ", nic)
-		gsub(/^ +| +$/, "", nic)
-		gsub(/ [ \t]+/, " ", nic)
-		# construct a unique string ending for each chipset detected, this allows for
-		# multiple instances of the same exact chipsets, ie, dual gigabit 
-		nic = nic "~~" counter++
-		aPciBusId[nic] = gensub(/(^[0-9a-f:\.]+) [^:]+: .+$/,"\\1","g",$0)
-		# I do not understand why incrementing a string index makes sense? 
-		eth[nic]++ 
+		gsub(/'"$BAN_LIST_NORMAL"'/, "", aNic[counter])
+		gsub(/,/, " ", aNic[counter])
+		gsub(/^ +| +$/, "", aNic[counter])
+		gsub(/ [ \t]+/, " ", aNic[counter])
+		aPciBusId[counter] = gensub(/(^[0-9a-f:\.]+) [^:]+: .+$/,"\\1","g",$0)
 		while ( getline && !/^$/ ) {
 			gsub(/,/, "", $0)
-			if ( /I\/O/ ) {
-				ports[nic] = ports[nic] $4 " "
+			if ( /^[[:space:]]*I\/O/ ) {
+				aPorts[counter] = aPorts[counter] $4 " "
 			}
 			if ( /driver in use/ ) {
-				drivers[nic] = drivers[nic] gensub( /(.*): (.*)/ ,"\\2" ,"g" ,$0 ) ""
+				aDrivers[counter] = aDrivers[counter] gensub( /(.*): (.*)/ ,"\\2" ,"g" ,$0 ) ""
 			}
 			else if ( /kernel modules/ ) {
-				modules[nic] = modules[nic] gensub( /(.*): (.*)/ ,"\\2" ,"g" ,$0 ) ""
+				aModules[counter] = aModules[counter] gensub( /(.*): (.*)/ ,"\\2" ,"g" ,$0 ) ""
 			}
 		}
+		counter++
 	}
-
 	END {
-		j=0
-		for (i in eth) {
+		for (i=0;i<counter;i++) {
 			useDrivers=""
 			usePorts=""
 			useModules=""
+			useNic=""
 			usePciBusId=""
 
-			if ( eth[i] > 1 ) {
-				a[j] = eth[i] "x " i
-			}
-			else {
-				a[j] = i
-			}	
 			## note: this loses the plural ports case, is it needed anyway?
-			if ( ports[i] != "" ) {
-				usePorts = ports[i]
+			if ( aPorts[i] != "" ) {
+				usePorts = aPorts[i]
 			}
-			if ( drivers[i] != "" ) {
-				useDrivers = drivers[i]
+			if ( aDrivers[i] != "" ) {
+				useDrivers = aDrivers[i]
 			}
-			if ( modules[i] != "" ) {
-				useModules = modules[i]
+			if ( aModules[i] != "" ) {
+				useModules = aModules[i]
+			}
+			if ( aNic[i] != "" ) {
+				useNic=aNic[i]
 			}
 			if ( aPciBusId[i] != "" ) {
 				usePciBusId = aPciBusId[i]
 			}
 			# create array primary item for master array
-			# and strip out the counter again, this handled dual cards with same chipset
-			sub( /~~[0-9]+$/, "", a[j] )
 			sub( / $/, "", usePorts ) # clean off trailing whitespace
-			print a[j] "," useDrivers "," usePorts "," useModules, "," usePciBusId
-			j++
+			print useNic "," useDrivers "," usePorts "," useModules, "," usePciBusId
 		}
 	}' ) )
 	IFS="$ORIGINAL_IFS"
@@ -6401,42 +6454,59 @@ get_networking_data()
 get_network_advanced_data()
 {
 	eval $LOGFS
-	local a_network_adv_working='' if_path='' working_path='' working_uevent_path='' dir_path=''
-	local if_id='' speed='' duplex='' mac_id='' oper_state=''  chip_id=''
-	local usb_data='' usb_vendor='' usb_product='' product_path='' driver_test=''
+	local a_network_adv_working='' if_data='' working_path='' working_uevent_path='' dir_path=''
+	local if_id='' speed='' duplex='' mac_id='' oper_state=''  chip_id='' b_path_made='true'
+	local usb_data='' usb_vendor='' usb_product='' product_path='' driver_test='' array_counter=0
+	local full_path=''
+	# we need to change to holder since we are updating the main array
+	IFS=$'\n'
+	local a_main_working=(${A_NETWORK_DATA[@]})
+	IFS="$ORIGINAL_IFS"
 	
-	for (( i=0; i < ${#A_NETWORK_DATA[@]}; i++ ))
+	for (( i=0; i < ${#a_main_working[@]}; i++ ))
 	do
 		IFS=","
-		a_network_adv_working=( ${A_NETWORK_DATA[i]} )
+		a_network_adv_working=( ${a_main_working[i]} )
+		IFS="$ORIGINAL_IFS"
 		# reset these every go round
 		driver_test=''
-		if_id='' 
-		speed='' 
-		duplex='' 
-		mac_id='' 
-		oper_state=''
+		if_data=''
+		product_path=''
 		usb_data=''
-		chip_id=''
+		usb_product=''
+		usb_vendor=''
+		working_path=''
+		working_uevent_path=''
 		if [[ -z $( grep '^usb-' <<< ${a_network_adv_working[4]} ) ]];then
 			# note although this may exist technically don't use it, it's a virtual path
 			# and causes weird cat errors when there's a missing file as well as a virtual path
 			# /sys/bus/pci/devices/0000:02:02.0/net/eth1
 			# real paths are: /sys/devices/pci0000:00/0000:00:1e/0/0000:02:02.0/net/eth1/uevent
 			# and on older debian kernels: /sys/devices/pci0000:00/0000:02:02.0/net:eth1/uevent
-			# but broadcom shows this sometimes:
+			# but broadcom shows this sometimes, and older kernels maybe:
+			# /sys/devices/pci0000:00/0000:00:01.0/0000:05:00.0/net/eth0/
 			# /sys/devices/pci0000:00/0000:00:03.0/0000:03:00.0/ssb0:0/uevent:['DRIVER=b43', 'MODALIAS=ssb:v4243id0812rev0D']:
-			working_path="/sys/bus/pci/devices/0000:${a_network_adv_working[4]}"
+			# echo a ${a_network_adv_working[4]}
+			if [[ -d /sys/bus/pci/devices/ ]];then
+				working_path="/sys/bus/pci/devices/0000:${a_network_adv_working[4]}"
+			elif [[ -d /sys/devices/pci0000:00/ ]];then
+				working_path="/sys/devices/pci0000:00/0000:00:01.0/0000:${a_network_adv_working[4]}"
+			fi
+			#echo wp ${a_network_adv_working[4]} $i
 			# now we want the real one, that xiin also displays, without symbolic links.
-			if [[ -e $working_path ]];then
+			if [[ -n $working_path && -e $working_path ]];then
 				working_path=$( readlink -f $working_path 2>/dev/null )
-				# sometimes there is another directory between the path and /net
-				if [[ ! -e $working_path/net ]];then
-					# using find here, probably will need to also use it in usb part since the grep
-					# method seems to not be working now. Slice off the rest, which leaves the basic path
-					working_path=$( find $working_path/*/net/*/uevent 2>/dev/null | \
-					sed 's|/net.*||' )
-				fi
+			else
+				working_path=$( find -P /sys/ -type d -name "*:${a_network_adv_working[4]}" 2>/dev/null )
+				# just on off chance we get two returns, just one one
+				working_path=${working_path%% *}
+			fi
+			# sometimes there is another directory between the path and /net
+			if [[ -n $working_path && ! -e $working_path/net ]];then
+				# using find here, probably will need to also use it in usb part since the grep
+				# method seems to not be working now. Slice off the rest, which leaves the basic path
+				working_path=$( find $working_path/*/net/*/uevent 2>/dev/null | \
+				sed 's|/net.*||' )
 			fi
 			# working_path=$( ls /sys/devices/pci*/*/0000:${a_network_adv_working[4]}/net/*/uevent  )
 		else
@@ -6459,7 +6529,6 @@ get_network_advanced_data()
 				product_path=$( grep -s "$usb_product" /sys/devices/pci*/*/usb*/*/*/idProduct | \
 				sed -e "s/idProduct:$usb_product//" -e '/driver/d' )
 			fi
-			
 			# make sure it's the right product/vendor match here, it will almost always be but let's be sure
 			if [[ -n $working_path && -n $product_path ]] && [[ $working_path == $product_path ]];then
 			#if [[ -n $working_path ]];then
@@ -6477,50 +6546,90 @@ get_network_advanced_data()
 				a_network_adv_working[1]=$driver_test
 			fi
 		fi
+		#echo wp: $working_path
 		log_function_data "PRE: working_path: $working_path\nworking_uevent_path: $working_uevent_path"
-		
 		# this applies in two different cases, one, default, standard, two, for usb, this is actually
 		# the short path, minus the last longer numeric directory name, ie: 
 		# from debian squeeze 2.6.32-5-686: 
 		# /sys/devices/pci0000:00/0000:00:0b.1/usb1/1-1/net/wlan0/address
 		if [[ -e $working_path/net ]];then
-			if_path=$( ls $working_path/net 2>/dev/null )
-			if_id=$if_path
-			working_path=$working_path/net/$if_path
+			# in cases like infiniband dual port devices, there can be two ids, like ib0 ib1, 
+			# with line break in output
+			if_data=$( ls $working_path/net 2>/dev/null )
+			b_path_made='false'
 		# this is the normal usb detection if the first one didn't work
 		elif [[ -n $usb_data && -e $working_uevent_path/net ]];then
-			if_path=$( ls $working_uevent_path/net 2>/dev/null )
-			if_id=$if_path
-			working_path=$working_uevent_path/net/$if_path
+			if_data=$( ls $working_uevent_path/net 2>/dev/null )
+			working_path=$working_uevent_path/net/$if_data
 		# 2.6.32 debian lenny kernel shows not: /net/eth0 but /net:eth0
-		else
-			if_path=$( ls $working_path 2>/dev/null | grep 'net:' )
-			if_id=$( cut -d ':' -f 2 <<< "$if_path" )
-			working_path=$working_path/$if_path
-		fi
-		log_function_data "POST: working_path: $working_path\nif_path: $if_path - if_id: $if_id"
-		
-		if [[ -n $if_path ]];then
-			if [[ -r $working_path/speed ]];then
-				speed=$( cat $working_path/speed 2>/dev/null )
-			fi
-			if [[ -r $working_path/duplex ]];then
-				duplex=$( cat $working_path/duplex 2>/dev/null )
-			fi
-			if [[ -r $working_path/address ]];then
-				mac_id=$( cat $working_path/address 2>/dev/null )
-			fi
-			if [[ -r $working_path/operstate ]];then
-				oper_state=$( cat $working_path/operstate 2>/dev/null )
+		elif [[ -n ${working_path/\/sys*/} ]];then
+			if_data=$( ls $working_path 2>/dev/null | grep 'net:' )
+			if [[ -n $if_data ]];then
+				working_path=$working_path/$if_data
+				# we won't be using this for path any more, just the actual if id output
+				# so prep it for the loop below
+				if_data=$( cut -d ':' -f 2 <<< "$if_data" )
 			fi
 		fi
-		
-		if [[ -n ${a_network_adv_working[10]} ]];then
-			chip_id=${a_network_adv_working[10]}
+		# just in case we got a failed path, like /net or /, clear it out for tests below
+		if [[ -n ${working_path/\/sys*/} ]];then
+			working_path=''
 		fi
-		A_NETWORK_DATA[i]=${a_network_adv_working[0]}","${a_network_adv_working[1]}","${a_network_adv_working[2]}","${a_network_adv_working[3]}","${a_network_adv_working[4]}","$if_id","$oper_state","$speed","$duplex","$mac_id","$chip_id
-		IFS="$ORIGINAL_IFS"
+		#echo id: $if_data
+		log_function_data "POST: working_path: $working_path\nif_data: $if_data - if_id: $if_id"
+		# there are virtual devices that will have no if data but which we still want in the array
+		# as it loops. These will also have null working_path as well since no **/net is found
+		# echo if_data: $if_data
+		if [[ -z $if_data ]];then
+			if_data='null-if-id'
+		fi
+		## note: in cases of dual ports with different ids, this loop will create extra array items
+		for if_item in $if_data
+		do
+			chip_id=
+			duplex=''
+			full_path=''
+			if_id=''
+			mac_id=''
+			oper_state=''
+			speed=''
+			# strip out trailing spaces
+			if_item=${if_item%% }
+			#echo wp1: $working_path
+			if [[ $working_path != '' ]];then
+				if_id=$if_item
+				if [[ $b_path_made == 'false' ]];then
+					full_path=$working_path/net/$if_item
+				else
+					full_path=$working_path
+				fi
+				if [[ -r $full_path/speed ]];then
+					speed=$( cat $full_path/speed 2>/dev/null )
+				fi
+				if [[ -r $full_path/duplex ]];then
+					duplex=$( cat $full_path/duplex 2>/dev/null )
+				fi
+				if [[ -r $full_path/address ]];then
+					mac_id=$( cat $full_path/address 2>/dev/null )
+				fi
+				if [[ -r $full_path/operstate ]];then
+					oper_state=$( cat $full_path/operstate 2>/dev/null )
+				fi
+				if [[ -n ${a_network_adv_working[10]} ]];then
+					chip_id=${a_network_adv_working[10]}
+				fi
+			fi
+			
+			#echo fp: $full_path 
+			#echo id: $if_id
+			# echo "$if_data ii:  $if_item $array_counter i: $i"
+			A_NETWORK_DATA[$array_counter]=${a_network_adv_working[0]}","${a_network_adv_working[1]}","${a_network_adv_working[2]}","${a_network_adv_working[3]}","${a_network_adv_working[4]}","$if_id","$oper_state","$speed","$duplex","$mac_id","$chip_id
+			
+			((array_counter++))
+		done
 	done
+	a_temp=${A_NETWORK_DATA[@]}
+	log_function_data "A_NETWORK_DATA (advanced): $a_temp"
 
 	eval $LOGFE
 }
@@ -6597,7 +6706,7 @@ get_networking_wan_ip_data()
 	# awk has bad regex handling so checking it with grep -E instead
 	# ip=$( echo  2001:0db8:85a3:0000:0000:8a2e:0370:7334 | gawk  --re-interval '
 	# ip=$( wget -q -O - $WAN_IP_URL | gawk  --re-interval '
-	ip=$( wget -t 1 -T $WGET_TIMEOUT -q -O - $WAN_IP_URL | gawk  --re-interval '
+	ip=$( wget -t 4 -T $WGET_TIMEOUT -q -O - $WAN_IP_URL | gawk  --re-interval '
 	{
 		#gsub("\n","",$2")
 		print $NF
@@ -6928,7 +7037,7 @@ get_partition_data()
 	eval $LOGFS
 	
 	local a_partition_working='' dev_item='' a_temp='' dev_working_item='' 
-	local swap_data='' df_string='' main_partition_data='' df_test='' fs_type=''
+	local swap_data='' df_string='' main_partition_data='' fs_type=''
 	local mount_data='' dev_bsd_item=''
 	#local excluded_file_types='--exclude-type=aufs --exclude-type=tmpfs --exclude-type=iso9660'
 	# df doesn't seem to work in script with variables like at the command line
@@ -6942,8 +7051,7 @@ get_partition_data()
 		swap_data="$( swapctl -l 2>/dev/null )"
 		# default size is 512, -H only for size in human readable format
 		# older bsds don't support -T, pain, so we'll use partial output there
-		df_test=$( df -H -T 2>/dev/null )
-		if [[ -n $df_test ]];then
+		if df -H -T &>/dev/null;then
 			df_string='df -H -T'
 		else
 			df_string='df -H'
@@ -6969,7 +7077,7 @@ get_partition_data()
 	# $NF = partition name; $(NF - 4) = partition size; $(NF - 3) = used, in gB; $(NF - 1) = percent used
 	## note: by subtracting from the last field number NF, we avoid a subtle issue with LVM df output, where if
 	## the first field is too long, it will occupy its own line, this way we are getting only the needed data
-	A_PARTITION_DATA=( $( echo "$main_partition_data" | gawk -v bsdType=$BSD_TYPE '
+	A_PARTITION_DATA=( $( echo "$main_partition_data" | gawk -v bsdType=$BSD_TYPE -v bsdVersion=$BSD_VERSION '
 	BEGIN {
 		IGNORECASE=1
 		fileSystem=""
@@ -7016,7 +7124,13 @@ get_partition_data()
 		else {
 			fileSystem=""
 		}
-		print $NF "," $(NF - 4) "," $(NF - 3) "," $(NF - 1) ",main," fileSystem "," devBase 
+		# /dev/disk0s2    249G    24G   225G    10% 5926984 54912758   10%   /
+		if ( bsdVersion == "darwin" && $(NF - 4) ~ /[0-9]+%/ ) {
+			print $NF "," $(NF - 7) "," $(NF - 6) "," $(NF - 4) ",main," fileSystem "," devBase 
+		}
+		else {
+			print $NF "," $(NF - 4) "," $(NF - 3) "," $(NF - 1) ",main," fileSystem "," devBase 
+		}
 	}
 	# skip all these, including the first, header line. Use the --exclude-type
 	# to handle new filesystems types we do not want listed here
@@ -7024,7 +7138,11 @@ get_partition_data()
 		# this is to avoid file systems with spaces in their names, that will make
 		# the test show the wrong data in each of the fields, if no x%, then do not use
 		# using 3 cases, first default, standard, 2nd, 3rd, handles one and two spaces in name
-		if ( $(NF - 1) ~ /[0-9]+%/ ) {
+		if ( bsdVersion == "darwin" && $(NF - 4) ~ /[0-9]+%/ ) {
+			fileSystem=""
+			print $NF "," $(NF - 7) "," $(NF - 6) "," $(NF - 4) ",main," fileSystem "," devBase 
+		}
+		else if ( $(NF - 1) ~ /[0-9]+%/ ) {
 			# note, older df in bsd do not have file system column
 			if ( NF == "7" ) {
 				fileSystem=$(NF - 5)
@@ -8013,6 +8131,534 @@ get_raid_component_data_bsd()
 	eval $LOGFE
 }
 # get_raid_data_bsd;exit
+
+get_ram_data()
+{
+	eval $LOGFS
+	
+	local a_temp='' array_string=''
+	
+	get_dmidecode_data
+	
+	if [[ -n $DMIDECODE_DATA ]];then
+		if [[ $DMIDECODE_DATA == 'dmidecode-error-'* ]];then
+			A_MEMORY_DATA[0]=$DMIDECODE_DATA
+		# please note: only dmidecode version 2.11 or newer supports consistently the -s flag
+		else
+			IFS=$'\n'
+			A_MEMORY_DATA=( $( 
+			gawk -F ':' '
+			BEGIN {
+				IGNORECASE=1
+				arrayHandle=""
+				bankLocator=""
+				clockSpeed=""
+				configuredClockSpeed=""
+				dataWidth=""
+				deviceManufacturer=""
+				devicePartNumber=""
+				deviceSerialNumber=""
+				deviceSpeed=""
+				deviceType=""
+				deviceTypeDetail=""
+				deviceSize=""
+				errorCorrection=""
+				formFactor=""
+				handle=""
+				location=""
+				locator=""
+				aArrayData[0,"maxCapacity5"]=0
+				aArrayData[0,"maxCapacity16"]=0
+				aArrayData[0,"usedCapacity"]=0
+				aArrayData[0,"maxModuleSize"]=0
+				aArrayData[0,"derivedModuleSize"]=0
+				aArrayData[0,"deviceCount5"]=0
+				aArrayData[0,"deviceCount16"]=0
+				aArrayData[0,"deviceCountFound"]=0
+				aArrayData[0,"moduleVoltage5"]=""
+				moduleVoltage=""
+				numberOfDevices=""
+				primaryType=""
+				totalWidth=""
+				use=""
+				i=0
+				j=0
+				k=0
+				bDebugger1="false"
+				dDebugger2="false"
+				bType5="false"
+			}
+			function calculateSize(data,size) {
+				if ( data ~ /^[0-9]+[[:space:]]*[GMTP]B/) {
+					if ( data ~ /GB/ ) {
+						data=gensub(/([0-9]+)[[:space:]]*GB/,"\\1",1,data) * 1024
+					}
+					else if ( data ~ /MB/ ) {
+						data=gensub(/([0-9]+)[[:space:]]*MB/,"\\1",1,data)
+					}
+					else if ( data ~ /TB/ ) {
+						data=gensub(/([0-9]+)[[:space:]]*TB/,"\\1",1,data) * 1024 * 1000
+					}
+					else if ( data ~ /PB/ ) {
+						data=gensub(/([0-9]+)[[:space:]]*TB/,"\\1",1,data) * 1024 * 1000 * 1000
+					}
+					if (data ~ /^[0-9][0-9]+$/ && data > size ) {
+						size=data
+					}
+				}
+				return size
+			}
+			/^Table[[:space:]]+at[[:space:]]/ {
+				bType5="false"
+				# we need to start count here because for testing > 1 array, and we want always to have
+				# the actual module data assigned to the right primary array, even when it is out of
+				# position in dmidecode output
+				i=0
+				j=0
+				k++
+			}
+			# {print k ":k:" $0}
+			/^Handle .* DMI[[:space:]]+type[[:space:]]+5(,|[[:space:]])/ {
+				while ( getline && !/^$/ ) {
+					if ( $1 == "Maximum Memory Module Size" ) {
+						aArrayData[k,"maxModuleSize"]=calculateSize($2,aArrayData[k,"maxModuleSize"])
+						# print "mms:" aArrayData[k,"maxModuleSize"] ":" $2
+					}
+					if ($1 == "Maximum Total Memory Size") {
+						aArrayData[k,"maxCapacity5"]=calculateSize($2,aArrayData[k,"maxCapacity5"])
+					}
+					if ( $1 == "Memory Module Voltage" ) {
+						aArrayData[k,"moduleVoltage5"]=$2
+					}
+				}
+				aArrayData[k,"data-type"]="memory-array"
+				# print k ":data5:"aArrayData[k,"data-type"]
+				bType5="true"
+			}
+			/^Handle .* DMI[[:space:]]+type[[:space:]]+6(,|[[:space:]])/ {
+				while ( getline && !/^$/ ) {
+					if ( $1 == "Installed Size" ) {
+						# get module size
+						aMemory[k,j,18]=calculateSize($2,0)
+						# get data after module size
+						sub(/ Connection/,"",$2)
+						sub(/^[0-9]+[[:space:]]*[MGTP]B[[:space:]]*/,"",$2)
+						aMemory[k,j,16]=$2
+					}
+					if ( $1 == "Current Speed" ) {
+						aMemory[k,j,17]=$2
+					}
+				}
+				j++
+			}
+			
+			/^Handle .* DMI[[:space:]]+type[[:space:]]+16/ {
+				arrayHandle=gensub(/Handle[[:space:]]([0-9a-zA-Z]+)([[:space:]]|,).*/,"\\1",$0)
+				while ( getline && !/^$/ ) {
+					# print $0
+					if ( $1 == "Maximum Capacity") {
+						aArrayData[k,"maxCapacity16"]=calculateSize($2,aArrayData[k,"maxCapacity16"])
+						#print "mc:" aArrayData[k,"maxCapacity16"] ":" $2
+					}
+					# note: these 3 have cleaned data in get_dmidecode_data, so replace stuff manually
+					if ( $1 == "Location") {
+						sub(/[[:space:]]Or[[:space:]]Motherboard/,"",$2)
+						location=$2
+						if ( location == "" ){
+							location="System Board"
+						}
+					}
+					if ( $1 == "Use") {
+						use=$2
+						if ( use == "" ){
+							use="System Memory"
+						}
+					}
+					if ( $1 == "Error Correction Type") {
+						errorCorrection=$2
+						if ( errorCorrection == "" ){
+							errorCorrection="None"
+						}
+					}
+					if ( $1 == "Number of Devices") {
+						numberOfDevices=$2
+					}
+				}
+				aArrayData[k,"data-type"]="memory-array"
+				# print k ":data16:"aArrayData[k,"data-type"]
+				aArrayData[k,"handle"]=arrayHandle
+				aArrayData[k,"location"]=location
+				aArrayData[k,"deviceCount16"]=numberOfDevices
+				aArrayData[k,"use"]=use
+				aArrayData[k,"errorCorrection"]=errorCorrection
+				
+				# reset
+				primaryType=""
+				arrayHandle=""
+				location=""
+				numberOfDevices=""
+				use=""
+				errorCorrection=""
+				moduleVoltage=""
+				
+				aDerivedModuleSize[k+1]=0
+				aArrayData[k+1,"deviceCountFound"]=0
+				aArrayData[k+1,"maxCapacity5"]=0
+				aArrayData[k+1,"maxCapacity16"]=0
+				aArrayData[k+1,"maxModuleSize"]=0
+			}
+			/^Handle .* DMI[[:space:]]+type[[:space:]]+17/ {
+				while ( getline && !/^$/ ) {
+					if ( $1 == "Array Handle") {
+						arrayHandle=$2
+					}
+					if ( $1 == "Data Width") {
+						dataWidth=$2
+					}
+					if ( $1 == "Total Width") {
+						totalWidth=$2
+					}
+					if ( $1 == "Size") {
+						# do not try to guess from installed modules, only use this to correct type 5 data
+						aArrayData[k,"derivedModuleSize"]=calculateSize($2,aArrayData[k,"derivedModuleSize"])
+						workingSize=calculateSize($2,0)
+						if ( workingSize ~ /^[0-9][0-9]+$/ ){
+							aArrayData[k,"deviceCountFound"]++
+							# build up actual capacity found for override tests
+							aArrayData[k,"usedCapacity"]=workingSize + aArrayData[k,"usedCapacity"]
+						}
+						# print aArrayData[k,"derivedModuleSize"] " dm:" k ":mm " aMaxModuleSize[k] " uc:" aArrayData[k,"usedCapacity"]
+						# we want any non real size data to be preserved
+						if ( $2 ~ /^[0-9]+[[:space:]]*[MTPG]B/ ) {
+							deviceSize=workingSize
+						}
+						else {
+							deviceSize=$2
+						}
+					}
+					if ( $1 == "Locator") {
+						# sub(/.*_/,"",$2)
+						#sub(/RAM slot #|^DIMM/, "Slot",$2)
+						sub(/RAM slot #/, "Slot",$2)
+						
+						#locator=toupper($2)
+						locator=$2
+					}
+					if ( $1 == "Bank Locator") {
+						#sub(/_.*/,"",$2)
+						#sub(/RAM slot #|Channel|Chan/,"bank",$2)
+						#sub(/RAM slot #|Channel|Chan/,"bank",$2)
+						#bankLocator=toupper($2)
+						bankLocator=$2
+					}
+					if ( $1 == "Form Factor") {
+						formFactor=$2
+					}
+					if ( $1 == "Type") {
+						deviceType=$2
+					}
+					if ( $1 == "Type Detail") {
+						deviceTypeDetail=$2
+					}
+					if ( $1 == "Speed") {
+						deviceSpeed=$2
+					}
+					if ( $1 == "Configured Clock Speed") {
+						configuredClockSpeed=$2
+					}
+					if ( $1 == "Manufacturer") {
+						gsub(/(^[0]+$|Undefined.*|.*Manufacturer.*)/,"",$2)
+						deviceManufacturer=$2
+					}
+					if ( $1 == "Part Number") {
+						sub(/(^[0]+$||.*Module.*|Undefined.*)/,"",$2)
+						devicePartNumber=$2
+					}
+					if ( $1 == "Serial Number") {
+						gsub(/(^[0]+$|Undefined.*)/,"",$2)
+						deviceSerialNumber=$2
+					}
+				}
+				# because of the wide range of bank/slot type data, we will just use
+				# the one that seems most likely to be right. Some have: Bank: SO DIMM 0 slot: J6A
+				# so we dump the useless data and use the one most likely to be visibly correct
+				if ( bankLocator ~ /DIMM/ ) {
+					mainLocator=bankLocator
+				}
+				else {
+					mainLocator=locator
+				}
+				# sometimes the data is just wrong, they reverse total/data. data I believe is
+				# used for the actual memory bus width, total is some synthetic thing, sometimes missing.
+				# note that we do not want a regular string comparison, because 128 bit memory buses are
+				# in our future, and 128 bits < 64 bits with string compare
+				intData=gensub(/(^[0-9]+).*/,"\\1",1,dataWidth)
+				intTotal=gensub(/(^[0-9]+).*/,"\\1",1,totalWidth)
+				if (intData != "" && intTotal != "" && intData > intTotal ) {
+					tempWidth=dataWidth
+					dataWidth=totalWidth
+					totalWidth=tempWidth
+				}
+				
+				aMemory[k,i,0]="memory-device"
+				aMemory[k,i,1]=arrayHandle
+				aMemory[k,i,2]=deviceSize
+				aMemory[k,i,3]=bankLocator
+				aMemory[k,i,4]=locator
+				aMemory[k,i,5]=formFactor
+				aMemory[k,i,6]=deviceType
+				aMemory[k,i,7]=deviceTypeDetail
+				aMemory[k,i,8]=deviceSpeed
+				aMemory[k,i,9]=configuredClockSpeed
+				aMemory[k,i,10]=dataWidth
+				aMemory[k,i,11]=totalWidth
+				aMemory[k,i,12]=deviceManufacturer
+				aMemory[k,i,13]=devicePartNumber
+				aMemory[k,i,14]=deviceSerialNumber
+				aMemory[k,i,15]=mainLocator
+				
+				primaryType=""
+				arrayHandle=""
+				deviceSize=""
+				bankLocator=""
+				locator=""
+				mainLocator=""
+				mainLocator=""
+				formFactor=""
+				deviceType=""
+				deviceTypeDetail=""
+				deviceSpeed=""
+				configuredClockSpeed=""
+				dataWidth=""
+				totalWidth=""
+				deviceManufacturer=""
+				devicePartNumber=""
+				deviceSerialNumber=""
+				i++
+			}
+			END {
+				## CRITICAL: gawk keeps changing integers to strings, so be explicit with int() in math
+				# print primaryType "," arrayHandle "," location "," maxCapacity "," numberOfDevices "," use "," errorCorrection "," maxModuleSize "," moduleVoltage
+				
+				# print primaryType "," arrayHandle "," deviceSize "," bankLocator "," locator "," formFactor "," deviceType "," deviceTypeDetail "," deviceSpeed "," configuredClockSpeed "," dataWidth "," totalWidth "," deviceManufacturer "," devicePartNumber "," deviceSerialNumber "," mainLocator
+				
+				for ( m=1;m<=k;m++ ) {
+					estCap=""
+					estMod=""
+					unit=""
+					altCap=0
+					workingMaxCap=int(aArrayData[m,"maxCapacity16"])
+					
+					if ( bDebugger1 == "true" ){
+						print ""
+						print "count: " m
+						print "1: mmods: " aArrayData[m,"maxModuleSize"] " :dmmods: " aArrayData[m,"derivedModuleSize"] " :mcap: " workingMaxCap " :ucap: " aArrayData[m,"usedCapacity"] 
+					}
+					# 1: if max cap 1 is null, and max cap 2 not null, use 2
+					if ( workingMaxCap == 0 ) {
+						if ( aArrayData[m,"maxCapacity5"] != 0 ) {
+							workingMaxCap=aArrayData[m,"maxCapacity5"]
+						}
+					}
+					if ( aArrayData[m,"deviceCount16"] == "" ) {
+						aArrayData[m,"deviceCount16"] = 0
+					}
+					if ( bDebugger1 == "true" ){
+						print "2: mmods: " aArrayData[m,"maxModuleSize"] " :dmmods: " aArrayData[m,"derivedModuleSize"] " :mcap: " workingMaxCap " :ucap: " aArrayData[m,"usedCapacity"]
+					}
+					# 2: now check to see if actually found module sizes are > than listed max module, replace if >
+					if (aArrayData[m,"maxModuleSize"] != 0 && aArrayData[m,"derivedModuleSize"] != 0 && int(aArrayData[m,"derivedModuleSize"]) > int(aArrayData[m,"maxModuleSize"]) ) {
+						aArrayData[m,"maxModuleSize"]=aArrayData[m,"derivedModuleSize"]
+						estMod=" (est)"
+					}
+					aArrayData[m,"maxModuleSize"]=int(aArrayData[m,"maxModuleSize"])
+					aArrayData[m,"derivedModuleSize"]=int(aArrayData[m,"derivedModuleSize"])
+					aArrayData[m,"usedCapacity"]=int(aArrayData[m,"usedCapacity"])
+					workingMaxCap=int(workingMaxCap) 
+					 
+					# note: some cases memory capacity == max module size, so one stick will fill it
+					# but I think only with cases of 2 slots does this happen, so if > 2, use the count of slots.
+					if ( bDebugger1 == "true" ){
+						print "3: fmod: " aArrayData[m,"deviceCountFound"] " :modc: " aArrayData[m,"deviceCount16"] " :maxc1: " aArrayData[m,"maxCapacity5"] " :maxc2: " aArrayData[m,"maxCapacity16"]
+					}
+					if (workingMaxCap != 0 && ( aArrayData[m,"deviceCountFound"] != 0 || aArrayData[m,"deviceCount16"] != 0 ) ) {
+						aArrayData[m,"deviceCount16"]=int(aArrayData[m,"deviceCount16"])
+						## first check that actual memory found is not greater than listed max cap, or
+						## checking to see module count * max mod size is not > used capacity
+						if ( aArrayData[m,"usedCapacity"] != 0 && aArrayData[m,"maxCapacity16"] != 0 ) {
+							if ( aArrayData[m,"usedCapacity"] > workingMaxCap ) {
+								if ( aArrayData[m,"maxModuleSize"] != 0 && 
+									aArrayData[m,"usedCapacity"] < aArrayData[m,"deviceCount16"] * aArrayData[m,"maxModuleSize"] ) {
+									workingMaxCap=aArrayData[m,"deviceCount16"] * aArrayData[m,"maxModuleSize"]
+									estCap=" (est)"
+									if ( bDebugger1 == "true" ){
+										print "A"
+									}
+								}
+								else if ( aArrayData[m,"derivedModuleSize"] != 0 && 
+											aArrayData[m,"usedCapacity"] < aArrayData[m,"deviceCount16"] * aArrayData[m,"derivedModuleSize"] ) {
+									workingMaxCap=aArrayData[m,"deviceCount16"] *  aArrayData[m,"derivedModuleSize"]
+									estCap=" (est)"
+									if ( bDebugger1 == "true" ){
+										print "B"
+									}
+								}
+								else {
+									workingMaxCap=aArrayData[m,"usedCapacity"]
+									estCap=" (est)"
+									if ( bDebugger1 == "true" ){
+										print "C"
+									}
+								}
+							}
+						} 
+						# note that second case will never really activate except on virtual machines and maybe
+						# mobile devices
+						if ( estCap == "" ) {
+							# do not do this for only single modules found, max mod size can be equal to the array size
+							if ( ( aArrayData[m,"deviceCount16"] > 1 && aArrayData[m,"deviceCountFound"] > 1 ) && 
+								( workingMaxCap < aArrayData[m,"derivedModuleSize"] * aArrayData[m,"deviceCount16"] ) ) {
+								workingMaxCap = aArrayData[m,"derivedModuleSize"] * aArrayData[m,"deviceCount16"]
+								estCap=" (est)"
+								if ( bDebugger1 == "true" ){
+									print "D"
+								}
+							}
+							else if ( ( aArrayData[m,"deviceCountFound"] > 0 ) && 
+										( workingMaxCap < aArrayData[m,"derivedModuleSize"] * aArrayData[m,"deviceCountFound"] ) ) {
+								workingMaxCap = aArrayData[m,"derivedModuleSize"] * aArrayData[m,"deviceCountFound"]
+								estCap=" (est)"
+								if ( bDebugger1 == "true" ){
+									print "E"
+								}
+							}
+							## handle cases where we have type 5 data: mms x device count equals type 5 max cap
+							# however do not use it if cap / devices equals the derived module size
+							else if ( aArrayData[m,"maxModuleSize"] > 0 && 
+										( aArrayData[m,"maxModuleSize"] * aArrayData[m,"deviceCount16"] == aArrayData[m,"maxCapacity5"] ) && 
+										aArrayData[m,"maxCapacity5"] != aArrayData[m,"maxCapacity16"] && 
+										aArrayData[m,"maxCapacity16"] / aArrayData[m,"deviceCount16"] != aArrayData[m,"derivedModuleSize"] ) {
+								workingMaxCap = aArrayData[m,"maxCapacity5"]
+								altCap=aArrayData[m,"maxCapacity5"] # not used
+								estCap=" (check)"
+								if ( bDebugger1 == "true" ){
+									print "F"
+								}
+							}
+						}
+					}
+					altCap=int(altCap)
+					workingMaxCap=int(workingMaxCap)
+					if ( bDebugger1 == "true" ){
+						print "4: mmods: " aArrayData[m,"maxModuleSize"] " :dmmods: " aArrayData[m,"derivedModuleSize"] " :mcap: " workingMaxCap " :ucap: " aArrayData[m,"usedCapacity"]
+					}
+					# some cases of type 5 have too big module max size, just dump the data then since
+					# we cannot know if it is valid or not, and a guess can be wrong easily
+					if ( aArrayData[m,"maxModuleSize"] != 0 && workingMaxCap != "" && 
+						( aArrayData[m,"maxModuleSize"] > workingMaxCap ) ){
+						aArrayData[m,"maxModuleSize"] = 0
+						# print "yes"
+					}
+					if ( bDebugger1 == "true" ){
+						print "5: dms: " aArrayData[m,"derivedModuleSize"] " :dc: " aArrayData[m,"deviceCount16"] " :wmc: " workingMaxCap
+					}
+					## prep for output ##
+					if (aArrayData[m,"maxModuleSize"] == 0 ){
+						aArrayData[m,"maxModuleSize"]=""
+						# ie: 2x4gB
+						if ( estCap == "" && int(aArrayData[m,"derivedModuleSize"]) > 0 &&
+						    workingMaxCap > ( int(aArrayData[m,"derivedModuleSize"]) * int(aArrayData[m,"deviceCount16"]) * 4 ) ) { 
+							estCap=" (check)"
+							if ( bDebugger1 == "true" ){
+								print "G"
+							}
+						}
+					}
+					else {
+						# case where listed max cap is too big for actual slots x max cap, eg:
+						# listed max cap, 8gb, max mod 2gb, slots 2
+						if ( estCap == "" && aArrayData[m,"maxModuleSize"] > 0 ) {
+							if ( int(workingMaxCap) > int(aArrayData[m,"maxModuleSize"]) * aArrayData[m,"deviceCount16"] ) {
+								estCap=" (check)"
+								if ( bDebugger1 == "true" ){
+									print "H"
+								}
+							}
+						}
+						if (aArrayData[m,"maxModuleSize"] > 1023 ) {
+							aArrayData[m,"maxModuleSize"]=aArrayData[m,"maxModuleSize"] / 1024 " GB"
+						}
+						else {
+							aArrayData[m,"maxModuleSize"]=aArrayData[m,"maxModuleSize"] " MB"
+						}
+					}
+					if ( aArrayData[m,"deviceCount16"] == 0 ) {
+						aArrayData[m,"deviceCount16"] = ""
+					}
+					if (workingMaxCap != 0 ) {
+						if ( workingMaxCap < 1024 ) {
+							workingMaxCap = workingMaxCap
+							unit=" MB"
+						}
+						else if ( workingMaxCap < 1024000 ) {
+							workingMaxCap = workingMaxCap / 1024
+							unit=" GB"
+						}
+						else if ( workingMaxCap < 1024000000 ) {
+							workingMaxCap = workingMaxCap / 1024000
+							unit=" TB"
+						}
+						# we only want a max 2 decimal places, this trick gives 0 to 2
+						workingMaxCap=gensub(/([0-9]+\.[0-9][0-9]).*/,"\\1",1,workingMaxCap)
+						workingMaxCap = workingMaxCap unit estCap
+						
+					}
+					else {
+						workingMaxCap == ""
+					}
+					
+					print aArrayData[m,"data-type"] "," aArrayData[m,"handle"] "," aArrayData[m,"location"] "," workingMaxCap "," aArrayData[m,"deviceCount16"] "," aArrayData[m,"use"] "," aArrayData[m,"errorCorrection"] "," aArrayData[m,"maxModuleSize"] estMod "," aArrayData[m,"voltage5"] 
+					# print device rows next
+					for ( j=0;j<=100;j++ ) {
+						if (aMemory[m,j,0] != "" ) {
+							unit=""
+							workingSize=aMemory[m,j,2]
+							if ( workingSize ~ /^[0-9]+$/ ) {
+								workingSize=int(workingSize)
+								if ( workingSize < 1024 ) {
+									workingSize = workingSize
+									unit=" MB"
+								}
+								else if ( workingSize < 1024000 ) {
+									workingSize = workingSize / 1024
+									unit=" GB"
+								}
+								else if ( workingSize < 1024000000 ) {
+									workingSize = workingSize / 1024000
+									unit=" TB"
+								}
+								# we only want a max 2 decimal places, this trick gives 0 to 2
+								workingSize=gensub(/([0-9]+\.[0-9][0-9]).*/,"\\1",1,workingSize)
+								workingSize = workingSize unit
+							}
+							print aMemory[m,j,0] "," aMemory[m,j,1] "," workingSize "," aMemory[m,j,3] "," aMemory[m,j,4] "," aMemory[m,j,5] "," aMemory[m,j,6] "," aMemory[m,j,7] "," aMemory[m,j,8]  "," aMemory[m,j,9] "," aMemory[m,j,10] "," aMemory[m,j,11] "," aMemory[m,j,12] "," aMemory[m,j,13] "," aMemory[m,j,14] "," aMemory[m,j,15] "," aMemory[m,j,16] "," aMemory[m,j,17]
+						}
+						else {
+							break
+						}
+					}
+				}
+			}' <<< "$DMIDECODE_DATA" ) )
+		fi
+	fi
+	IFS="$ORIGINAL_IFS"
+	a_temp=${A_MEMORY_DATA[@]}
+	
+ 	# echo "${a_temp[@]}"
+	log_function_data "A_MEMORY_DATA: $a_temp"
+	
+	eval $LOGFE
+}
 
 # Repos will be added as we get distro package manager data to create the repo data. 
 # This method will output the file name also, which is useful to create output that's 
@@ -9366,7 +10012,7 @@ print_it_out()
 			print_cpu_data
 		fi
 		if [[ $B_SHOW_MEMORY == 'true' ]];then
-			print_memory_data
+			print_ram_data
 		fi
 		if [[ $B_SHOW_GRAPHICS == 'true' ]];then
 			print_graphics_data
@@ -9632,19 +10278,19 @@ print_audio_data()
 			fi
 			if [[ -n $audio_data ]];then
 				if [[ $( calculate_line_length "$card_string$audio_data" ) -lt $COLS_INNER ]];then
-					print_data=$( create_print_line "$line_starter" "$card_string$audio_data${CN}" )
+					print_data=$( create_print_line "$line_starter" "$card_string$audio_data" )
 					print_screen_output "$print_data"
 				# print the line
 				else
 					# keep the driver on the same line no matter what, looks weird alone on its own line
 					if [[ $( calculate_line_length "$card_string$audio_data" ) -gt $COLS_INNER ]];then
-						print_data=$( create_print_line "$line_starter" "$card_string${CN}" )
+						print_data=$( create_print_line "$line_starter" "$card_string" )
 						print_screen_output "$print_data"
 						line_starter=' '
-						print_data=$( create_print_line "$line_starter" "$audio_data${CN}" )
+						print_data=$( create_print_line "$line_starter" "$audio_data" )
 						print_screen_output "$print_data"
 					else
-						print_data=$( create_print_line "$line_starter" "$card_string$audio_data${CN}" )
+						print_data=$( create_print_line "$line_starter" "$card_string$audio_data" )
 						print_screen_output "$print_data"
 					fi
 				fi
@@ -9657,7 +10303,7 @@ print_audio_data()
 			# alsa_data=$( sed 's/ALSA/Advanced Linux Sound Architecture/' <<< $alsa_data )
 			alsa_data=${alsa_data/ALSA/Advanced Linux Sound Architecture}
 		fi
-		alsa_data=$( create_print_line "$line_starter" "$alsa_data${CN}" )
+		alsa_data=$( create_print_line "$line_starter" "$alsa_data" )
 		print_screen_output "$alsa_data"
 	fi
 	eval $LOGFE
@@ -9793,21 +10439,21 @@ print_cpu_data()
 	fi
 # 	echo $cpu_data $cpu_2_data
 # 	echo ln: $( calculate_line_length "$cpu_data $cpu_2_data" )
-# 	echo cpl: $( create_print_line "$line_starter" "$cpu_2_data${CN}" ):
+# 	echo cpl: $( create_print_line "$line_starter" "$cpu_2_data" ):
 # 	echo icols: $COLS_INNER
 # 	echo tc: $TERM_COLUMNS
 	# echo :${cpu_2_data}:
 	if [[ -n $cpu_2_data && $( calculate_line_length "$cpu_data $cpu_2_data" ) -gt $COLS_INNER ]];then
-		cpu_data=$( create_print_line "$line_starter" "$cpu_data${CN}" )
+		cpu_data=$( create_print_line "$line_starter" "$cpu_data" )
 		line_starter=' '
 		print_screen_output "$cpu_data"
-		cpu_data=$( create_print_line " " "$cpu_2_data${CN}" )
+		cpu_data=$( create_print_line " " "$cpu_2_data" )
 		print_screen_output "$cpu_data"
 	else
-		cpu_data=$( create_print_line "$line_starter" "$cpu_data${CN}" )
+		cpu_data=$( create_print_line "$line_starter" "$cpu_data" )
 		print_screen_output "$cpu_data $cpu_2_data"
 	fi
-	# we don't this printing out extra line unless > 1 cpu core
+	# we don't do this printing out extra line unless > 1 cpu core
 	# note the numbering, the last array item is the min/max/not found for cpu speeds
 	if [[ ${#A_CPU_DATA[@]} -gt 2 && $B_SHOW_CPU == 'true' ]];then
 		for (( i=0; i < ${#A_CPU_DATA[@]}-1; i++ ))
@@ -9893,6 +10539,35 @@ print_cpu_flags_full()
 		flag_data=$( create_print_line " " "$line_starter${a_cpu_flags[$i]}" )
 		print_screen_output "$flag_data"
 	done
+	eval $LOGFE
+}
+
+# args: $1 - type [sys/default]; $2 - get_dmidecode_data error return
+print_dmidecode_error()
+{
+	eval $LOGFS
+	local error_message='Unknown dmidecode error.'
+	local sysDmiError='Using '
+	
+	if [[ $1 == 'sys' ]];then
+		if [[ $B_FORCE_DMIDECODE == 'true' ]];then
+			sysDmiError='Forcing '
+		elif [[ $BSD_TYPE == '' || -d /sys ]];then
+			sysDmiError='No /sys/class/dmi; using '
+		else
+			sysDmiError='Using '
+		fi
+	fi
+	if [[ $2 == 'dmidecode-error-requires-root' ]];then
+		error_message="${sysDmiError}dmidecode: you must be root to run dmidecode"
+	elif [[ $2 == 'dmidecode-error-not-installed' ]];then
+		error_message="${sysDmiError}dmidecode: dmidecode is not installed."
+	elif [[ $2 == 'dmidecode-error-no-smbios-dmi-data' ]];then
+		error_message="${sysDmiError}dmidecode: no smbios data available. Old system?"
+	elif [[ $2 == 'dmidecode-error-unknown-error' ]];then
+		error_message="${sysDmiError}dmidecode: unknown error occured"
+	fi
+	echo $error_message
 	eval $LOGFE
 }
 
@@ -10244,7 +10919,7 @@ print_hard_disk_data()
 		# temporary message to indicate not yet supported
 		if [[ $BSD_TYPE == 'bsd' ]];then
 			hdd_data=$bsd_unsupported
-			hdd_data=$( create_print_line "$Line_Starter" "$hdd_data${CN}" )
+			hdd_data=$( create_print_line "$Line_Starter" "$hdd_data" )
 			print_screen_output "$hdd_data"
 			Line_Starter=' '
 		fi
@@ -10254,7 +10929,7 @@ print_hard_disk_data()
 		if [[ $BSD_TYPE == 'bsd' ]];then
 			hdd_data=$bsd_unsupported
 		fi
-		hdd_data=$( create_print_line "$Line_Starter" "$hdd_data${CN}" )
+		hdd_data=$( create_print_line "$Line_Starter" "$hdd_data" )
 		print_screen_output "$hdd_data"
 		Line_Starter=' '
 	fi
@@ -10311,7 +10986,7 @@ print_info_data()
 				if [[ $shell_parent == 'login' ]];then
 					shell_parent=''
 				elif [[ -n $shell_parent ]];then
-					shell_parent=" running in $shell_parent"
+					shell_parent=" running in ${shell_parent##*/}"
 				fi
 			fi
 			IRC_CLIENT="$IRC_CLIENT ($shell_data$shell_parent)"
@@ -10370,7 +11045,7 @@ print_info_data()
 	# sometimes gcc is very long, and default runlevel can be long with systemd, so create a gcc-less line first
 	if [[ $( calculate_line_length "$info_data$init_data$gcc_installed" ) -gt $COLS_INNER ]];then
 		# info_data=$info_data
-		info_data=$( create_print_line "$line_starter" "$info_data${CN}" )
+		info_data=$( create_print_line "$line_starter" "$info_data" )
 		print_screen_output "$info_data"
 		info_data=''
 		# closing_data=''
@@ -10379,7 +11054,7 @@ print_info_data()
 	fi
 	if [[ $( calculate_line_length "$init_data$gcc_installed" ) -gt $COLS_INNER ]];then
 		info_data=$init_data
-		info_data=$( create_print_line "$line_starter" "$info_data${CN}" )
+		info_data=$( create_print_line "$line_starter" "$info_data" )
 		print_screen_output "$info_data"
 		info_data=''
 		init_data=''
@@ -10388,7 +11063,7 @@ print_info_data()
 	fi
 	if [[ $( calculate_line_length "$info_data$init_data$gcc_installed$closing_data" ) -gt $COLS_INNER ]];then
 		info_data=$info_data$init_data$gcc_installed
-		info_data=$( create_print_line "$line_starter" "$info_data${CN}" )
+		info_data=$( create_print_line "$line_starter" "$info_data" )
 		print_screen_output "$info_data"
 		info_data=''
 		gcc_installed=''
@@ -10398,7 +11073,7 @@ print_info_data()
 	fi
 	info_data="$info_data$init_data$gcc_installed$closing_data"
 	
-	info_data=$( create_print_line "$line_starter" "$info_data${CN}" )
+	info_data=$( create_print_line "$line_starter" "$info_data" )
 	if [[ $SCHEME -gt 0 ]];then
 		info_data="$info_data ${NORMAL}"
 	fi
@@ -10413,20 +11088,14 @@ print_machine_data()
 	
 	local system_line='' mobo_line='' bios_line='' chassis_line=''
 	local mobo_vendor='' mobo_model='' mobo_version='' mobo_serial=''
-	local bios_vendor='' bios_version='' bios_date='' bios_rom=''
+	local bios_vendor='' bios_version='' bios_date='' bios_rom='' error_string=''
 	local system_vendor='' product_name='' product_version='' product_serial='' product_uuid=''
 	local chassis_vendor='' chassis_type='' chassis_version='' chassis_serial='' 
 	local b_skip_system='false' b_skip_chassis='false'
-	local sysDmiError='No /sys/class/dmi, using '
 	local sysDmiNull='No /sys/class/dmi machine data: try newer kernel, or install dmidecode'
 	# set A_MACHINE_DATA
 	get_machine_data
 	
-	if [[ -n $BSD_TYPE || $B_FORCE_DMIDECODE == 'true' ]];then
-		sysDmiError=''
-		sysDmiNull='No machine data available. Is dmidecode installed?'
-	fi
-
 	IFS=','
 	## keys for machine data are:
 	# 0-sys_vendor 1-product_name 2-product_version 3-product_serial 4-product_uuid 
@@ -10434,8 +11103,8 @@ print_machine_data()
 	# 9-bios_vendor 10-bios_version 11-bios_date 
 	## with extra data: 
 	# 12-chassis_vendor 13-chassis_type 14-chassis_version 15-chassis_serial
-	
-	if [[ ${#A_MACHINE_DATA[@]} -gt 0 ]];then
+	# a null array always has a count of 1
+	if [[ ${#A_MACHINE_DATA[@]} -gt 1 ]];then
 		# note: in some case a mobo/version will match a product name/version, do not print those
 		# but for laptops, or even falsely id'ed desktops with batteries, let's print it all if it matches
 		# there can be false id laptops if battery appears so need to make sure system is filled
@@ -10547,55 +11216,31 @@ print_machine_data()
 				chassis_line=''
 			fi
 		fi
-		IFS="$ORIGINAL_IFS"
 	else
 		system_line="${C2}$sysDmiNull"
 	fi
-	# patch to dump all of above if dmidecode was data source and non root user
-	if [[ ${A_MACHINE_DATA[0]} == 'dmidecode-non-root-user' || \
-	${A_MACHINE_DATA[0]} == 'dmidecode-no-smbios-dmi-data' ]];then
-		if [[ ${A_MACHINE_DATA[0]} == 'dmidecode-non-root-user' ]];then
-			system_line="${C2}${sysDmiError}dmidecode: you must be root to run dmidecode"
-		elif [[ ${A_MACHINE_DATA[0]} == 'dmidecode-no-smbios-dmi-data' ]];then
-			system_line="${C2}${sysDmiError}dmidecode: no machine data available"
-		fi
+	IFS="$ORIGINAL_IFS"
+	# patch to dump all of above if dmidecode was data source and a dmidecode error is present
+	if [[ ${A_MACHINE_DATA[0]} == 'dmidecode-error-'* ]];then
+		error_string=$( print_dmidecode_error 'sys' "${A_MACHINE_DATA[0]}" )
+		system_line=${C2}$error_string
 		mobo_line=''
 		bios_line=''
 		chassis_line=''
 	fi
-	system_line=$( create_print_line "Machine:" "$system_line${CN}" )
+	system_line=$( create_print_line "Machine:" "$system_line" )
 	print_screen_output "$system_line"
 	if [[ -n $mobo_line ]];then
-		mobo_line=$( create_print_line " " "$mobo_line${CN}" )
+		mobo_line=$( create_print_line " " "$mobo_line" )
 		print_screen_output "$mobo_line"
 	fi
 	if [[ -n $bios_line ]];then
-		bios_line=$( create_print_line " " "$bios_line${CN}" )
+		bios_line=$( create_print_line " " "$bios_line" )
 		print_screen_output "$bios_line"
 	fi
 	if [[ -n $chassis_line ]];then
-		chassis_line=$( create_print_line " " "$chassis_line${CN}" )
+		chassis_line=$( create_print_line " " "$chassis_line" )
 		print_screen_output "$chassis_line"
-	fi
-	
-	eval $LOGFE
-}
-
-print_memory_data()
-{
-	eval $LOGFS
-	local memory_line="${C1}Placeholder$SEP3${C2} Feature not yet developed"
-	
-	memory_line=$( create_print_line "Memory:" "$memory_line${CN}" )
-	print_screen_output "$memory_line"
-	
-	if [[ ${A_MEMORY_DATA[0]} == 'dmidecode-non-root-user' || \
-	${A_MEMORY_DATA[0]} == 'dmidecode-no-smbios-dmi-data' ]];then
-		if [[ ${A_MEMORY_DATA[0]} == 'dmidecode-non-root-user' ]];then
-			memory_line="${C2}${sysDmiError}dmidecode: you must be root to run dmidecode"
-		elif [[ ${A_MEMORY_DATA[0]} == 'dmidecode-no-smbios-dmi-data' ]];then
-			memory_line="${C2}${sysDmiError}dmidecode: no machine data available"
-		fi
 	fi
 	
 	eval $LOGFE
@@ -10749,7 +11394,7 @@ print_networking_data()
 		done
 	else
 		network_data="${C1}Card$SEP3${C2} Failed to Detect Network Card! "
-		network_data=$( create_print_line "$line_starter" "$network_data${CN}" )
+		network_data=$( create_print_line "$line_starter" "$network_data" )
 		print_screen_output "$network_data"
 	fi
 	if [[ $B_SHOW_IP == 'true' ]];then
@@ -10802,12 +11447,12 @@ print_network_advanced_data()
 	network_data="${C1}IF$SEP3${C2} $if_id ${C1}state$SEP3${C2} $oper_state $speed_string$duplex_string"
 	part_2_data="${C1}mac$SEP3${C2} $mac_id"
 	if [[ $( calculate_line_length "$network_data$part_2_data" ) -gt $COLS_INNER ]];then
-		network_data=$( create_print_line " " "$network_data${CN}" )
+		network_data=$( create_print_line " " "$network_data" )
 		print_screen_output "$network_data"
 		network_data=''
 	fi
 	if [[ -n $network_data$part_2_data ]];then
-		network_data=$( create_print_line " " "$network_data$part_2_data${CN}" )
+		network_data=$( create_print_line " " "$network_data$part_2_data" )
 		print_screen_output "$network_data"
 		network_data=''
 	fi
@@ -10872,14 +11517,14 @@ print_networking_ip_data()
 		# first line, print wan on its own line if too long
 		if [[ $i -eq 0 ]];then
 			if [[ $( calculate_line_length "$wan_ip_data$if_string" ) -gt $COLS_INNER ]];then
-				full_string=$( create_print_line " " "$wan_ip_data${CN}" )
+				full_string=$( create_print_line " " "$wan_ip_data" )
 				print_screen_output "$full_string"
 				wan_ip_data=''
-				full_string=$( create_print_line " " "$if_string${CN}" )
+				full_string=$( create_print_line " " "$if_string" )
 				print_screen_output "$full_string"
 				if_string=''
 			else
-				full_string=$( create_print_line " " "$wan_ip_data$if_string${CN}" )
+				full_string=$( create_print_line " " "$wan_ip_data$if_string" )
 				print_screen_output "$full_string"
 				wan_ip_data=''
 				if_string=''
@@ -10887,7 +11532,7 @@ print_networking_ip_data()
 		else 
 			if [[ $( calculate_line_length "$if_string_holding$if_string" ) -gt $COLS_INNER ]];then
 				if [[ -n $if_string_holding ]];then
-					full_string=$( create_print_line " " "$if_string_holding${CN}" )
+					full_string=$( create_print_line " " "$if_string_holding" )
 					print_screen_output "$full_string"
 				fi
 				if_string_holding="$if_string"
@@ -10900,7 +11545,7 @@ print_networking_ip_data()
 	
 	# then print out anything not printed already
 	if [[ -n $if_string_holding ]];then
-		full_string=$( create_print_line " " "$if_string_holding${CN}" )
+		full_string=$( create_print_line " " "$if_string_holding" )
 		print_screen_output "$full_string"
 	fi
 	eval $LOGFE
@@ -10979,30 +11624,30 @@ print_optical_drive_data()
 			fi
 			drive_data="${C1}Optical${counter}$SEP3${C2} $drive_string"
 			if [[ $( calculate_line_length "$drive_data$part_2_data" ) -lt $COLS_INNER ]];then
-				drive_data=$( create_print_line "$Line_Starter" "$drive_data$part_2_data${CN}" )
+				drive_data=$( create_print_line "$Line_Starter" "$drive_data$part_2_data" )
 				print_screen_output "$drive_data"
 				Line_Starter=' '
 				drive_data=''
 				part_2_data=''
 			else
 				if [[ $( calculate_line_length "$drive_data" ) -gt $COLS_INNER ]];then
-					drive_data=$( create_print_line "$Line_Starter" "$drive_data${CN}" )
+					drive_data=$( create_print_line "$Line_Starter" "$drive_data" )
 					print_screen_output "$drive_data"
 					Line_Starter=' '
 					drive_data=''
 				fi
 				if [[ $( calculate_line_length "$drive_data$part_2_data" ) -lt $COLS_INNER ]];then
-					drive_data=$( create_print_line "$Line_Starter" "$drive_data$part_2_data${CN}" )
+					drive_data=$( create_print_line "$Line_Starter" "$drive_data$part_2_data" )
 					print_screen_output "$drive_data"
 					Line_Starter=' '
 					part_2_data=''
 					drive_data=''
 				else
-					drive_data=$( create_print_line "$Line_Starter" "$drive_data${CN}" )
+					drive_data=$( create_print_line "$Line_Starter" "$drive_data" )
 					print_screen_output "$drive_data"
 					drive_data=''
 					Line_Starter=' '
-					drive_data=$( create_print_line "$Line_Starter" "$part_2_data${CN}" )
+					drive_data=$( create_print_line "$Line_Starter" "$part_2_data" )
 					print_screen_output "$drive_data"
 					Line_Starter=' '
 					part_2_data=''
@@ -11078,13 +11723,13 @@ print_optical_drive_data()
 				drive_data="${C1}Features: speed$SEP3${C2} $speed $multisession"
 				part_2_data="$audio${C1}dvd$SEP3${C2} $dvd ${C1}rw$SEP3${C2} $rw_support $state"
 				if [[ $( calculate_line_length "$drive_data$part_2_data" ) -lt $COLS_INNER ]];then
-					drive_data=$( create_print_line "$Line_Starter" "$drive_data$part_2_data${CN}" )
+					drive_data=$( create_print_line "$Line_Starter" "$drive_data$part_2_data" )
 					print_screen_output "$drive_data"
 					Line_Starter=' '
 				else
 					drive_data=$( create_print_line "$Line_Starter" "$drive_data" )
 					print_screen_output "$drive_data"
-					drive_data=$( create_print_line "$Line_Starter" "$part_2_data${CN}" )
+					drive_data=$( create_print_line "$Line_Starter" "$part_2_data" )
 					print_screen_output "$drive_data"
 					Line_Starter=' '
 				fi
@@ -11199,7 +11844,7 @@ print_partition_data()
 			line_starter=' '
 		fi
 		if [[ -n ${a_partition_data[$i]} ]];then
-			partition_data=$( create_print_line "$line_starter" "${a_partition_data[$i]}${CN}" )
+			partition_data=$( create_print_line "$line_starter" "${a_partition_data[$i]}" )
 			print_screen_output "$partition_data"
 		fi
 	done
@@ -11267,7 +11912,7 @@ print_ps_item()
 	fi
 	
 	# appName, appPath, appStarterName, appStarterPath, cpu, mem, pid, vsz, user
-	ps_data=$( create_print_line "$line_starter" "$line_start_data${CN}" )
+	ps_data=$( create_print_line "$line_starter" "$line_start_data" )
 	print_screen_output "$ps_data"
 
 	for (( i=0; i < ${#A_PS_DATA[@]}; i++ ))
@@ -11306,7 +11951,7 @@ print_ps_item()
 		(( line_counter++ ))
 		count_nu="${C1}$line_counter$SEP3${C2}"
 		full_line="$count_nu$app_cpu$app_mem$app_name$app_pid$extra_data"
-		ps_data=$( create_print_line " " "$full_line${CN}" )
+		ps_data=$( create_print_line " " "$full_line" )
 		print_screen_output "$ps_data"
 	done
 	
@@ -11594,7 +12239,7 @@ print_raid_data()
 			fi
 			if [[ $B_EXTRA_EXTRA_DATA == 'true' && $array_count != '' ]];then
 				if [[ $i == 0 ]];then
-					raid_data=$( create_print_line "$line_starter" "${a_raid_data[array_count]}${CN}" )
+					raid_data=$( create_print_line "$line_starter" "${a_raid_data[array_count]}" )
 					print_screen_output "$raid_data"
 					line_starter=' '
 				fi
@@ -11603,7 +12248,7 @@ print_raid_data()
 			print_screen_output "$raid_data"
 			if [[ $B_EXTRA_EXTRA_DATA == 'true' && $array_count_unused != '' ]];then
 				if [[ $i == $(( array_count_unused - 2 )) ]];then
-					raid_data=$( create_print_line "$line_starter" "${a_raid_data[array_count_unused]}${CN}" )
+					raid_data=$( create_print_line "$line_starter" "${a_raid_data[array_count_unused]}" )
 					print_screen_output "$raid_data"
 				fi
 			fi
@@ -11612,6 +12257,240 @@ print_raid_data()
 	
 	eval $LOGFE
 }
+
+print_ram_data()
+{
+	eval $LOGFS
+	local memory_line='' line_2='' line_3='' b_module_present='true'
+	local error_string='' a_memory_item='' line_starter='Memory:' array_counter=1 device_counter=1
+	local dmidecodeNull='No dmidecode memory data: try newer kernel.'
+	
+	local manufacturer='' part_nu='' serial_nu='' device_speed='' configured_speed='' bus_width=
+	local data_width='' total_width='' device_type='' device_type_detail='' bank='' slot='' form_factor=''
+	local device_size='' array_use='' location='' error_correction='' max_capacity='' nu_of_devices=''
+	local max_module_size='' module_voltage='' bank_connection=''
+	
+	get_ram_data
+	#echo ${#A_MEMORY_DATA[@]}
+	#echo ${A_MEMORY_DATA[0]}
+	if [[ ${#A_MEMORY_DATA[@]} -gt 0 ]];then
+		if [[ ${A_MEMORY_DATA[0]} == 'dmidecode-error-'* ]];then
+			error_string=$( print_dmidecode_error 'default' "${A_MEMORY_DATA[0]}" )
+			memory_line="${C2}$error_string"
+		else
+			for (( i=0;i<${#A_MEMORY_DATA[@]};i++ ))
+			do
+				IFS=','
+				a_memory_item=(${A_MEMORY_DATA[i]})
+				IFS="$ORIGINAL_IFS"
+				memory_line=''
+				line_2=''
+				line_3=''
+				bus_width=''
+				data_width=
+				total_width=
+				part_nu=''
+				serial_nu=''
+				manufacturer=''
+				max_module_size='' 
+				module_voltage=''
+				bank_connection=''
+				# memory-array,0x0012,System Board,8 GB,4,System Memory,None,max size,moudule voltage
+				if [[ ${a_memory_item[0]} == 'memory-array' ]];then
+					if [[ -n ${a_memory_item[4]} ]];then
+						nu_of_devices=${a_memory_item[4]}
+					else
+						nu_of_devices='N/A'
+					fi
+					if [[ -n ${a_memory_item[3]} ]];then
+						max_capacity=${a_memory_item[3]}
+					else
+						max_capacity='N/A'
+					fi
+					if [[ -n ${a_memory_item[6]} ]];then
+						error_correction=${a_memory_item[6]}
+					else
+						error_correction='N/A'
+					fi
+					if [[ $B_EXTRA_DATA == 'true' ]];then
+						if [[ -n ${a_memory_item[7]} ]];then
+							max_module_size="${C1}max module size${SEP3}${C2} ${a_memory_item[7]} "
+						fi
+					fi
+					if [[ $B_EXTRA_EXTRA_EXTRA_DATA == 'true' ]];then
+						if [[ -n ${a_memory_item[8]} ]];then
+							module_voltage="${C1}module voltage$SEP3${C2} ${a_memory_item[8]}"
+						fi
+					fi
+					memory_line="${C1}Array-$array_counter capacity$SEP3${C2} $max_capacity ${C1}devices$SEP3${C2} $nu_of_devices ${C1}EC$SEP3${C2} $error_correction "
+					line_2="$max_module_size$module_voltage"
+					if [[ -n $line_2 && $( calculate_line_length "$memory_line$line_2" ) -gt $COLS_INNER ]];then
+						memory_line=$( create_print_line "$line_starter" "$memory_line" )
+						print_screen_output "$memory_line"
+						memory_line="$line_2"
+						line_starter=' '
+						line_2=''
+					else
+						memory_line="$memory_line$line_2"
+						line_2=''
+					fi
+					(( array_counter++ ))
+					device_counter=1 # reset so device matches device count per array
+				else
+					# not used for now
+# 					if [[ -n ${a_memory_item[3333]} ]];then
+# 						if [[ -z ${a_memory_item[3]/BANK*/} ]];then
+# 							#bank=${a_memory_item[3]#BANK}
+# 							bank=${a_memory_item[3]}
+# 							bank=${bank## }
+# 						else
+# 							bank=${a_memory_item[3]}
+# 						fi
+# 					else
+# 						bank='N/A'
+# 					fi
+# 					# not used for now
+# 					if [[ -n ${a_memory_item[44444]} ]];then
+# 						if [[ -z ${a_memory_item[4]/SLOT*/} ]];then
+# 							#slot=${a_memory_item[4]#SLOT}
+# 							slot=${a_memory_item[4]}
+# 							slot=${slot## }
+# 						else
+# 							slot=${a_memory_item[4]}
+# 						fi
+# 					else
+# 						slot='N/A'
+# 					fi
+					if [[ -n ${a_memory_item[15]} ]];then
+						locator=${a_memory_item[15]}
+						locator=${locator## }
+					else
+						locator='N/A'
+					fi
+					if [[ -n ${a_memory_item[2]} ]];then
+						device_size=${a_memory_item[2]}
+						if [[ $device_size == 'No Module Installed' ]];then
+							b_module_present='false'
+						else
+							b_module_present='true'
+						fi
+					else
+						device_size='N/A'
+					fi
+					if [[ -n ${a_memory_item[6]} ]];then
+						device_type=${a_memory_item[6]}
+						if [[ $B_EXTRA_EXTRA_EXTRA_DATA == 'true' && -n ${a_memory_item[7]} \
+						      && ${a_memory_item[7]} != 'Other' ]];then
+							device_type="$device_type (${a_memory_item[7]})"
+						fi
+					else
+						device_type='N/A'
+					fi
+					device_type="${C1}type$SEP3${C2} $device_type "
+					if [[ -n ${a_memory_item[8]} ]];then
+						if [[ -n ${a_memory_item[9]} ]];then
+							device_speed=${a_memory_item[9]}
+						else
+							device_speed=${a_memory_item[8]}
+						fi
+					else
+						device_speed='N/A'
+					fi
+					if [[ $b_module_present == 'true' ]];then
+						device_speed="${C1}speed$SEP3${C2} $device_speed "
+					else
+						device_speed=''
+					fi
+					# memory-device,0x002C,8192 MB,ChannelD,ChannelD_Dimm2,DIMM,DDR3,Synchronous,2400 MHz,2400 MHz,64 bits,64 bits,Undefined,F3-19200C10-8GBZH,00000000
+					if [[ $b_module_present == 'true' ]];then
+						if [[ $B_EXTRA_DATA == 'true' ]];then
+							if [[ -n ${a_memory_item[13]} ]];then
+								part_nu=${a_memory_item[13]}
+							else
+								part_nu='N/A'
+							fi
+							part_nu="${C1}part$SEP3${C2} $part_nu "
+						fi
+						if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
+							if [[ -n ${a_memory_item[12]} ]];then
+								manufacturer=${a_memory_item[12]}
+							else
+								manufacturer='N/A' 
+							fi
+							manufacturer="${C1}manufacturer$SEP3${C2} $manufacturer "
+							if [[ -n ${a_memory_item[14]} ]];then
+								serial_nu=${a_memory_item[14]}
+							else
+								serial_nu='N/A'
+							fi
+							serial_nu="${C1}serial$SEP3${C2} $serial_nu "
+							
+							if [[ $device_size != 'N/A' && -n ${a_memory_item[16]} ]];then
+								bank_connection=" ${a_memory_item[16]}"
+							fi
+						fi
+					fi
+					if [[ $B_EXTRA_EXTRA_EXTRA_DATA == 'true' ]];then
+						if [[ $b_module_present == 'true' ]] || \
+						     [[ -n ${a_memory_item[11]} || -n ${a_memory_item[10]} ]];then
+							# only create this if the total exists and is > data width
+							if [[ -n ${a_memory_item[10]/ bits/} && -n ${a_memory_item[11]/ bits} && \
+							      ${a_memory_item[11]/ bits/} -gt ${a_memory_item[10]/ bits/} ]];then
+								total_width=" (total$SEP3 ${a_memory_item[11]})"
+							fi
+							if [[ -n ${a_memory_item[10]} ]];then
+								data_width=${a_memory_item[10]}
+							else
+								data_width='N/A'
+							fi
+							bus_width="${C1}bus width$SEP3${C2} $data_width$total_width "
+						fi
+					fi
+					memory_line="${C1}Device-$device_counter$SEP3${C2} $locator ${C1}size$SEP3${C2} $device_size$bank_connection $device_speed"
+					if [[ $( calculate_line_length "$memory_line$device_type" ) -le $COLS_INNER ]];then
+						memory_line="$memory_line$device_type"
+						device_type=''
+					fi
+					line_3="$manufacturer$part_nu$serial_nu"
+					line_2="$device_type$bus_width"
+					# echo $( calculate_line_length "$memory_line" )
+					# echo $( calculate_line_length "$memory_line$line_2" )
+					if [[ $( calculate_line_length "$memory_line$line_2$line_3" ) -gt $COLS_INNER ]];then
+						memory_line=$( create_print_line "$line_starter" "$memory_line" )
+						print_screen_output "$memory_line"
+						memory_line="$line_2"
+						line_starter=' '
+						if [[ -n $memory_line && -n $line_3 && $( calculate_line_length "$memory_line$line_3" ) -gt $COLS_INNER ]];then
+							memory_line=$( create_print_line "$line_starter" "$memory_line" )
+							print_screen_output "$memory_line"
+							memory_line="$line_3"
+						else
+							memory_line="$memory_line$line_3"
+						fi
+					else
+						memory_line="$memory_line$line_2$line_3"
+					fi
+					(( device_counter++ ))
+				fi
+				memory_line=$( create_print_line "$line_starter" "$memory_line" )
+				print_screen_output "$memory_line"
+				line_starter=' '
+			done
+			memory_line=' '
+		fi
+	else
+		memory_line="${C2}$dmidecodeNull"
+	fi
+	IFS="$ORIGINAL_IFS"
+	memory_line=${memory_line## }
+	if [[ -n $memory_line ]];then
+		memory_line=$( create_print_line "$line_starter" "$memory_line" )
+		print_screen_output "$memory_line"
+	fi
+
+	eval $LOGFE
+}
+
 
 # currently only apt using distros support this feature, but over time we can add others
 print_repo_data()
@@ -11649,13 +12528,13 @@ print_repo_data()
 				file_name_holder=$file_name
 				b_print_next_line='true'
 			else
-				repo_full=$file_content
+				repo_full="${C2}$file_content"
 			fi
 			# first line print Repos: 
 			if [[ $repo_count -eq 1 ]];then
-				repo_full=$( create_print_line "Repos:" "$repo_full${CN}" )
+				repo_full=$( create_print_line "Repos:" "$repo_full" )
 			else
-				repo_full=$( create_print_line " " "$repo_full${CN}" )
+				repo_full=$( create_print_line " " "$repo_full" )
 			fi
 			print_screen_output "$repo_full"
 			# this prints the content of the file as well as the file name
@@ -11800,16 +12679,16 @@ print_sensors_data()
 	# unless -s used explicitly. So for -F type output won't show unless valid or -! 1 used
 	if [[ $b_is_error != 'true' || $B_SHOW_SENSORS == 'true' || $B_TESTING_1 == 'true' ]];then
 		temp_data="$cpu_temp$mobo_temp$psu_temp$gpu_temp"
-		temp_data=$( create_print_line "Sensors:" "$temp_data${CN}" )
+		temp_data=$( create_print_line "Sensors:" "$temp_data" )
 		print_screen_output "$temp_data"
 		# don't print second or subsequent lines if error data
 		fan_data="$cpu_fan$mobo_fan$ps_fan$sys_fans"
 		if [[ $b_is_error != 'true' && -n $fan_data ]];then
-			fan_data=$( create_print_line " " "$fan_data${CN}" )
+			fan_data=$( create_print_line " " "$fan_data" )
 			print_screen_output "$fan_data"
 			# and then second wrapped fan line if needed
 			if [[ -n $sys_fans2 ]];then
-				fan_data2=$( create_print_line " " "$sys_fans2${CN}" )
+				fan_data2=$( create_print_line " " "$sys_fans2" )
 				print_screen_output "$fan_data2"
 			fi
 		fi
@@ -11895,13 +12774,13 @@ print_system_data()
 	distro_string="${C1}Distro$SEP3${C2} $distro "
 	
 	if [[ $( calculate_line_length "$host_kernel_string$de_string" ) -gt $COLS_INNER ]];then
-		system_data=$( create_print_line "$line_starter" "$host_kernel_string${CN}" )
+		system_data=$( create_print_line "$line_starter" "$host_kernel_string" )
 		print_screen_output "$system_data"
 		host_kernel_string=''
 		line_starter=' '
 	fi
 	if [[ $( calculate_line_length "$host_kernel_string$de_string$distro_string" ) -gt $COLS_INNER ]];then
-		system_data=$( create_print_line "$line_starter" "$host_kernel_string$de_string${CN}" )
+		system_data=$( create_print_line "$line_starter" "$host_kernel_string$de_string" )
 		print_screen_output "$system_data"
 		host_kernel_string=''
 		de_string=''
@@ -11910,7 +12789,7 @@ print_system_data()
 	system_data="$host_kernel_string$de_string$distro_string"
 	if [[ -n $system_data ]];then
 		system_data="$host_kernel_string$de_string$distro_string"
-		system_data=$( create_print_line "$line_starter" "$system_data${CN}" )
+		system_data=$( create_print_line "$line_starter" "$system_data" )
 		print_screen_output "$system_data"
 	fi
 	
@@ -11974,19 +12853,19 @@ print_unmounted_partition_data()
 				part_2_data="$full_fs$full_label$full_uuid"
 			fi
 			if [[ $( calculate_line_length "$full_string$part_2_data" ) -gt $COLS_INNER ]];then
-				unmounted_data=$( create_print_line "$line_starter" "$full_string${CN}" )
+				unmounted_data=$( create_print_line "$line_starter" "$full_string" )
 				print_screen_output "$unmounted_data"
 				line_starter=' '
-				unmounted_data=$( create_print_line "$line_starter" "$part_2_data${CN}" )
+				unmounted_data=$( create_print_line "$line_starter" "$part_2_data" )
 				print_screen_output "$unmounted_data"
 			else
-				unmounted_data=$( create_print_line "$line_starter" "$full_string$part_2_data${CN}" )
+				unmounted_data=$( create_print_line "$line_starter" "$full_string$part_2_data" )
 				print_screen_output "$unmounted_data"
 				line_starter=' '
 			fi
 		done
 	else
-		unmounted_data=$( create_print_line "$line_starter" "No unmounted partitions detected${CN}" )
+		unmounted_data=$( create_print_line "$line_starter" "No unmounted partitions detected" )
 		print_screen_output "$unmounted_data"
 	fi
 	
@@ -12060,11 +12939,11 @@ print_weather_data()
 
 		if [[ $B_EXTRA_DATA != 'true' ]];then
 			weather_data="$weather_string $time_string"
-			weather_data=$( create_print_line "Weather:" "$weather_data${CN}" )
+			weather_data=$( create_print_line "Weather:" "$weather_data" )
 			print_screen_output "$weather_data"
 		else
 			weather_data="$weather_string"
-			weather_data=$( create_print_line "Weather:" "$weather_data${CN}" )
+			weather_data=$( create_print_line "Weather:" "$weather_data" )
 			print_screen_output "$weather_data"
 			if [[ $B_EXTRA_EXTRA_EXTRA_DATA == 'true' ]];then
 				if [[ -n ${a_weather[8]} ]];then
@@ -12100,10 +12979,10 @@ print_weather_data()
 				fi
 				# the last three are oftenblank
 				if [[ -z "$heat_index$wind_chill$dew_point" ]];then
-					weather_data=$( create_print_line " " "$pressure$location_string${CN}" )
+					weather_data=$( create_print_line " " "$pressure$location_string" )
 					print_screen_output "$weather_data"
 				else
-					weather_data=$( create_print_line " " "$pressure$heat_index$wind_chill$dew_point${CN}" )
+					weather_data=$( create_print_line " " "$pressure$heat_index$wind_chill$dew_point" )
 					print_screen_output "$weather_data"
 					if [[ $B_OUTPUT_FILTER != 'true' ]];then
 						weather_data=$( create_print_line " " "$location_string" )
@@ -12111,21 +12990,21 @@ print_weather_data()
 					fi
 				fi
 				if [[ -n $time_string$observation_time ]];then
-					weather_data=$( create_print_line " " "$time_string$observation_time${CN}" )
+					weather_data=$( create_print_line " " "$time_string$observation_time" )
 					print_screen_output "$weather_data"
 				fi
 			else
 				if [[ -n $pressure$time_string ]];then
 					weather_data="$pressure$time_string"
-					weather_data=$( create_print_line " " "$weather_data${CN}" )
+					weather_data=$( create_print_line " " "$weather_data" )
 					print_screen_output "$weather_data"
 				fi
 			fi
 		fi
 	else
-		weather_data=$( create_print_line "Weather:" "Weather data failure: $(date)" )
+		weather_data=$( create_print_line "Weather:" "${C2}Weather data failure: $(date)" )
 		print_screen_output "$weather_data"
-		weather_data=$( create_print_line " " "${A_WEATHER_DATA}${CN}" )
+		weather_data=$( create_print_line " " "${C2}${A_WEATHER_DATA}" )
 		print_screen_output "$weather_data"
 	fi
 	eval $LOGFE
