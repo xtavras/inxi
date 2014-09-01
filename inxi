@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.1
 ####  Date: 2014-09-01
-####  Patch Number: 02-bsd
+####  Patch Number: 03-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4927,75 +4927,6 @@ get_dmidecode_data()
 			else 
 				dmiData="$( $dmidecodePath 2>&1 )"
 			fi
-			DMIDECODE_DATA="$( echo "$dmiData" | gawk -F ':' '
-			BEGIN {
-				IGNORECASE=1
-				cutExtraTab="false"
-				twoData=""
-				oneData=""
-			}
-			{
-				# no idea why, but freebsd gawk does not do this right
-				oneData=$1
-				twoData=$2
-				if ( twoData != "" ) {
-					twoHolder="true"
-				}
-				else {
-					twoHolder="false"
-				}
-				if ( $0 ~ /^\tDMI type/ ) {
-					sub(/^\tDMI type.*/, "", $0)
-					cutExtraTab="true"
-				}
-				
-				gsub(/'"$BAN_LIST_NORMAL"'/, "", twoData)
-				gsub(/,/, " ", twoData)
-				# clean out Handle line
-				# sub(/^Handle.*/,"", $0)
-				sub(/^[[:space:]]*Inactive.*/,"",twoData)
-				# yes, there is a typo in a user data set, unknow
-				# Base Board Version|Base Board Serial Number
-				# Chassis Manufacturer|Chassis Version|Chassis Serial Number
-				# System manufacturer|System Product Name|System Version
-				# To Be Filled By O.E.M.
-				# strip out starting white space so that the following stuff will clear properly
-				sub(/^[[:space:]]+/, "", twoData)
-				sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*|^0x[0]+$|\[Empty\]|<Bad Index>|^\.\.$/, "", twoData) 
-				sub(/.*(AssetTagNum|Manufacturer| Or Motherboard|PartNum.*|SerNum).*/, "", twoData)
-				gsub(/bios|acpi/, "", twoData)
-				sub(/http:\/\/www.abit.com.tw\//, "Abit", twoData)
-				
-				# for double indented values replace with ~ so later can test for it, we are trusting that
-				# indentation will be tabbed in this case
-				# special case, dmidecode 2.2 has an extra tab and a DMI type line
-				if ( cutExtraTab == "true" ) {
-					sub(/^\t\t\t+/, "~", oneData)
-				}
-				else {
-					sub(/^\t\t+/, "~", oneData)
-				}
-				gsub(/ [ \t]+/, " ", twoData)
-				gsub(/^[[:space:]]+|[[:space:]]+$/, "", twoData)
-				gsub(/^[[:space:]]+|[[:space:]]+$/, "", oneData)
-				
-				# reconstructing the line for processing so gawk can use -F : again
-				if ( oneData != "" && twoHolder == "true" ) {
-					print oneData ":" twoData
-				}
-				else {
-					# make sure all null lines have no spaces in them!
-					gsub(/^[[:space:]]+|[[:space:]]+$/,"",$0)
-					print $0
-				}
-			}' \
-			| sed '/^$/{
-N
-/^\n$/D
-}' \
-			)"
-			# echo ":${DMIDECODE_DATA}:"
-			log_function_data "DMIDECODE_DATA (PRE): $DMIDECODE_DATA"
 			if [[ ${#DMIDECODE_DATA} -lt 100  ]];then
 				if [[ -z ${DMIDECODE_DATA/*Permission denied*/} ]];then
 				# if [[ -n $( grep -i 'Permission denied' <<< "$DMIDECODE_DATA" ) ]];then
@@ -5004,10 +4935,80 @@ N
 				elif [[ -n $( grep -i 'no smbios ' <<< "$DMIDECODE_DATA" ) ]];then
 					DMIDECODE_DATA='dmidecode-error-no-smbios-dmi-data'
 				else
-					echo $DMIDECODE_DATA
 					DMIDECODE_DATA='dmidecode-error-unknown-error'
 				fi
+			else
+				DMIDECODE_DATA="$( echo "$dmiData" | gawk -F ':' '
+				BEGIN {
+					IGNORECASE=1
+					cutExtraTab="false"
+					twoData=""
+					oneData=""
+				}
+				{
+					# no idea why, but freebsd gawk does not do this right
+					oneData=$1
+					twoData=$2
+					if ( twoData != "" ) {
+						twoHolder="true"
+					}
+					else {
+						twoHolder="false"
+					}
+					if ( $0 ~ /^\tDMI type/ ) {
+						sub(/^\tDMI type.*/, "", $0)
+						cutExtraTab="true"
+					}
+					
+					gsub(/'"$BAN_LIST_NORMAL"'/, "", twoData)
+					gsub(/,/, " ", twoData)
+					# clean out Handle line
+					# sub(/^Handle.*/,"", $0)
+					sub(/^[[:space:]]*Inactive.*/,"",twoData)
+					# yes, there is a typo in a user data set, unknow
+					# Base Board Version|Base Board Serial Number
+					# Chassis Manufacturer|Chassis Version|Chassis Serial Number
+					# System manufacturer|System Product Name|System Version
+					# To Be Filled By O.E.M.
+					# strip out starting white space so that the following stuff will clear properly
+					sub(/^[[:space:]]+/, "", twoData)
+					sub(/^Base Board .*|^Chassis .*|.*O\.E\.M\..*|.*OEM.*|^Not .*|^System .*|.*unknow.*|.*N\/A.*|none|^To be filled.*|^0x[0]+$|\[Empty\]|<Bad Index>|^\.\.$/, "", twoData) 
+					sub(/.*(AssetTagNum|Manufacturer| Or Motherboard|PartNum.*|SerNum).*/, "", twoData)
+					gsub(/bios|acpi/, "", twoData)
+					sub(/http:\/\/www.abit.com.tw\//, "Abit", twoData)
+					
+					# for double indented values replace with ~ so later can test for it, we are trusting that
+					# indentation will be tabbed in this case
+					# special case, dmidecode 2.2 has an extra tab and a DMI type line
+					if ( cutExtraTab == "true" ) {
+						sub(/^\t\t\t+/, "~", oneData)
+					}
+					else {
+						sub(/^\t\t+/, "~", oneData)
+					}
+					gsub(/ [ \t]+/, " ", twoData)
+					gsub(/^[[:space:]]+|[[:space:]]+$/, "", twoData)
+					gsub(/^[[:space:]]+|[[:space:]]+$/, "", oneData)
+					
+					# reconstructing the line for processing so gawk can use -F : again
+					if ( oneData != "" && twoHolder == "true" ) {
+						print oneData ":" twoData
+					}
+					else {
+						# make sure all null lines have no spaces in them!
+						gsub(/^[[:space:]]+|[[:space:]]+$/,"",$0)
+						print $0
+					}
+				}' \
+				| sed '/^$/{
+N
+/^\n$/D
+}' \
+				)"
 			fi
+			# echo ":${DMIDECODE_DATA}:"
+			log_function_data "DMIDECODE_DATA (PRE): $DMIDECODE_DATA"
+			
 		fi
 		B_DMIDECODE_SET='true'
 		log_function_data "DMIDECODE_DATA (POST): $DMIDECODE_DATA"
