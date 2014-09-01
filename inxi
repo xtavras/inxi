@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.1
 ####  Date: 2014-09-01
-####  Patch Number: 01-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1796,8 +1796,8 @@ debug_data_collector()
 			df -h -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs &> $debug_data_dir/df-h-T-P-excludes.txt
 			df -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs &> $debug_data_dir/df-T-P-excludes.txt
 			df -T -P --exclude-type=aufs --exclude-type=squashfs --exclude-type=unionfs --exclude-type=devtmpfs --exclude-type=tmpfs --exclude-type=iso9660 --exclude-type=devfs --exclude-type=linprocfs --exclude-type=sysfs --exclude-type=fdescfs --total &> $debug_data_dir/df-T-P-excludes-total.txt
-			df -H -T &> $debug_data_dir/bsd-df-H-T-no-excludes.txt
-			df -H &> $debug_data_dir/bsd-df-H-no-excludes.txt
+			df -h -T &> $debug_data_dir/bsd-df-h-T-no-excludes.txt
+			df -h &> $debug_data_dir/bsd-df-h-no-excludes.txt
 			df -k -T &> $debug_data_dir/bsd-df-k-T-no-excludes.txt
 			df -k &> $debug_data_dir/bsd-df-k-no-excludes.txt
 			atacontrol list &> $debug_data_dir/bsd-atacontrol-list.txt
@@ -7051,10 +7051,10 @@ get_partition_data()
 		swap_data="$( swapctl -l 2>/dev/null )"
 		# default size is 512, -H only for size in human readable format
 		# older bsds don't support -T, pain, so we'll use partial output there
-		if df -H -T &>/dev/null;then
-			df_string='df -H -T'
+		if df -h -T &>/dev/null;then
+			df_string='df -h -T'
 		else
-			df_string='df -H'
+			df_string='df -h'
 		fi
 	fi
 	main_partition_data="$( eval $df_string )"
