@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 15-bsd
+####  Patch Number: 16-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3917,7 +3917,7 @@ get_cpu_data_bsd()
 		 /^hw.model/ && ( bsdVersion != "darwin" ) {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
-			sub(//,"",$NF)
+			gsub(/,/,"",$NF)
 			sub(/[a-z]+-core/, "", $NF )
 			gsub(/^ +| +$|\"/, "", $NF)
 			gsub(/ [ \t]+/, " ", $NF)
@@ -3945,7 +3945,7 @@ get_cpu_data_bsd()
 		/^machdep.cpu.brand_string/ {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
-			sub(//,"",$NF)
+			gsub(/,/,"",$NF)
 			sub(/[a-z]+-core/, "", $NF )
 			gsub(/^ +| +$|\"/, "", $NF)
 			gsub(/ [ \t]+/, " ", $NF)
@@ -6311,21 +6311,23 @@ get_memory_data()
 		# darwin sysctl is broken and uses both : and = and repeats these items
 		if [[ $BSD_VERSION == 'openbsd' ]];then
 			gawk_fs='='
-			if [[ -n $( type -p vmstat) ]];then
-				# avail mem:2037186560 (1942MB)
-				used_memory=$( vmstat 2>/dev/null | tail -n 1 | gawk '
-				# procs    memory       page                    disks    traps          cpu
-				# r b w    avm     fre  flt  re  pi  po  fr  sr wd0 wd1  int   sys   cs us sy id
-				# 0 0 0  55256 1484092  171   0   0   0   0   0   2   0   12   460   39  3  1 96
-				BEGIN {
-					IGNORECASE=1
-				}
-				{
-					sub(/K,/,"",$4)
-					print $4
-					exit
-				}' )
-			fi
+		fi
+		# use this for all bsds, maybe we can get some useful data on other ones
+		if [[ -n $( type -p vmstat) ]];then
+			# avail mem:2037186560 (1942MB)
+			used_memory=$( vmstat 2>/dev/null | tail -n 1 | gawk '
+			# procs    memory       page                    disks    traps          cpu
+			# r b w    avm     fre  flt  re  pi  po  fr  sr wd0 wd1  int   sys   cs us sy id
+			# 0 0 0  55256 1484092  171   0   0   0   0   0   2   0   12   460   39  3  1 96
+			BEGIN {
+				IGNORECASE=1
+			}
+			{
+				sub(/K,/,"",$4)
+				
+				print $4 " " 
+				exit
+			}' )
 		fi
 		memory=$( grep -i 'mem' <<< "$Sysctl_a_Data" | gawk -v usedMemory="$used_memory" -F "$gawk_fs"  '
 		BEGIN {
