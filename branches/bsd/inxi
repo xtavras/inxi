@@ -7234,8 +7234,11 @@ get_partition_data()
 		if [[ $BSD_TYPE == 'bsd' ]] && [[ -z $fs_type && -n $dev_item ]];then
 			dev_bsd_item=$( sed -e 's/non-dev-//' -e 's|/|\\/|g' <<< "$dev_item" )
 			fs_type=$( gawk -F  -v bsdVersion=$BSD_VERSION '(' '
+			BEGIN {
+				IGNORECASE=1
+			}
 			/'$dev_bsd_item'/ {
-				if ( bsdVersion !== "opebsd" ) {
+				if ( bsdVersion !== "openbsd" ) {
 					# slice out everything after / plus the first comma
 					sub( /,.*/, "", $2 )
 					fileSystem=$2
