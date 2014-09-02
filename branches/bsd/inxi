@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 11-bsd
+####  Patch Number: 12-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6292,7 +6292,7 @@ get_machine_data()
 get_memory_data()
 {
 	eval $LOGFS
-	local memory='' memory_full='' avail_memory=''
+	local memory='' memory_full='' used_memory=''
 	if [[ $B_MEMINFO_FILE == 'true' ]];then
 		memory=$( gawk '
 		/^MemTotal:/ {
@@ -6311,17 +6311,21 @@ get_memory_data()
 		# darwin sysctl is broken and uses both : and = and repeats these items
 		if [[ $BSD_VERSION == 'openbsd' ]];then
 			gawk_fs='='
-			if [[ -n $Dmesg_Boot_Data ]];then
+			if [[ -n $( type -p vmstat) ]];then
 				# avail mem:2037186560 (1942MB)
-				avail_memory=$( gawk -F ":" '
-				/^avail mem/ {
-					sub(/[[:space:]]*\(.*/,"",$2)
-					print $2
+				used_memory=$( vmstat -m 2>/dev/null | tail -n 5 | gawk '
+				# In use 17136K, total allocated 20744K; utilization 82.6%
+				BEGIN {
+					IGNORECASE=1
+				}
+				/^In use/ {
+					sub(/K,/,"",$3)
+					print $3
 					exit
-				}' <<< "$Dmesg_Boot_Data" )
+				}' )
 			fi
 		fi
-		memory=$( grep -i 'mem' <<< "$Sysctl_a_Data" | gawk -v availMem="$avail_memory" -F "$gawk_fs"  '
+		memory=$( grep -i 'mem' <<< "$Sysctl_a_Data" | gawk -v usedMemory="$used_memory" -F "$gawk_fs"  '
 		BEGIN {
 			realMemory=""
 			freeMemory=""
@@ -6344,13 +6348,16 @@ get_memory_data()
 			}
 		}
 		END {
-			# use openbsd avail mem data if available
-			if (availMem != "" && freeMemory == "" ) {
-				freeMemory == availMem
-			}
+			
 			# hack: temp fix for openbsd/darwin: in case no free mem was detected but we have physmem
 			if ( freeMemory == "" && realMemory != "" ) {
-				printf("NA/%.1fMB\n", realMemory/1024)
+				# use openbsd avail mem data if available
+				if (usedMemory != "" ) {
+					printf("%.1f/%.1fMB\n", usedMemory/1024, realMemory/1024)
+				}
+				else {
+					printf("NA/%.1fMB\n", realMemory/1024)
+				}
 			}
 			else if ( freeMemory != "" && realMemory != "" ) {
 				used = realMemory - freeMemory
