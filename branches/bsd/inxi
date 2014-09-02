@@ -8681,7 +8681,7 @@ get_repo_data()
 	local repo_name=''
 	local apt_file='/etc/apt/sources.list' yum_repo_dir='/etc/yum.repos.d/' yum_conf='/etc/yum.conf'
 	local pacman_conf='/etc/pacman.conf' pacman_repo_dir='/etc/pacman.d/' pisi_dir='/etc/pisi/'
-	local zypp_repo_dir='/etc/zypp/repos.d/' freebsd_conf='/etc/portsnap.conf' opebsd_conf='/etc/pkg.conf'
+	local zypp_repo_dir='/etc/zypp/repos.d/' freebsd_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
