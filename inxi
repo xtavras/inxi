@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 05-bsd
+####  Patch Number: 06-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7233,9 +7233,10 @@ get_partition_data()
 		# older bsds have df minus -T so can't get fs type easily, try using mount instead
 		if [[ $BSD_TYPE == 'bsd' ]] && [[ -z $fs_type && -n $dev_item ]];then
 			dev_bsd_item=$( sed -e 's/non-dev-//' -e 's|/|\\/|g' <<< "$dev_item" )
-			fs_type=$( gawk -F  -v bsdVersion=$BSD_VERSION '(' '
+			fs_type=$( gawk -v bsdVersion=$BSD_VERSION -F '(' '
 			BEGIN {
 				IGNORECASE=1
+				fileSystem=""
 			}
 			/'$dev_bsd_item'/ {
 				if ( bsdVersion != "openbsd" ) {
