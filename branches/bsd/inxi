@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 08-bsd
+####  Patch Number: 09-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3975,7 +3975,7 @@ get_cpu_flags_bsd()
 			IGNORECASE=1
 			cpuFlags=""
 		}
-		/^CPU:/ {
+		/^CPU:|cpu0:/ {
 			while ( getline && !/memory|real mem/  ) {
 				if ( $1 ~ /Features/ || ( bsdVersion == "openbsd" && $0 ~ /^cpu0.*,[a-z][a-z][a-z],[a-z][a-z][a-z],/ ) ) {
 					# clean up odd stuff like <b23>
