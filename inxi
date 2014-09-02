@@ -5038,7 +5038,7 @@ get_dmesg_boot_data()
 		# replace all indented items with ~ so we can id them easily while processing
 		# note that if user, may get error of read permissions
 		# for some weird reason, real mem and avail mem are use a '=' separator, who knows why, the others are ':'
-		dmsg_boot_data="$( cat $FILE_DMESG_BOOT 2>/dev/null | sed -e 's/"//g' -e 's/[[:space:]]*=[[:space:]]*|:[[:space:]]*/:/g' )"
+		dmsg_boot_data="$( cat $FILE_DMESG_BOOT 2>/dev/null | sed -e 's/"//g' -e 's/[[:space:]]*=[[:space:]]*/:/g' -e 's/:[[:space:]]*/:/g' )"
 	fi
 	echo "$dmsg_boot_data"
 	# log_function_data "$dmsg_boot_data"
