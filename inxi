@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 03-bsd
+####  Patch Number: 04-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7244,7 +7244,9 @@ get_partition_data()
 					fileSystem=$2
 				}
 				else {
-					fileSystem=gensub( /.*[[:space:]]([![:space:]]+)[[:space:]]*$/, "\\1", 1, $1 )
+					# for openbsd: /dev/wd0f on /usr type ffs (local, nodev)
+					gsub( /^.*type[[:space:]]+|[[:space:]]*$/, "", $1 )
+					fileSystem=$1
 				}
 				print fileSystem
 				exit
