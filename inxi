@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 07-bsd
+####  Patch Number: 08-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3977,7 +3977,7 @@ get_cpu_flags_bsd()
 		}
 		/^CPU:/ {
 			while ( getline && !/memory|real mem/  ) {
-				if ( $1 ~ /Features/ || (bsdVersion == "openbsd" && $1 == "cpu0" && $2 ~ /[^,]+,[^,]+/ ) ) {
+				if ( $1 ~ /Features/ || ( bsdVersion == "openbsd" && $0 ~ /^cpu0.*,[a-z][a-z][a-z],[a-z][a-z][a-z],/ ) ) {
 					# clean up odd stuff like <b23>
 					gsub(/<[a-z0-9]+>/,"", $2)
 					# all the flags are contained within < ... > on freebsd at least
