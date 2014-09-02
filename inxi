@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 ########################################################################
 ####  Script Name: inxi
-####  Version: 2.2.1
-####  Date: 2014-09-01
-####  Patch Number: 03-bsd
+####  Version: 2.2.2
+####  Date: 2014-09-02
+####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1617,9 +1617,16 @@ debug_data_collector()
 		echo 'also checking for dmidecode data: note, you must be root to have dmidecode work.'
 		echo "Data going into: $SCRIPT_DATA_DIR/$debug_data_dir"
 		# bsd tools http://cb.vu/unixtoolbox.xhtml
+		# freebsd
 		pciconf -l -cv &> $debug_data_dir/bsd-pciconf-cvl.txt
 		pciconf -vl &> $debug_data_dir/bsd-pciconf-vl.txt
 		pciconf -l &> $debug_data_dir/bsd-pciconf-l.txt
+		# openbsd
+		pcidump &> $debug_data_dir/bsd-pcidump.txt
+		pcidump -v &> $debug_data_dir/bsd-pcidump-v.txt
+		# netbsd
+		pcictl list &> $debug_data_dir/bsd-pcictl-list.txt
+		pcictl list -n &> $debug_data_dir/bsd-pcictl-list-n.txt
 		sysctl -a &> $debug_data_dir/bsd-sysctl-a.txt
 		usbdevs -v  &> $debug_data_dir/bsd-usbdevs-v.txt
 		kldstat  &> $debug_data_dir/bsd-kldstat.txt
@@ -4927,6 +4934,8 @@ get_dmidecode_data()
 			else 
 				dmiData="$( $dmidecodePath 2>&1 )"
 			fi
+			# these tests first, because bsd error messages like this (note how many : are in the string)
+			# inxi: line 4928: /usr/local/sbin/dmidecode: Permission denied
 			if [[ ${#DMIDECODE_DATA} -lt 100  ]];then
 				if [[ -z ${DMIDECODE_DATA/*Permission denied*/} ]];then
 				# if [[ -n $( grep -i 'Permission denied' <<< "$DMIDECODE_DATA" ) ]];then
@@ -4959,7 +4968,6 @@ get_dmidecode_data()
 						sub(/^\tDMI type.*/, "", $0)
 						cutExtraTab="true"
 					}
-					
 					gsub(/'"$BAN_LIST_NORMAL"'/, "", twoData)
 					gsub(/,/, " ", twoData)
 					# clean out Handle line
@@ -8673,7 +8681,7 @@ get_repo_data()
 	local repo_name=''
 	local apt_file='/etc/apt/sources.list' yum_repo_dir='/etc/yum.repos.d/' yum_conf='/etc/yum.conf'
 	local pacman_conf='/etc/pacman.conf' pacman_repo_dir='/etc/pacman.d/' pisi_dir='/etc/pisi/'
-	local zypp_repo_dir='/etc/zypp/repos.d/' freebsd_conf='/etc/portsnap.conf'
+	local zypp_repo_dir='/etc/zypp/repos.d/' freebsd_conf='/etc/portsnap.conf' opebsd_conf='/etc/pkg.conf'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
@@ -8873,6 +8881,15 @@ $repo_data_working"
 			print "BSD ports servers:" repoFile ":" $2
 		}
 		' $freebsd_conf )"
+	elif [[ -f $openbsd_conf ]];then
+		REPO_DATA="$( gawk -F '=' -v repoFile=$openbsd_conf '
+		BEGIN {
+			IGNORECASE=1
+		}
+		/^installpath/ {
+			print "BSD ports servers:" repoFile ":" $2
+		}
+		' $openbsd_conf )"
 	fi
 	eval $LOGFE
 }
