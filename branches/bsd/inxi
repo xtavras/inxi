@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 06-bsd
+####  Patch Number: 07-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3968,18 +3968,16 @@ get_cpu_flags_bsd()
 	
 	local cpu_flags=''
 	local gawk_fs=':'
-	if [[ $BSD_VERSION == 'openbsd' ]];then
-		gawk_fs='='
-	fi
+	
 	if [[ -n $Dmesg_Boot_Data ]];then
-		cpu_flags=$( gawk -F "=" '
+		cpu_flags=$( gawk -v bsdVersion=$BSD_VERSION -F ":" '
 		BEGIN {
 			IGNORECASE=1
 			cpuFlags=""
 		}
 		/^CPU:/ {
-			while ( getline && !/memory/  ) {
-				if ( $1 ~ /Features/ ) {
+			while ( getline && !/memory|real mem/  ) {
+				if ( $1 ~ /Features/ || (bsdVersion == "openbsd" && $1 == "cpu0" && $2 ~ /[^,]+,[^,]+/ ) ) {
 					# clean up odd stuff like <b23>
 					gsub(/<[a-z0-9]+>/,"", $2)
 					# all the flags are contained within < ... > on freebsd at least
@@ -3993,6 +3991,9 @@ get_cpu_flags_bsd()
 			exit
 		}' <<< "$Dmesg_Boot_Data" )
 	elif [[ -n $Sysctl_a_Data ]];then
+		if [[ $BSD_VERSION == 'openbsd' ]];then
+			gawk_fs='='
+		fi
 		cpu_flags=$( gawk -F "$gawk_fs" '
 		BEGIN {
 			cpuFlags=""
@@ -5036,7 +5037,8 @@ get_dmesg_boot_data()
 	if [[ $B_DMESG_BOOT_FILE == 'true' ]];then
 		# replace all indented items with ~ so we can id them easily while processing
 		# note that if user, may get error of read permissions
-		dmsg_boot_data="$( cat $FILE_DMESG_BOOT 2>/dev/null | sed $SED_RX 's/"//g' )"
+		# for some weird reason, real mem and avail mem are use a '=' separator, who knows why, the others are ':'
+		dmsg_boot_data="$( cat $FILE_DMESG_BOOT 2>/dev/null | sed -e 's/"//g' -e 's/[[:space:]]*=[[:space:]]*/:/g' )"
 	fi
 	echo "$dmsg_boot_data"
 	# log_function_data "$dmsg_boot_data"
