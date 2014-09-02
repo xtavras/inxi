@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 10-bsd
+####  Patch Number: 110-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6311,17 +6311,17 @@ get_memory_data()
 		# darwin sysctl is broken and uses both : and = and repeats these items
 		if [[ $BSD_VERSION == 'openbsd' ]];then
 			gawk_fs='='
-			if [[ -n "$Dmesg_Boot_Data" ]];then
+			if [[ -n $Dmesg_Boot_Data ]];then
 				# avail mem:2037186560 (1942MB)
-				avail_memory=$( gawk -F ':' '
+				avail_memory=$( gawk -F ":" '
 				/^avail mem/ {
 					sub(/[[:space:]]*\(.*/,"",$2)
 					print $2
-				}
-				' <<< "$Dmesg_Boot_Data" )
+					exit
+				}' <<< "$Dmesg_Boot_Data" )
 			fi
 		fi
-		memory=$( grep -i 'mem' <<< "$Sysctl_a_Data" | gawk -v availMem=$avail_memory -F "$gawk_fs"  '
+		memory=$( grep -i 'mem' <<< "$Sysctl_a_Data" | gawk -v availMem="$avail_memory" -F "$gawk_fs"  '
 		BEGIN {
 			realMemory=""
 			freeMemory=""
@@ -6344,10 +6344,11 @@ get_memory_data()
 			}
 		}
 		END {
-			# hack: temp fix for openbsd/darwin: in case no free mem was detected but we have physmem
-			if (availMem != "" ) {
+			# use openbsd avail mem data if available
+			if (availMem != "" && freeMemory == "" ) {
 				freeMemory == availMem
 			}
+			# hack: temp fix for openbsd/darwin: in case no free mem was detected but we have physmem
 			if ( freeMemory == "" && realMemory != "" ) {
 				printf("NA/%.1fMB\n", realMemory/1024)
 			}
