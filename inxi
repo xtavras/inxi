@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7238,7 +7238,7 @@ get_partition_data()
 				IGNORECASE=1
 			}
 			/'$dev_bsd_item'/ {
-				if ( bsdVersion !== "openbsd" ) {
+				if ( bsdVersion != "openbsd" ) {
 					# slice out everything after / plus the first comma
 					sub( /,.*/, "", $2 )
 					fileSystem=$2
