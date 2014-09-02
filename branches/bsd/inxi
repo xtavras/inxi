@@ -3975,7 +3975,7 @@ get_cpu_flags_bsd()
 			IGNORECASE=1
 			cpuFlags=""
 		}
-		/^CPU:|cpu0:/ {
+		/^(CPU:|cpu0:)/ {
 			while ( getline && !/memory|real mem/  ) {
 				if ( $1 ~ /Features/ || ( bsdVersion == "openbsd" && $0 ~ /^cpu0.*,[a-z][a-z][a-z],[a-z][a-z][a-z],/ ) ) {
 					# clean up odd stuff like <b23>
