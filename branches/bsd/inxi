@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 29-bsd
+####  Patch Number: 30-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -7693,7 +7693,7 @@ EOF"
 				sub(/:$/, "", pciId)
 				itemData=$4
 				chipId=gensub(/.*chip=([0-9a-f][0-9a-f][0-9a-f][0-9a-f])([0-9a-f][0-9a-f][0-9a-f][0-9a-f]).*/, "\\2:\\1", itemData )
-				if ( $2 == "class=020000" ) {
+				if ( $2 ~ /class=020000|class=0x068000/ ) {
 					class="network"
 				}
 				else if ( $2 == "class=030000" ) {
