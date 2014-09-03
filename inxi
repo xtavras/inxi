@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 23-bsd
+####  Patch Number: 24-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3932,6 +3932,9 @@ get_cpu_data_bsd()
 		}
 		/^hw.cpufrequency/ {
 			cpuClock = $NF / 1000000
+		}
+		/^hw.cpuspeed/ {
+			cpuClock=$NF
 		}
 		/^hw.l2cachesize/ {
 			cpuCache=$NF/1024
