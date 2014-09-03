@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 21-bsd
+####  Patch Number: 22-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5254,9 +5254,9 @@ get_graphics_driver()
 			# failed/unloaded, which have not always actually been truly loaded
  			aDrivers[driver]="loaded" 
 		}
-		# openbsd uses UnloadModule
+		# openbsd uses UnloadModule: 
 		/(Unloading[[:space:]]|UnloadModule).*('"$driver_list"')(|_drv.so)$/ {
-			driver=gensub(/(.*)(Unloading[[:space:]]|UnloadModule).*('"$driver_list"')(|_drv.so)$/, "\\2", 1, $0 )
+			driver=gensub(/(.*)(Unloading[[:space:]]|UnloadModule).*('"$driver_list"')(|_drv.so)$/, "\\3", 1, $0 )
 			# we need to make sure that the driver has already been truly loaded, not just discussed
 			if ( driver in aDrivers ) {
 				aDrivers[driver]="unloaded"
