@@ -3051,7 +3051,8 @@ get_start_client()
 			
 			if [[ -n $App_Working_Name ]];then
 				Irc_Client_Path=$App_Working_Name
-				App_Working_Name=${App_Working_Name##*/}
+				irc_client_path_lower=$( tr '[A-Z]' '[a-z]' <<< $Irc_Client_Path )
+				App_Working_Name=${irc_client_path_lower##*/}
 				B_Non_Native_App='false'
 				get_irc_client_version
 				if [[ -z $IRC_CLIENT ]];then
