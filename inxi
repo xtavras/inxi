@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 17-bsd
+####  Patch Number: 18-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -10727,8 +10727,8 @@ print_graphics_data()
 	if [[ -n $root_x_string ]];then
 		root_x_string="${C1}Advanced Data$SEP3${C2} N/A $root_x_string"
 	fi
-	
-	if [[ ${#A_GRAPHICS_CARD_DATA[@]} -gt 0 ]];then
+	# note, this comes out with a count of 1 sometimes for null data
+	if [[ ${A_GRAPHICS_CARD_DATA[0]} != '' ]];then
 		for (( i=0; i < ${#A_GRAPHICS_CARD_DATA[@]}; i++ ))
 		do
 			IFS=","
