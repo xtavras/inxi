@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 24-bsd
+####  Patch Number: 25-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -481,6 +481,7 @@ DEV_DISK_LABEL=''
 DEV_DISK_MAPPER=''
 DEV_DISK_UUID=''
 DMIDECODE_DATA=''
+DOWNLOADER='wget'
 IRC_CLIENT=''
 IRC_CLIENT_VERSION=''
 PS_THROTTLED=''
@@ -822,6 +823,10 @@ initialize_data()
 	fi
 	
 	initialize_paths
+	
+	if [[ -z $( type -p wget ) && -n $( type -p curl ) ]];then
+		DOWNLOADER='curl'
+	fi
 	
 	if [[ -n $BSD_TYPE ]];then
 		if [[ -e $FILE_DMESG_BOOT ]];then
@@ -1329,7 +1334,7 @@ error_handler()
 			;;
 		7)	error_message="One of the options you entered in your script parameters: $2\nis not supported.The option may require extra arguments to work.\nFor supported options (and their arguments), check the help menu: $SCRIPT_NAME -h"
 			;;
-		8)	error_message="the self-updater failed, wget exited with error: $2.\nYou probably need to be root.\nHint, to make for easy updates without being root, do: chown <user name> $SCRIPT_PATH/$SCRIPT_NAME"
+		8)	error_message="the self-updater failed, $DOWNLOADER exited with error: $2.\nYou probably need to be root.\nHint, to make for easy updates without being root, do: chown <user name> $SCRIPT_PATH/$SCRIPT_NAME"
 			;;
 		9)	error_message="unsupported debugging level: $2"
 			;;
@@ -1494,7 +1499,7 @@ create_rotate_logfiles()
 script_self_updater()
 {
 	eval $LOGFS
-	local wget_error=0 file_contents='' wget_man_error=0 
+	local downloader_error=0 file_contents='' downloader_man_error=0 
 	local man_file_path="$MAN_FILE_LOCATION/inxi.1.gz"
 	
 	if [[ $B_IRC == 'true' ]];then
@@ -1506,10 +1511,13 @@ script_self_updater()
 	print_screen_output "Currently running $SCRIPT_NAME version number: $SCRIPT_VERSION_NUMBER"
 	print_screen_output "Current version patch number: $SCRIPT_PATCH_NUMBER"
 	print_screen_output "Updating $SCRIPT_NAME in $SCRIPT_PATH using $2 as download source..."
-
-	file_contents="$( wget -q -O - $1$SCRIPT_NAME )" || wget_error=$?
+	if [[ $DOWNLOADER != 'curl' ]];then
+		file_contents="$( wget -q -O - $1$SCRIPT_NAME )" || downloader_error=$?
+	else
+		file_contents="$( curl -s $1$SCRIPT_NAME )" || downloader_error=$?
+	fi
 	# then do the actual download
-	if [[  $wget_error -eq 0 ]];then
+	if [[  $downloader_error -eq 0 ]];then
 		# make sure the whole file got downloaded and is in the variable
 		if [[ -n $( grep '###\*\*EOF\*\*###' <<< "$file_contents" ) ]];then
 			echo "$file_contents" > $SCRIPT_PATH/$SCRIPT_NAME || error_handler 14 "$?"
@@ -1533,14 +1541,22 @@ script_self_updater()
 							exec $( type -p mandb ) -q 
 						fi
 					fi
-					wget -q --spider $MAN_FILE_DOWNLOAD || wget_man_error=$?
-					if [[ $wget_man_error -eq 0 ]];then
-						print_screen_output "Man file download URL verified: $MAN_FILE_DOWNLOAD"
+					if [[ $DOWNLOADER != 'curl' ]];then
+						wget -q --spider $MAN_FILE_DOWNLOAD || downloader_man_error=$?
+					fi
+					if [[ $downloader_man_error -eq 0 ]];then
+						if [[ $DOWNLOADER != 'curl' ]];then
+							print_screen_output "Man file download URL verified: $MAN_FILE_DOWNLOAD"
+						fi
 						print_screen_output "Downloading Man page file now."
-						wget -q -O $man_file_path $MAN_FILE_DOWNLOAD || wget_man_error=$?
-						if [[ $wget_man_error -gt 0 ]];then
+						if [[ $DOWNLOADER != 'curl' ]];then
+							wget -q -O $man_file_path $MAN_FILE_DOWNLOAD || downloader_man_error=$?
+						else
+							curl -s -o $man_file_path $MAN_FILE_DOWNLOAD || downloader_man_error=$?
+						fi
+						if [[ $downloader_man_error -gt 0 ]];then
 							print_screen_output "Oh no! Something went wrong downloading the Man gz file at: $MAN_FILE_DOWNLOAD"
-							print_screen_output "Check the error messages for what happened. Error: $wget_man_error"
+							print_screen_output "Check the error messages for what happened. Error: $downloader_man_error"
 						else
 							print_screen_output "Download/install of man page successful. Check to make sure it works: man inxi"
 						fi
@@ -1559,7 +1575,7 @@ script_self_updater()
 	# now run the error handlers on any wget failure
 	else
 		if [[ $2 == 'svn server' ]];then
-			error_handler 8 "$wget_error"
+			error_handler 8 "$downloader_error"
 		elif [[ $2 == 'alt server' ]];then
 			error_handler 10 "$1"
 		else
@@ -1703,7 +1719,11 @@ debug_data_collector()
 				mv -f xiin $xiin_file
 			fi
 			# -Nc is creating really weird download anomolies, so using -O instead
-			xiin_download="$( wget -q -O - http://inxi.googlecode.com/svn/branches/xiin/$xiin_file )"
+			if [[ $DOWNLOADER != 'curl' ]];then
+				xiin_download="$( wget -q -O - http://inxi.googlecode.com/svn/branches/xiin/$xiin_file )"
+			else
+				xiin_download="$( curl -s http://inxi.googlecode.com/svn/branches/xiin/$xiin_file )"
+			fi
 			# if nothing got downloaded kick out error, otherwise we'll use an older version
 			if [[ $? -gt 0 && ! -f $xiin_file ]];then
 				echo -e "ERROR: Failed to download required file: $xiin_file\nMaybe the remote site is down or your networking is broken?"
@@ -2211,13 +2231,12 @@ remove_erroneous_chars()
 get_parameters()
 {
 	eval $LOGFS
-	local opt='' wget_test='' debug_data_type='' weather_flag='wW:' 
+	local opt='' downloader_test='' debug_data_type='' weather_flag='wW:' 
 	local use_short='true' # this is needed to trigger short output, every v/d/F/line trigger sets this false
 
 	# if distro maintainers don't want the weather feature disable it
 	if [[ $B_ALLOW_WEATHER == 'false' ]];then
 		weather_flag=''
-		
 	fi
 	if [[ $1 == '--version' ]];then
 		print_version_info
@@ -6735,7 +6754,7 @@ get_networking_usb_data()
 get_networking_wan_ip_data()
 {
 	eval $LOGFS
-	local ip=''
+	local ip='' ip_data=''
 
 	# get ip using wget redirect to stdout. This is a clean, text only IP output url,
 	# single line only, ending in the ip address. May have to modify this in the future
@@ -6743,11 +6762,16 @@ get_networking_wan_ip_data()
 	# awk has bad regex handling so checking it with grep -E instead
 	# ip=$( echo  2001:0db8:85a3:0000:0000:8a2e:0370:7334 | gawk  --re-interval '
 	# ip=$( wget -q -O - $WAN_IP_URL | gawk  --re-interval '
-	ip=$( wget -t 4 -T $WGET_TIMEOUT -q -O - $WAN_IP_URL | gawk  --re-interval '
+	if [[ $DOWNLOADER != 'curl' ]];then
+		ip_data="$(wget -t 4 -T $WGET_TIMEOUT -q -O - $WAN_IP_URL )"
+	else
+		ip_data="$( curl -y $WGET_TIMEOUT -s $WAN_IP_URL )"
+	fi
+	ip=$( gawk  --re-interval '
 	{
 		#gsub("\n","",$2")
 		print $NF
-	}' )
+	}' <<< "$ip_data" )
 	# validate the data
 	if [[ -z $ip ]];then
 		ip='None Detected!'
@@ -9654,7 +9678,7 @@ get_weather_data()
 	local location_site='http://geoip.ubuntu.com/lookup'
 	local weather_feed='http://api.wunderground.com/auto/wui/geo/WXCurrentObXML/index.xml?query='
 	local weather_spider='http://wunderground.com/'
-	local data_grab_error='' wget_error=0 
+	local data_grab_error='' downloader_error=0 
 	local b_test_loc=false b_test_weather=false b_debug=false
 	local test_dir="$HOME/bin/scripts/inxi/data/weather/"
 	local test_location='location2.xml' test_weather='weather-feed.xml'
@@ -9669,12 +9693,16 @@ get_weather_data()
 		# echo $ALTERNATE_WEATHER_LOCATION;exit
 	else
 		if [[ $b_test_loc != 'true' ]];then
-			location_data=$( wget -q -t 1 -T $WGET_TIMEOUT -O- $location_site || wget_error=$? )
-			log_function_data "$location_data"
-			if [[ $wget_error -ne 0 ]];then
-				data_grab_error="Error: location server up but download error - wget: $wget_error"
+			if [[ $DOWNLOADER != 'curl' ]];then
+				location_data=$( wget -q -t 1 -T $WGET_TIMEOUT -O- $location_site || downloader_error=$? )
+			else
+				location_data=$( curl -s -y $WGET_TIMEOUT $location_site || downloader_error=$? )
 			fi
-			wget_error=0
+			log_function_data "$location_data"
+			if [[ $downloader_error -ne 0 ]];then
+				data_grab_error="Error: location server up but download error - $DOWNLOADER: $downloader_error"
+			fi
+			downloader_error=0
 		else
 			if [[ -f $test_dir$test_location ]];then
 				location_data="$( cat $test_dir$test_location )"
@@ -9785,9 +9813,13 @@ get_weather_data()
 	# now either dump process or go on to get weather data
 	if [[ -z $data_grab_error ]];then
 		if [[ $b_test_weather != 'true' ]];then
-			weather_data="$( wget -q -t 1 -T $WGET_TIMEOUT -O- $weather_feed"$location" || wget_error=$? )"
-			if [[ $wget_error -ne 0 ]];then
-				data_grab_error="Error: weather server up but download error - wget: $wget_error"
+			if [[ $DOWNLOADER != 'curl' ]];then
+				weather_data="$( wget -q -t 1 -T $WGET_TIMEOUT -O- $weather_feed"$location" || downloader_error=$? )"
+			else
+				weather_data="$( curl -s -y $WGET_TIMEOUT $weather_feed"$location" || downloader_error=$? )"
+			fi
+			if [[ $downloader_error -ne 0 ]];then
+				data_grab_error="Error: weather server up but download error - $DOWNLOADER: $downloader_error"
 			fi
 			log_function_data "$weather_data"
 		else
