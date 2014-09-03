@@ -9469,7 +9469,7 @@ get_shell_data()
 	fi
 	echo $shell_type
 	log_function_data "shell type: $shell_parent"
-	eval $LOGFS
+	eval $LOGFE
 }
 
 get_shell_parent()
