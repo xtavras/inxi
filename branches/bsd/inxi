@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 18-bsd
+####  Patch Number: 20-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -10577,11 +10577,13 @@ print_cpu_flags_full()
 			a_cpu_flags[$counter]=$flag_string
 			flag_string=$flag
 			(( counter++ ))
-		fi
+		fi	
 		temp_string=''
 	done
 	if [[ -n $flag_string ]];then
 		a_cpu_flags[$counter]=$flag_string
+	else
+		a_cpu_flags[$counter]='No CPU flag data found.'
 	fi
 	# then print it out
 	for (( i=0; i < ${#a_cpu_flags[@]};i++ ))
