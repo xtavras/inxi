@@ -9468,7 +9468,7 @@ get_shell_data()
 		shell_type="$shell_type $shell_version"
 	fi
 	echo $shell_type
-	
+	log_function_data "shell type: $shell_parent"
 	eval $LOGFS
 }
 
@@ -9510,6 +9510,7 @@ get_sysctl_data()
 	fi
 	# log_function_data "sysctl_data: $sysctl_data"
 	echo "$sysctl_data"
+	
 	eval $LOGFE
 }
 
