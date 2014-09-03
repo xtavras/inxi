@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 26-bsd
+####  Patch Number: 27-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3226,7 +3226,8 @@ get_irc_client_version()
 			}' )"
 			IRC_CLIENT="Pidgin"
 			;;
-		quassel*)
+		# possible failure of wildcard so make it explicit
+		quassel|quasselclient|quasselcore|quassel*)
 			# sample: quassel -v
 			# Qt: 4.5.0
 			# KDE: 4.2.65 (KDE 4.2.65 (KDE 4.3 >= 20090226))
@@ -10168,6 +10169,11 @@ print_short_data()
 	local cpu_core_count=${A_CPU_CORE_DATA[3]}
 	local cpu_core_alpha=${A_CPU_CORE_DATA[1]}
 	local cpu_type=${A_CPU_CORE_DATA[2]}
+	local kernel_os='Kernel'
+	
+	if [[ $BSD_TYPE == 'bsd' ]];then
+		kernel_os='OS'
+	fi
 
 	if [[ $cpu_physical_count -gt 1 ]];then
 		cpc_plural='(s)'
@@ -10237,7 +10243,7 @@ print_short_data()
 			#C1="${C1},1"; C2="${C2},1"; CN="${CN},1"
 		fi
 	fi
-	short_data="${C1}CPU$cpc_plural${C2}$SEP1$cpu_data_string $cpu_model$model_plural ($cpu_type) clocked at $min_max_clock$SEP2${C1}Kernel${C2}$SEP1$current_kernel$SEP2${C1}Up${C2}$SEP1$up_time$SEP2${C1}Mem${C2}$SEP1$memory$SEP2${C1}HDD${C2}$SEP1$hdd_capacity($hdd_used)$SEP2${C1}Procs${C2}$SEP1$processes$SEP2"
+	short_data="${C1}CPU$cpc_plural${C2}$SEP1$cpu_data_string $cpu_model$model_plural ($cpu_type) clocked at $min_max_clock$SEP2${C1}$kernel_os${C2}$SEP1$current_kernel$SEP2${C1}Up${C2}$SEP1$up_time$SEP2${C1}Mem${C2}$SEP1$memory$SEP2${C1}HDD${C2}$SEP1$hdd_capacity($hdd_used)$SEP2${C1}Procs${C2}$SEP1$processes$SEP2"
 
 	if [[ $SHOW_IRC -gt 0 ]];then
 		short_data="$short_data${C1}Client${C2}$SEP1$IRC_CLIENT$IRC_CLIENT_VERSION$SEP2"
