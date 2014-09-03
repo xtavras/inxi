@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 16-bsd
+####  Patch Number: 17-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3780,7 +3780,6 @@ get_cpu_data()
 				cpu[nr, "model"] = $NF
 			}
 		}
-
 		/^model name|^cpu\t+:/ {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
@@ -3792,7 +3791,6 @@ get_cpu_data()
 				bArm = "true"
 			}
 		}
-
 		/^cpu MHz|^clock\t+:/ {
 			if (!min) {
 				min = $NF
@@ -3802,7 +3800,6 @@ get_cpu_data()
 					min = $NF
 				}
 			}
-
 			if ($NF > max) {
 				max = $NF
 			}
@@ -3810,11 +3807,9 @@ get_cpu_data()
 			gsub(/.00[0]+$/,".00",$NF) ## clears out excessive zeros
 			cpu[nr, "speed"] = $NF
 		}
-
 		/^cache size/ {
 			cpu[nr, "cache"] = $NF
 		}
-
 		/^flags|^features/ {
 			cpu[nr, "flags"] = $NF
 			# not all ARM cpus show ARM in model name
@@ -3822,16 +3817,13 @@ get_cpu_data()
 				bArm = "true"
 			}
 		}
-
 		/^bogomips/ {
 			cpu[nr, "bogomips"] = $NF
 		}
-
 		/vendor_id/ {
 			gsub(/genuine|authentic/,"",$NF)
 			cpu[nr, "vendor"] = tolower( $NF )
 		}
-
 		END {
 			#if (!nr) { print ",,,"; exit } # <- should this be necessary or should bash handle that
 			for ( i = 0; i <= nr; i++ ) {
@@ -3914,13 +3906,19 @@ get_cpu_data_bsd()
 			cpuVendor=""
 			bSwitchFs="false"
 		}
-		 /^hw.model/ && ( bsdVersion != "darwin" ) {
+		/^hw.model/ && ( bsdVersion != "darwin" ) {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
-			gsub(/,/,"",$NF)
+			gsub(/,/," ",$NF)
 			sub(/[a-z]+-core/, "", $NF )
 			gsub(/^ +| +$|\"/, "", $NF)
 			gsub(/ [ \t]+/, " ", $NF)
+			if ( $NF ~ /[0-9]+[[:space:]]*[KM]B[[:space:]]+L2 cache/) {
+				cpuCache=gensub(/.*[^0-9]([0-9]+[[:space:]]*[KM]B)[[:space:]]+L2 cach.*/,"\\1",1,$NV)
+			}
+			if ( $NF ~ /\)$/ ){
+				sub(/[[:space:]]*\(.*\)$/,"",$NF)
+			}
 			cpuModel=$NF
 			if ( cpuClock != "" ) {
 				exit
@@ -3945,7 +3943,7 @@ get_cpu_data_bsd()
 		/^machdep.cpu.brand_string/ {
 			gsub(/'"$BAN_LIST_NORMAL"'/, "", $NF )
 			gsub(/'"$BAN_LIST_CPU"'/, "", $NF )
-			gsub(/,/,"",$NF)
+			gsub(/,/," ",$NF)
 			sub(/[a-z]+-core/, "", $NF )
 			gsub(/^ +| +$|\"/, "", $NF)
 			gsub(/ [ \t]+/, " ", $NF)
