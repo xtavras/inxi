@@ -3,7 +3,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.2
 ####  Date: 2014-09-02
-####  Patch Number: 30-bsd
+####  Patch Number: 31-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3051,6 +3051,7 @@ get_start_client()
 			
 			if [[ -n $App_Working_Name ]];then
 				Irc_Client_Path=$App_Working_Name
+				App_Working_Name=${App_Working_Name##*/}
 				B_Non_Native_App='false'
 				get_irc_client_version
 				if [[ -z $IRC_CLIENT ]];then
@@ -3227,7 +3228,7 @@ get_irc_client_version()
 			IRC_CLIENT="Pidgin"
 			;;
 		# possible failure of wildcard so make it explicit
-		quassel|quasselclient|quasselcore|quassel*)
+		quassel*)
 			# sample: quassel -v
 			# Qt: 4.5.0
 			# KDE: 4.2.65 (KDE 4.2.65 (KDE 4.3 >= 20090226))
