@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 ########################################################################
 ####  Script Name: inxi
-####  Version: 2.2.2
-####  Date: 2014-09-02
-####  Patch Number: 31-bsd
+####  Version: 2.2.3
+####  Date: 2014-09-03
+####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4960,12 +4960,12 @@ get_dmidecode_data()
 			fi
 			# these tests first, because bsd error messages like this (note how many : are in the string)
 			# inxi: line 4928: /usr/local/sbin/dmidecode: Permission denied
-			if [[ ${#DMIDECODE_DATA} -lt 100  ]];then
-				if [[ -z ${DMIDECODE_DATA/*Permission denied*/} ]];then
-				# if [[ -n $( grep -i 'Permission denied' <<< "$DMIDECODE_DATA" ) ]];then
+			if [[ ${#dmiData} -lt 100  ]];then
+				if [[ -z ${dmiData/*Permission denied*/} ]];then
+				# if [[ -n $( grep -i 'Permission denied' <<< "$dmiData" ) ]];then
 					DMIDECODE_DATA='dmidecode-error-requires-root'
 				# this handles very old systems, like Lenny 2.6.26, with dmidecode, but no data
-				elif [[ -n $( grep -i 'no smbios ' <<< "$DMIDECODE_DATA" ) ]];then
+				elif [[ -n $( grep -i 'no smbios ' <<< "$dmiData" ) ]];then
 					DMIDECODE_DATA='dmidecode-error-no-smbios-dmi-data'
 				else
 					DMIDECODE_DATA='dmidecode-error-unknown-error'
