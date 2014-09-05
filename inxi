@@ -831,10 +831,10 @@ initialize_data()
 		# first check for bsd stuff
 		if [[ -n $( type -p fetch ) ]];then
 			DOWNLOADER='fetch'
-		elif [[ $BSD_VERSION == 'openbsd' && -n $( type -p ftp ) ]];then
-			DOWNLOADER='ftp'
 		elif -n $( type -p curl ) ]];then
 			DOWNLOADER='curl'
+		elif [[ $BSD_VERSION == 'openbsd' && -n $( type -p ftp ) ]];then
+			DOWNLOADER='ftp'
 		else
 			DOWNLOADER='no-downloader'
 		fi
