@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.3
 ####  Date: 2014-09-05
-####  Patch Number: 02-bsd
+####  Patch Number: 03-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1964,12 +1964,17 @@ check_recommends_user_output()
 {
 	local Line=$LINE1
 	local gawk_version='N/A' sed_version='N/A' sudo_version='N/A' python_version='N/A'
+	local downloaders_bsd=''
 	
 	if [[ $B_IRC == 'true' ]];then
 		print_screen_output "Sorry, you can't run this option in an IRC client."
 		exit 1
 	fi
-	
+	if [[ -n $BSD_TYPE ]];then
+		downloaders_bsd='
+		fetch:BSD-only~BSD-only~BSD-only~:-i_wan_ip;-w/-W;-U/-!_[11-15]_(BSDs)
+		ftp:ftp-OpenBSD-only~ftp-OpenBSD-only~ftp-OpenBSD-only~:-i_wan_ip;-w/-W;-U/-!_[11-15]_(OpenBSD_only)'
+	fi
 	initialize_paths
 	print_lines_basic "0" "" "$SCRIPT_NAME will now begin checking for the programs it needs to operate. First a check of the main languages and tools $SCRIPT_NAME uses. Python is only for debugging data collection."
 	echo $Line
@@ -2016,7 +2021,12 @@ check_recommends_user_output()
 	echo 
 	check_recommends_items 'recommended-apps'
 	
-	echo 'Test Five: System Directories for Various Information.' 
+	echo 'Test Five: Script Recommends for Remaining Features.' 
+	print_lines_basic "0" "" "One of these downloaders needed for options -i/-w/-W (-U/-! [11-15], if supported):"
+	echo 
+	check_recommends_items 'downloaders'
+	
+	echo 'Test Six: System Directories for Various Information.' 
 	print_lines_basic "0" "" "If one of these directories is missing, $SCRIPT_NAME will have incomplete output:"
 	echo 
 	check_recommends_items 'system-dirs'
@@ -2065,6 +2075,12 @@ check_recommends_items()
 	runlevel:sysvinit~sysvinit~systemd~:-I_runlevel
 	sudo:sudo~sudo~sudo~:-Dx_hddtemp-user;-o_file-user
 	'
+	
+	local downloaders="
+	wget:wget~wget~wget~:-i_wan_ip;-w/-W;-U/-!_[11-15]_(if_supported)
+	curl:curl~curl~curl~:-i_wan_ip;-w/-W;-U/-!_[11-15]_(if_supported)
+	$downloaders_bsd
+	"
 	local recommended_dirs='
 	/sys/class/dmi/id:-M_system,_motherboard,_bios
 	/dev:-l,-u,-o,-p,-P,-D_disk_partition_data
@@ -2082,6 +2098,13 @@ check_recommends_items()
 	fi
 	
 	case $1 in
+		downloaders)
+			item_list=$downloaders
+			item_string='Downloaders'
+			item_string=''
+			missing_string='downloaders, and their corresponding packages,'
+			type='applications'
+			;;
 		required-dirs)
 			item_list=$required_dirs
 			item_string='Required file system'
@@ -12905,7 +12928,11 @@ print_system_data()
 	local host_name=$HOSTNAME
 	local current_kernel=$( get_kernel_version ) 
 	local distro="$( get_distro_data )"
-	local tty_session='' compiler_string=''
+	local tty_session='' compiler_string='' distro_os='Distro'
+	
+	if [[ -n $BSD_TYPE ]];then
+		distro_os='OS'
+	fi
 	
 	# I think these will work, maybe, if logged in as root and in X
 	if [[ $B_RUNNING_IN_DISPLAY == 'true' ]];then
@@ -12971,7 +12998,7 @@ print_system_data()
 	fi
 	host_kernel_string="$host_string${C1}Kernel$SEP3${C2} $current_kernel$bits "
 	de_string="${C1}$desktop_type$SEP3${C2} $desktop_environment$de_extra_data$dm_data "
-	distro_string="${C1}Distro$SEP3${C2} $distro "
+	distro_string="${C1}$distro_os$SEP3${C2} $distro "
 	
 	if [[ $( calculate_line_length "$host_kernel_string$de_string" ) -gt $COLS_INNER ]];then
 		system_data=$( create_print_line "$line_starter" "$host_kernel_string" )
