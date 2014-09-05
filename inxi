@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+# fetch has -q for quiet you can use -o - for stdout and -T for timeout
+# openbsd ftp does http
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 2.2.3
-####  Date: 2014-09-03
-####  Patch Number: 01-bsd
+####  Date: 2014-09-05
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -222,7 +224,7 @@ COLS_MAX_IRC='105'
 COLS_MAX_NO_DISPLAY='140'
 PS_COUNT=5
 # change to less, or more if you have very slow connection
-WGET_TIMEOUT=8
+DL_TIMEOUT=8
 ### END USER CONFIGS ###
 
 ### LOCALIZATION - DO NOT CHANGE! ###
@@ -824,8 +826,18 @@ initialize_data()
 	
 	initialize_paths
 	
-	if [[ -z $( type -p wget ) && -n $( type -p curl ) ]];then
-		DOWNLOADER='curl'
+	# set downloaders. 
+	if [[ -z $( type -p wget ) ]];then
+		# first check for bsd stuff
+		if [[ -n $( type -p fetch ) ]];then
+			DOWNLOADER='fetch'
+		elif [[ $BSD_VERSION == 'openbsd' && -n $( type -p ftp ) ]];then
+			DOWNLOADER='ftp'
+		elif -n $( type -p curl ) ]];then
+			DOWNLOADER='curl'
+		else
+			DOWNLOADER='no-downloader'
+		fi
 	fi
 	
 	if [[ -n $BSD_TYPE ]];then
@@ -1511,11 +1523,24 @@ script_self_updater()
 	print_screen_output "Currently running $SCRIPT_NAME version number: $SCRIPT_VERSION_NUMBER"
 	print_screen_output "Current version patch number: $SCRIPT_PATCH_NUMBER"
 	print_screen_output "Updating $SCRIPT_NAME in $SCRIPT_PATH using $2 as download source..."
-	if [[ $DOWNLOADER != 'curl' ]];then
-		file_contents="$( wget -q -O - $1$SCRIPT_NAME )" || downloader_error=$?
-	else
-		file_contents="$( curl -s $1$SCRIPT_NAME )" || downloader_error=$?
-	fi
+	case $DOWNLOADER in
+		curl)
+			file_contents="$( curl -s $1$SCRIPT_NAME )" || downloader_error=$?
+			;;
+		fetch)
+			file_contents="$( fetch -q -o - $1$SCRIPT_NAME )" || downloader_error=$?
+			;;
+		ftp)
+			file_contents="$( ftp -o - $1$SCRIPT_NAME 2>/dev/null )" || downloader_error=$?
+			;;
+		wget)
+			file_contents="$( wget -q -O - $1$SCRIPT_NAME )" || downloader_error=$?
+			;;
+		no-downloader)
+			downloader_error=1
+			;;
+	esac
+
 	# then do the actual download
 	if [[  $downloader_error -eq 0 ]];then
 		# make sure the whole file got downloaded and is in the variable
@@ -1541,19 +1566,31 @@ script_self_updater()
 							exec $( type -p mandb ) -q 
 						fi
 					fi
-					if [[ $DOWNLOADER != 'curl' ]];then
+					if [[ $DOWNLOADER == 'wget' ]];then
 						wget -q --spider $MAN_FILE_DOWNLOAD || downloader_man_error=$?
 					fi
 					if [[ $downloader_man_error -eq 0 ]];then
-						if [[ $DOWNLOADER != 'curl' ]];then
+						if [[ $DOWNLOADER == 'wget' ]];then
 							print_screen_output "Man file download URL verified: $MAN_FILE_DOWNLOAD"
 						fi
 						print_screen_output "Downloading Man page file now."
-						if [[ $DOWNLOADER != 'curl' ]];then
-							wget -q -O $man_file_path $MAN_FILE_DOWNLOAD || downloader_man_error=$?
-						else
-							curl -s -o $man_file_path $MAN_FILE_DOWNLOAD || downloader_man_error=$?
-						fi
+						case $DOWNLOADER in
+							curl)
+								curl -s -o $man_file_path $MAN_FILE_DOWNLOAD || downloader_man_error=$?
+								;;
+							fetch)
+								fetch -q -o $man_file_path $MAN_FILE_DOWNLOAD || downloader_man_error=$?
+								;;
+							ftp)
+								ftp -o $man_file_path $MAN_FILE_DOWNLOAD 2>/dev/null || downloader_man_error=$?
+								;;
+							wget)
+								wget -q -O $man_file_path $MAN_FILE_DOWNLOAD || downloader_man_error=$?
+								;;
+							no-downloader)
+								downloader_man_error=1
+								;;
+						esac
 						if [[ $downloader_man_error -gt 0 ]];then
 							print_screen_output "Oh no! Something went wrong downloading the Man gz file at: $MAN_FILE_DOWNLOAD"
 							print_screen_output "Check the error messages for what happened. Error: $downloader_man_error"
@@ -1591,9 +1628,12 @@ debug_data_collector()
 	local xiin_app='' xiin_data_file='' xiin_download='' error='' b_run_xiin='false'
 	local debug_data_dir='' bsd_string='' xorg_d_files='' xorg_file='' a_distro_ids=''
 	local completed_gz_file='' xiin_file='xiin.py' ftp_upload='ftp.techpatterns.com/incoming'
+	local xiin_url="http://inxi.googlecode.com/svn/branches/xiin/$xiin_file"
 	local Line='-------------------------' root_string=''
 	local start_directory=$( pwd )
 	local host=$( tr '[A-Z]' '[a-z]' <<< "$HOSTNAME" )
+	local downloader_error=0
+	
 	if [[ -n $host ]];then
 		host=${host// /-}
 	else
@@ -1719,13 +1759,25 @@ debug_data_collector()
 				mv -f xiin $xiin_file
 			fi
 			# -Nc is creating really weird download anomolies, so using -O instead
-			if [[ $DOWNLOADER != 'curl' ]];then
-				xiin_download="$( wget -q -O - http://inxi.googlecode.com/svn/branches/xiin/$xiin_file )"
-			else
-				xiin_download="$( curl -s http://inxi.googlecode.com/svn/branches/xiin/$xiin_file )"
-			fi
+			case $DOWNLOADER in
+				curl)
+					xiin_download="$( curl -s $xiin_url )" || downloader_error=$?
+					;;
+				fetch)
+					xiin_download="$( fetch -q -o - $xiin_url )" || downloader_error=$?
+					;;
+				ftp)
+					xiin_download="$( ftp -o - $xiin_url 2>/dev/null )" || downloader_error=$?
+					;;
+				wget)
+					xiin_download="$( wget -q -O - $xiin_url )" || downloader_error=$?
+					;;
+				no-downloader)
+					downloader_error=1
+					;;
+			esac
 			# if nothing got downloaded kick out error, otherwise we'll use an older version
-			if [[ $? -gt 0 && ! -f $xiin_file ]];then
+			if [[ $downloader_error -gt 0 && ! -f $xiin_file ]];then
 				echo -e "ERROR: Failed to download required file: $xiin_file\nMaybe the remote site is down or your networking is broken?"
 				echo "Continuing with incomplete data collection."
 				echo "$xiin_file download failed and no existing $xiin_file" >> $debug_data_dir/xiin-error.txt
@@ -6757,7 +6809,7 @@ get_networking_usb_data()
 get_networking_wan_ip_data()
 {
 	eval $LOGFS
-	local ip='' ip_data=''
+	local ip='' ip_data='' downloader_error=0
 
 	# get ip using wget redirect to stdout. This is a clean, text only IP output url,
 	# single line only, ending in the ip address. May have to modify this in the future
@@ -6765,11 +6817,23 @@ get_networking_wan_ip_data()
 	# awk has bad regex handling so checking it with grep -E instead
 	# ip=$( echo  2001:0db8:85a3:0000:0000:8a2e:0370:7334 | gawk  --re-interval '
 	# ip=$( wget -q -O - $WAN_IP_URL | gawk  --re-interval '
-	if [[ $DOWNLOADER != 'curl' ]];then
-		ip_data="$(wget -t 4 -T $WGET_TIMEOUT -q -O - $WAN_IP_URL )"
-	else
-		ip_data="$( curl -y $WGET_TIMEOUT -s $WAN_IP_URL )"
-	fi
+	case $DOWNLOADER in
+		curl)
+			ip_data="$( curl -y $DL_TIMEOUT -s $WAN_IP_URL )" || downloader_error=$?
+			;;
+		fetch)
+			ip_data="$( fetch -T $DL_TIMEOUT -q -o - $WAN_IP_URL )" || downloader_error=$?
+			;;
+		ftp)
+			ip_data="$( ftp -o - $WAN_IP_URL 2>/dev/null )" || downloader_error=$?
+			;;
+		wget)
+			ip_data="$( wget -T $DL_TIMEOUT -q -O - $WAN_IP_URL )" || downloader_error=$?
+			;;
+		no-downloader)
+			downloader_error=1
+			;;
+	esac
 	ip=$( gawk  --re-interval '
 	{
 		#gsub("\n","",$2")
@@ -9697,14 +9761,31 @@ get_weather_data()
 		# echo $ALTERNATE_WEATHER_LOCATION;exit
 	else
 		if [[ $b_test_loc != 'true' ]];then
-			if [[ $DOWNLOADER != 'curl' ]];then
-				location_data=$( wget -q -t 1 -T $WGET_TIMEOUT -O- $location_site || downloader_error=$? )
-			else
-				location_data=$( curl -s -y $WGET_TIMEOUT $location_site || downloader_error=$? )
-			fi
+			case $DOWNLOADER in
+				curl)
+					location_data="$( curl -y $DL_TIMEOUT -s $location_site )" || downloader_error=$?
+					;;
+				fetch)
+					location_data="$( fetch -T $DL_TIMEOUT -q -o - $location_site )" || downloader_error=$?
+					;;
+				ftp)
+					location_data="$( ftp -o - $location_site 2>/dev/null )" || downloader_error=$?
+					;;
+				wget)
+					location_data="$( wget -t 1 -T $DL_TIMEOUT -q -O - $location_site )" || downloader_error=$?
+					;;
+				no-downloader)
+					downloader_error=100
+					;;
+			esac
 			log_function_data "$location_data"
+			
 			if [[ $downloader_error -ne 0 ]];then
-				data_grab_error="Error: location server up but download error - $DOWNLOADER: $downloader_error"
+				if [[ $downloader_error -eq 100 ]];then
+					data_grab_error="Error: No downloader tool available. Install wget, curl, or fetch."
+				else
+					data_grab_error="Error: location server up but download error - $DOWNLOADER: $downloader_error"
+				fi
 			fi
 			downloader_error=0
 		else
@@ -9817,13 +9898,29 @@ get_weather_data()
 	# now either dump process or go on to get weather data
 	if [[ -z $data_grab_error ]];then
 		if [[ $b_test_weather != 'true' ]];then
-			if [[ $DOWNLOADER != 'curl' ]];then
-				weather_data="$( wget -q -t 1 -T $WGET_TIMEOUT -O- $weather_feed"$location" || downloader_error=$? )"
-			else
-				weather_data="$( curl -s -y $WGET_TIMEOUT $weather_feed"$location" || downloader_error=$? )"
-			fi
+			case $DOWNLOADER in
+				curl)
+					weather_data="$( curl -y $DL_TIMEOUT -s $weather_feed"$location" )" || downloader_error=$?
+					;;
+				fetch)
+					weather_data="$( fetch -T $DL_TIMEOUT -q -o - $weather_feed"$location" )" || downloader_error=$?
+					;;
+				ftp)
+					weather_data="$( ftp -o - $weather_feed"$location" 2>/dev/null )" || downloader_error=$?
+					;;
+				wget)
+					weather_data="$( wget -t 1 -T $DL_TIMEOUT -q -O - $weather_feed"$location" )" || downloader_error=$?
+					;;
+				no-downloader)
+					downloader_error=100
+					;;
+			esac
 			if [[ $downloader_error -ne 0 ]];then
-				data_grab_error="Error: weather server up but download error - $DOWNLOADER: $downloader_error"
+				if [[ $downloader_error -eq 100 ]];then
+					data_grab_error="Error: No downloader tool available. Install wget, curl, or fetch."
+				else
+					data_grab_error="Error: weather server up but download error - $DOWNLOADER: $downloader_error"
+				fi
 			fi
 			log_function_data "$weather_data"
 		else
