@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.3
 ####  Date: 2014-09-05
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3116,12 +3116,12 @@ get_start_client()
 				}' )"
 		else
 			# this should handle certain cases where it's ssh or some other startup tool
-			# that falls through all the other tests
+			# that falls through all the other tests. Also bsd irc clients will land here
 			if [[ $BSD_TYPE != 'bsd' ]];then
 				App_Working_Name=$(ps -p $PPID --no-headers 2>/dev/null | gawk '{print $NF}' )
 			else
 				# without --no-headers we need the second line
-				App_Working_Name=$(ps -p $PPID 2>/dev/null | gawk '/^[0-9]+/ {print $5}' )
+				App_Working_Name=$(ps -p $PPID 2>/dev/null | gawk '$1 ~ /^[0-9]+/ {print $5}' )
 			fi
 			
 			if [[ -n $App_Working_Name ]];then
@@ -3248,7 +3248,6 @@ get_irc_client_version()
 				}
 				exit
 			}' )"
-
 			T=($IRC_CLIENT_VERSION)
 			if [[ ${T[0]} == *+* ]];then
 				# < Sho_> locsmif: The version numbers of SVN versions look like this:
