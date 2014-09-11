@@ -4,8 +4,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 2.2.3
-####  Date: 2014-09-05
-####  Patch Number: 05-bsd
+####  Date: 2014-09-10
+####  Patch Number: 06-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3753,6 +3753,8 @@ get_cpu_core_count()
 {
 	eval $LOGFS
 	local cpu_physical_count='' cpu_core_count='' cpu_type='' cpu_alpha_count='' cores_per_cpu=''
+	local array_data=''
+	
 	if [[ $B_CPUINFO_FILE == 'true' ]]; then
 		# load the A_CPU_TYPE_PCNT_CCNT core data array
 		get_cpu_ht_multicore_smp_data
@@ -3767,14 +3769,17 @@ get_cpu_core_count()
 		
 		# create array, core count integer; core count string
 		# A_CPU_CORE_DATA=( "$cpu_core_count" "$cpu_alpha_count Core$cpu_type" )
-		A_CPU_CORE_DATA=( "$cpu_physical_count" "$cpu_alpha_count" "$cpu_type" "$cpu_core_count" )
+		array_data="$cpu_physical_count,$cpu_alpha_count,$cpu_type,$cpu_core_count"
+		IFS=','
+		A_CPU_CORE_DATA=( $array_data )
+		IFS="$ORIGINAL_IFS"
 	elif [[ -n $BSD_TYPE ]];then
 		local gawk_fs=': '
 	
 		if [[ $BSD_VERSION == 'openbsd' ]];then
 			gawk_fs='='
 		fi
-		cpu_core_count=$( gawk -F "$gawk_fs" -v bsdType=$BSD_VERSION '
+		cpu_core_count=$( gawk -F "$gawk_fs" -v bsdVersion="$BSD_VERSION" '
 		# note: on openbsd can also be hw.ncpufound so exit after first
 		BEGIN {
 			coreCount=""
@@ -3804,9 +3809,13 @@ get_cpu_core_count()
 		else
 			cpu_physical_count=1
 		fi
-		A_CPU_CORE_DATA=( "$cpu_physical_count" "$cpu_alpha_count" "$cpu_type" "$cpu_core_count" )
+		array_data="$cpu_physical_count,$cpu_alpha_count,$cpu_type,$cpu_core_count"
+		IFS=','
+		A_CPU_CORE_DATA=( $array_data )
+		IFS="$ORIGINAL_IFS"
 	fi
 	a_temp=${A_CPU_CORE_DATA[@]}
+	# echo $a_temp :: ${#A_CPU_CORE_DATA[@]}
 	log_function_data "A_CPU_CORE_DATA: $a_temp"
 	eval $LOGFE
 }
