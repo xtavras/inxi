@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.3
 ####  Date: 2014-09-10
-####  Patch Number: 06-bsd
+####  Patch Number: 07-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3784,7 +3784,7 @@ get_cpu_core_count()
 		BEGIN {
 			coreCount=""
 		}
-		/^hw.ncpu$/ {
+		$1 ~ /^hw.ncpu$/ {
 			coreCount=$NF
 		}
 		/^machdep.cpu.core_count/ {
@@ -3806,6 +3806,9 @@ get_cpu_core_count()
 		fi
 		if [[ -n $cores_per_cpu ]];then
 			cpu_physical_count=$(( $cpu_core_count / $cores_per_cpu ))
+			cpu_core_count=$cores_per_cpu
+		# do not guess here, only use phys count if it actually exists, otherwise handle in print_cpu..
+		# this 1 value should not be used for output, and is just to avoid math errors
 		else
 			cpu_physical_count=1
 		fi
@@ -10317,7 +10320,7 @@ print_short_data()
 	local cpu_core_count=${A_CPU_CORE_DATA[3]}
 	local cpu_core_alpha=${A_CPU_CORE_DATA[1]}
 	local cpu_type=${A_CPU_CORE_DATA[2]}
-	local kernel_os=''
+	local kernel_os='' local cpu_data_string=''
 	
 	if [[ $BSD_TYPE == 'bsd' ]];then
 		kernel_os="${C1}OS${C2}$SEP1$( uname -rsp )" 
@@ -10330,8 +10333,11 @@ print_short_data()
 		model_plural='s'
 		cpu_count_print="$cpu_physical_count "
 	fi
-	
-	local cpu_data_string="$cpu_count_print$cpu_core_alpha core"
+	if [[ -z $BSD_TYPE ]];then
+		cpu_data_string="$cpu_count_print$cpu_core_alpha core"
+	else
+		cpu_data_string="$cpu_count_print$cpu_core_count core"
+	fi
 # 	local cpu_core_count=${A_CPU_CORE_DATA[0]}
 
 	# load A_HDD_DATA
@@ -10602,8 +10608,20 @@ print_cpu_data()
 			model_plural='s'
 		fi
 		line_starter="CPU$cpc_plural:"
-		cpu_data_string="$cpu_count_print$cpu_core_alpha core"
-		cpu_data="${C1}$cpu_data_string${C2} ${a_cpu_working[0]}$model_plural ($cpu_type)"
+		if [[ -z $BSD_TYPE ]];then
+			cpu_data_string="$cpu_count_print$cpu_core_alpha core"
+			cpu_data="${C1}$cpu_data_string${C2} ${a_cpu_working[0]}$model_plural ($cpu_type)"
+		else
+			if [[ $cpu_physical_count -gt 1 ]];then
+				cpu_data_string="${C1}Cores$SEP3${C2} $cpu_core_count ${C1}CPUs$SEP3${C2} $cpu_physical_count "
+			else
+				cpu_data_string="${C1}Cores$SEP3${C2} $cpu_core_count "
+			fi
+			if [[ -n $cpu_type ]];then
+				cpu_type=" ($cpu_type)"
+			fi
+			cpu_data="$cpu_data_string${C1}model$SEP3${C2} ${a_cpu_working[0]}$cpu_type"
+		fi
 		if [[ $B_SHOW_CPU == 'true' ]];then
 			# update for multicore, bogomips x core count.
 			if [[ $B_EXTRA_DATA == 'true' ]];then
