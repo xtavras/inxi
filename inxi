@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.3
 ####  Date: 2014-09-10
-####  Patch Number: 07-bsd
+####  Patch Number: 08-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -10322,6 +10322,10 @@ print_short_data()
 	local cpu_type=${A_CPU_CORE_DATA[2]}
 	local kernel_os='' local cpu_data_string=''
 	
+	if [[ -z $BSD_TYPE || -n $cpu_type ]];then
+		cpu_type=" ($cpu_type)"
+	fi
+	
 	if [[ $BSD_TYPE == 'bsd' ]];then
 		kernel_os="${C1}OS${C2}$SEP1$( uname -rsp )" 
 	else
@@ -10399,7 +10403,7 @@ print_short_data()
 			#C1="${C1},1"; C2="${C2},1"; CN="${CN},1"
 		fi
 	fi
-	short_data="${C1}CPU$cpc_plural${C2}$SEP1$cpu_data_string $cpu_model$model_plural ($cpu_type) clocked at $min_max_clock$SEP2$kernel_os$SEP2${C1}Up${C2}$SEP1$up_time$SEP2${C1}Mem${C2}$SEP1$memory$SEP2${C1}HDD${C2}$SEP1$hdd_capacity($hdd_used)$SEP2${C1}Procs${C2}$SEP1$processes$SEP2"
+	short_data="${C1}CPU$cpc_plural${C2}$SEP1$cpu_data_string $cpu_model$model_plural$cpu_type clocked at $min_max_clock$SEP2$kernel_os$SEP2${C1}Up${C2}$SEP1$up_time$SEP2${C1}Mem${C2}$SEP1$memory$SEP2${C1}HDD${C2}$SEP1$hdd_capacity($hdd_used)$SEP2${C1}Procs${C2}$SEP1$processes$SEP2"
 
 	if [[ $SHOW_IRC -gt 0 ]];then
 		short_data="$short_data${C1}Client${C2}$SEP1$IRC_CLIENT$IRC_CLIENT_VERSION$SEP2"
