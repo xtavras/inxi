@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-18
-####  Patch Number: 05-bsd
+####  Patch Number: 06-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4760,6 +4760,8 @@ get_disk_data_bsd()
 {
 	eval $LOGFS
 	
+	local a_temp=''
+	
 	if [[ -n $Dmesg_Boot_Data ]];then
 		IFS=$'\n'
 		A_HDD_DATA=( $( gawk -v hddUsed="$2" -v testType="$1" -F ': ' '
@@ -4781,7 +4783,7 @@ get_disk_data_bsd()
 				bSetSize="true"
 			}
 			aDisks[nr, "diskId"] = $1
-			if ($NF ~ /[^0-9]*([0-9\.]+[[:space:]][MG]B/) {
+			if ($NF ~ /[^0-9]*[0-9\.]+[[:space:]][MG]B/) {
 				workingSize=gensub(/[^0-9]*([0-9\.]+[[:space:]][MG]B)/,"\\1",1,$NF)
 				if (workingSize ~ /GB/ ) {
 					sub(/[[:space:]]*GB/,"",workingSize)
@@ -4823,6 +4825,10 @@ get_disk_data_bsd()
 		}' <<< "$Dmesg_Boot_Data" ) )
 		IFS="$ORIGINAL_IFS"
 	fi
+	
+	a_temp=${A_HDD_DATA[@]}
+	echo ${a_temp[@]}
+	log_function_data "A_HDD_DATA: $a_temp"
 	
 	eval $LOGFE
 }
