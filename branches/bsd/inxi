@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-18
-####  Patch Number: 07-bsd
+####  Patch Number: 08-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4785,11 +4785,11 @@ get_disk_data_bsd()
 				workingSize=gensub(/.*[^0-9]([0-9\.]+[[:space:]]*[MG]B).*/,"\\1",1,$NF)
 				if (workingSize ~ /GB/ ) {
 					sub(/[[:space:]]*GB/,"",workingSize)
-					workingSize=workingSize*1
+					workingSize=workingSize*1000
 				}
 				else if (workingSize ~ /MB/ ) {
 					sub(/[[:space:]]*MB/,"",workingSize)
-					workingSize=workingSize/1000
+					workingSize=workingSize
 				}
 				aDisks[nr, "size"] = workingSize
 				if ( bSetSize == "true" ) {
@@ -4801,7 +4801,7 @@ get_disk_data_bsd()
 			}
 		}
 		END {
-			size = size                   # calculate size in GB size
+			size = size/1000                # calculate size in GB size
 			workingUsed = hddUsed*1024/1000**3         # calculate workingUsed in GB used
 			# this handles a special case with livecds where no hdd_used is detected
 			if ( size > 0 && hddUsed == "na" ) {
