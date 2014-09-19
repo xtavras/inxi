@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-18
-####  Patch Number: 06-bsd
+####  Patch Number: 07-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4764,27 +4764,25 @@ get_disk_data_bsd()
 	
 	if [[ -n $Dmesg_Boot_Data ]];then
 		IFS=$'\n'
-		A_HDD_DATA=( $( gawk -v hddUsed="$2" -v testType="$1" -F ': ' '
+		A_HDD_DATA=( $( gawk -v hddUsed="$2" -v testType="$1" -F ':' '
 		BEGIN {
 			IGNORECASE=1
-			aDisks=""
-			aIds=""
 			nr=0
 			size=0
 			bSetSize="false"
 		}
 		# sde,3.9GB,STORE_N_GO,USB,C200431546D3CF49-0:0,0
 		# sdd,250.1GB,ST3250824AS,,9ND08GKX,45
-		$1 ~ /^(ad|ada|sd|wd)[0-9]+$/ {
-			diskId=$1
+		$1 ~ /^(ad|ada|sd|wd)[0-9]+(|[[:space:]]at.*)$/ {
+			diskId=gensub(/^((ad|ada|sd|wd)[0-9]+)[^0-9].*/,"\\1",1,$1)
 			if (aIds[diskId] == "" ) {
 				nr++
-				aIds[diskId]=$1
+				aIds[diskId]=diskId
 				bSetSize="true"
 			}
-			aDisks[nr, "diskId"] = $1
-			if ($NF ~ /[^0-9]*[0-9\.]+[[:space:]][MG]B/) {
-				workingSize=gensub(/[^0-9]*([0-9\.]+[[:space:]][MG]B)/,"\\1",1,$NF)
+			aDisks[nr, "diskId"] = diskId
+			if ($NF ~ /[^0-9][0-9\.]+[[:space:]]*[MG]B/) {
+				workingSize=gensub(/.*[^0-9]([0-9\.]+[[:space:]]*[MG]B).*/,"\\1",1,$NF)
 				if (workingSize ~ /GB/ ) {
 					sub(/[[:space:]]*GB/,"",workingSize)
 					workingSize=workingSize*1
