@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-18
-####  Patch Number: 03-bsd
+####  Patch Number: 04-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4149,7 +4149,7 @@ get_cpu_flags_bsd()
 	local gawk_fs=':'
 	
 	if [[ -n $Dmesg_Boot_Data ]];then
-		cpu_flags=$( gawk -v bsdVersion=$BSD_VERSION -F ":" '
+		cpu_flags=$( gawk -v bsdVersion="$BSD_VERSION" -F ":" '
 		BEGIN {
 			IGNORECASE=1
 			cpuFlags=""
@@ -7332,7 +7332,7 @@ get_partition_data()
 	# $NF = partition name; $(NF - 4) = partition size; $(NF - 3) = used, in gB; $(NF - 1) = percent used
 	## note: by subtracting from the last field number NF, we avoid a subtle issue with LVM df output, where if
 	## the first field is too long, it will occupy its own line, this way we are getting only the needed data
-	A_PARTITION_DATA=( $( echo "$main_partition_data" | gawk -v bsdType=$BSD_TYPE -v bsdVersion=$BSD_VERSION '
+	A_PARTITION_DATA=( $( echo "$main_partition_data" | gawk -v bsdType="$BSD_TYPE" -v bsdVersion="$BSD_VERSION" '
 	BEGIN {
 		IGNORECASE=1
 		fileSystem=""
@@ -7344,7 +7344,7 @@ get_partition_data()
 	( bsdType != "" ) {
 		# skip if non disk/partition, or if raid primary id, which will not have a / in it
 		if ( $1 ~ /^(aufs|devfs|devtmpfs|fdescfs|iso9660|linprocfs|procfs|squashfs|sysfs|tmpfs|type|unionfs)$/ || 
-		$1 ~ /^([^\/]+)$/ ) {
+		( $1 ~ /^([^\/]+)$/ && $1 !~ /^ROOT/ ) ) {
 			# note use next, not getline or it does not work right
 			next 
 		}
@@ -7479,7 +7479,7 @@ get_partition_data()
 		# older bsds have df minus -T so can't get fs type easily, try using mount instead
 		if [[ $BSD_TYPE == 'bsd' ]] && [[ -z $fs_type && -n $dev_item ]];then
 			dev_bsd_item=$( sed -e 's/non-dev-//' -e 's|/|\\/|g' <<< "$dev_item" )
-			fs_type=$( gawk -v bsdVersion=$BSD_VERSION -F '(' '
+			fs_type=$( gawk -v bsdVersion="$BSD_VERSION" -F '(' '
 			BEGIN {
 				IGNORECASE=1
 				fileSystem=""
