@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-18
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -274,6 +274,7 @@ A_DISPLAY_SERVER_DATA=''
 
 ### BOOLEANS ###
 ## standard boolean flags ##
+B_BSD_DISK_SET='false'
 B_BSD_RAID='false'
 B_COLOR_SCHEME_SET='false'
 B_CONSOLE_IRC='false'
@@ -1640,7 +1641,7 @@ debug_data_collector()
 		host="-no-host"
 	fi
 	if [[ -n $BSD_TYPE ]];then
-		bsd_string="-$BSD_TYPE"
+		bsd_string="-$BSD_TYPE-$BSD_VERSION"
 	fi
 	if [[ $( whoami ) == 'root' ]];then
 		root_string='-root'
@@ -4754,6 +4755,78 @@ get_de_gtk_data()
 	eval $LOGFE
 }
 
+# args: $1 - test type [ hdd/optical ]/ $2 ~ hdd_used
+get_disk_data_bsd()
+{
+	eval $LOGFS
+	
+	if [[ -n $Dmesg_Boot_Data ]];then
+		IFS=$'\n'
+		A_HDD_DATA=( $( gawk -v hddUsed="$2" -v testType="$1" -F ': ' '
+		BEGIN {
+			IGNORECASE=1
+			aDisks=""
+			aIds=""
+			nr=0
+			size=0
+			bSetSize="false"
+		}
+		# sde,3.9GB,STORE_N_GO,USB,C200431546D3CF49-0:0,0
+		# sdd,250.1GB,ST3250824AS,,9ND08GKX,45
+		$1 ~ /^(ad|ada|sd|wd)[0-9]+$/ {
+			diskId=$1
+			if (aIds[diskId] == "" ) {
+				nr++
+				aIds[diskId]=$1
+				bSetSize="true"
+			}
+			aDisks[nr, "diskId"] = $1
+			if ($NF ~ /[^0-9]*([0-9\.]+[[:space:]][MG]B/) {
+				workingSize=gensub(/[^0-9]*([0-9\.]+[[:space:]][MG]B)/,"\\1",1,$NF)
+				if (workingSize ~ /GB/ ) {
+					sub(/[[:space:]]*GB/,"",workingSize)
+					workingSize=workingSize*1
+				}
+				else if (workingSize ~ /MB/ ) {
+					sub(/[[:space:]]*MB/,"",workingSize)
+					workingSize=workingSize/1000
+				}
+				aDisks[nr, "size"] = workingSize
+				if ( bSetSize == "true" ) {
+					if ( workingSize != "" ){
+						size=size+workingSize
+						bSetSize="false"
+					}
+				}
+			}
+		}
+		END {
+			size = size                   # calculate size in GB size
+			workingUsed = hddUsed*1024/1000**3         # calculate workingUsed in GB used
+			# this handles a special case with livecds where no hdd_used is detected
+			if ( size > 0 && hddUsed == "na" ) {
+				size = sprintf( "%.1f", size )
+				print size "GB,-,,.."
+			}
+			else if ( size > 0 && workingUsed > 0 ) {
+				diskUsed = workingUsed*100/size  # calculate used percentage
+				diskUsed = sprintf( "%.1f", diskUsed )
+				size = sprintf( "%.1f", size )
+				print size "GB," diskUsed "% used,,.." 
+			}
+			else {
+				print "NA,-,,.." # print an empty array, this will be further handled in the print out function
+			}
+# 			for (i=1;i<=nr;i++) {
+# 				
+# 			}
+		}' <<< "$Dmesg_Boot_Data" ) )
+		IFS="$ORIGINAL_IFS"
+	fi
+	
+	eval $LOGFE
+}
+
 # see which dm has started if any
 get_display_manager()
 {
@@ -5786,7 +5859,7 @@ get_hdd_data_basic()
 	hdd_data="$( eval $df_string )"
 	# eval $df_string | awk 'BEGIN{tot=0} !/total/ {tot+=$4} END{print tot}'
 	log_function_data 'raw' "hdd_data:\n$hdd_data"
-	hdd_used=$( echo "$hdd_data" | gawk -v bsdType=$BSD_TYPE -v swapSize=$swap_size '
+	hdd_used=$( echo "$hdd_data" | gawk -v bsdType="$BSD_TYPE" -v swapSize="$swap_size" '
 	BEGIN {
 		# this is used for specific cases where bind, or incorrect multiple mounts to same partitions,
 		# is present. The value is searched for an earlier appearance of that partition and if it is 
@@ -5887,19 +5960,23 @@ get_hdd_data_basic()
 			# this handles a special case with livecds where no hdd_used is detected
 			if ( size > 0 && hddUsed == "na" ) {
 				size = sprintf( "%.1f", size )
-				print size "GB,-"
+				print size "GB,-,,.."
 			}
 			else if ( size > 0 && workingUsed > 0 ) {
 				diskUsed = workingUsed*100/size  # calculate used percentage
 				diskUsed = sprintf( "%.1f", diskUsed )
 				size = sprintf( "%.1f", size )
-				print size "GB," diskUsed "% used"
+				print size "GB," diskUsed "% used,,.." 
 			}
 			else {
-				print "NA,-" # print an empty array, this will be further handled in the print out function
+				print "NA,-,,.." # print an empty array, this will be further handled in the print out function
 			}
 		}' $FILE_PARTITIONS ) )
 		log_function_data 'cat' "$FILE_PARTITIONS"
+	else
+		if [[ -n $BSD_TYPE ]];then
+			get_disk_data_bsd 'hdd' "$hdd_used"
+		fi
 	fi
 	IFS="$ORIGINAL_IFS"
 	a_temp=${A_HDD_DATA[@]}
@@ -5914,7 +5991,7 @@ get_hard_drive_data_advanced()
 	eval $LOGFS
 	local a_temp_working='' a_temp_scsi='' temp_holder='' temp_name='' i='' j=''
 	local sd_ls_by_id='' ls_disk_by_id='' ls_disk_by_path='' usb_exists='' a_temp=''
-	local firewire_exists='' thunderbolt_exists='' thunderbolt_exists=''
+	local firewire_exists='' thunderbolt_exists='' thunderbolt_exists='' hdd_temp hdd_serial=''
 
 	## check for all ide type drives, non libata, only do it if hdx is in array
 	## this is now being updated for new /sys type paths, this may handle that ok too
@@ -6048,8 +6125,23 @@ get_hard_drive_data_advanced()
 					fi
 				done
 			fi
+			if [[ $B_EXTRA_DATA == 'true' ]];then
+				IFS=","
+				a_temp_working=( ${A_HDD_DATA[i]} )
+				# echo "a:" ${a_temp_working[@]}
+				IFS="$ORIGINAL_IFS"
+				hdd_temp=''
+				hdd_serial=''
+				if [[ -n ${a_temp_working[1]} ]];then
+					hdd_temp=$( get_hdd_temp_data "/dev/${a_temp_working[0]}" )
+				fi
+				if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
+					hdd_serial=$( get_hdd_serial_number "${a_temp_working[0]}" )
+				fi
+				A_HDD_DATA[i]="${a_temp_working[0]},${a_temp_working[1]},${a_temp_working[2]},${a_temp_working[3]},$hdd_serial,$hdd_temp"
+				echo b: ${A_HDD_DATA[i]}
+			fi
 		done
-		unset ls_disk_by_id # and then let's dump the data we don't need
 	fi
 	a_temp=${A_HDD_DATA[@]}
 	log_function_data "A_HDD_DATA: $a_temp"
@@ -11189,11 +11281,12 @@ print_graphics_data()
 print_hard_disk_data()
 {
 	eval $LOGFS
+	local b_bsd_debugger='true'
 	local hdd_data='' hdd_data_2='' a_hdd_working='' hdd_temp_data='' hdd_string=''
 	local hdd_serial=''
 	local dev_data='' size_data='' hdd_model='' usb_data='' hdd_name=''
 	local Line_Starter='Drives:' # inherited by print_optical_drives
-	# load A_HDD_DATA
+	# load A_HDD_DATA - this will also populate the full bsd disk data array values
 	get_hdd_data_basic
 	## note: if hdd_model is declared prior to use, whatever string you want inserted will
 	## be inserted first. In this case, it's desirable to print out (x) before each disk found.
@@ -11222,10 +11315,9 @@ print_hard_disk_data()
 				else
 					usb_data=''
 				fi
-				dev_data="/dev/${a_hdd_working[0]} "
 				size_data=" ${C1}size$SEP3${C2} ${a_hdd_working[1]}"
-				if [[ $B_EXTRA_DATA == 'true' && -n $dev_data ]];then
-					hdd_temp_data=$( get_hdd_temp_data "$dev_data" )
+				if [[ $B_EXTRA_DATA == 'true' ]];then
+					hdd_temp_data=${a_hdd_working[5]}
 					# error handling is done in get data function
 					if [[ -n $hdd_temp_data ]];then
 						hdd_temp_data=" ${C1}temp$SEP3${C2} ${hdd_temp_data}C"
@@ -11234,7 +11326,7 @@ print_hard_disk_data()
 					fi
 				fi
 				if [[ $B_EXTRA_EXTRA_DATA == 'true' ]];then
-					hdd_serial=$( get_hdd_serial_number "${a_hdd_working[0]}" )
+					hdd_serial=${a_hdd_working[4]}
 					if [[ -z $hdd_serial ]];then
 						hdd_serial='N/A'
 					fi
@@ -11305,7 +11397,7 @@ print_hard_disk_data()
 			#echo 5
 		fi
 		# temporary message to indicate not yet supported
-		if [[ $BSD_TYPE == 'bsd' ]];then
+		if [[ $b_bsd_debugger == 'false' && $BSD_TYPE == 'bsd' ]];then
 			hdd_data=$bsd_unsupported
 			hdd_data=$( create_print_line "$Line_Starter" "$hdd_data" )
 			print_screen_output "$hdd_data"
@@ -11314,7 +11406,7 @@ print_hard_disk_data()
 	else
 		# temporary message to indicate not yet supported
 		hdd_data="$row_starter"
-		if [[ $BSD_TYPE == 'bsd' ]];then
+		if [[ $b_bsd_debugger == 'false' && $BSD_TYPE == 'bsd' ]];then
 			hdd_data=$bsd_unsupported
 		fi
 		hdd_data=$( create_print_line "$Line_Starter" "$hdd_data" )
