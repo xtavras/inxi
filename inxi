@@ -4,8 +4,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 2.2.6
-####  Date: 2014-09-18
-####  Patch Number: 22-bsd
+####  Date: 2014-09-19
+####  Patch Number: 23-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4833,6 +4833,7 @@ get_disk_data_bsd()
 				diskUsed = sprintf( "%.1f", diskUsed )
 				if ( diskUsed > 100 ) {
 					diskUsed = "Used Error!"
+				}
 				else {
 					diskUsed = diskUsed "% used"
 				}
@@ -6001,6 +6002,7 @@ get_hdd_data_basic()
 				diskUsed = sprintf( "%.1f", diskUsed )
 				if ( diskUsed > 100 ) {
 					diskUsed = "Used Error!"
+				}
 				else {
 					diskUsed = diskUsed "% used"
 				}
