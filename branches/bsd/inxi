@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-18
-####  Patch Number: 18-bsd
+####  Patch Number: 19-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4781,8 +4781,8 @@ get_disk_data_bsd()
 				bSetSize="true"
 			}
 			aDisks[nr, "id"] = diskId
-			if ($NF ~ /[^0-9][0-9\.]+[[:space:]]*[MG]B/ && $NF !~ /^[0-9\.]+[[:space:]]*MB\/s/) {
-				workingSize=gensub(/.*[^0-9]([0-9\.]+[[:space:]]*[MG]B).*/,"\\1",1,$NF)
+			if ($0 ~ /[^0-9][0-9\.]+[[:space:]]*[MG]B/ && $0 !~ /^[0-9\.]+[[:space:]]*MB\/s/) {
+				workingSize=gensub(/.*[^0-9]([0-9\.]+[[:space:]]*[MG]B).*/,"\\1",1,$0)
 				if (workingSize ~ /GB/ ) {
 					sub(/[[:space:]]*GB/,"",workingSize)
 					workingSize=workingSize*1000
@@ -4803,12 +4803,16 @@ get_disk_data_bsd()
 				gsub(/.*<|>.*/,"",$NF)
 				aDisks[nr, "model"] = $NF
 			}
+			if ( $NF ~ /serial number/ ){
+				sub(/serial[[:space:]]+number[[:space:]]*/,"",$NF)
+				aDisks[nr, "serial"] = $NF
+			}
 		}
 		END {
 			for (i=1;i<=nr;i++) {
 				workingSize = aDisks[i, "size"]/1000
 				workingSize = sprintf( "%.1fGB", workingSize )
-				print aDisks[i, "id"] "," workingSize "," aDisks[i, "model"] "," "," "," 
+				print aDisks[i, "id"] "," workingSize "," aDisks[i, "model"] "," "," aDisks[i, "serial"] "," 
 			}
 			size = size/1000                # calculate size in GB size
 			# in kb
