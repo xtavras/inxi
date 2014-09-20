@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-19
-####  Patch Number: 23-bsd
+####  Patch Number: 24-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4783,7 +4783,7 @@ get_disk_data_bsd()
 				}
 			}
 			aDisks[nr, "id"] = diskId
-			if ($0 ~ /[^0-9][0-9\.]+[[:space:]]*[MG]B/ && $0 !~ /^[0-9\.]+[[:space:]]*MB\/s/) {
+			if ($0 ~ /[^0-9][0-9\.]+[[:space:]]*[MG]B/ && $0 !~ /MB\/s/) {
 				workingSize=gensub(/.*[^0-9]([0-9\.]+[[:space:]]*[MG]B).*/,"\\1",1,$0)
 				if (workingSize ~ /GB/ ) {
 					sub(/[[:space:]]*GB/,"",workingSize)
