@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-18
-####  Patch Number: 16-bsd
+####  Patch Number: 17-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -5302,7 +5302,14 @@ get_dmesg_boot_data()
 		# replace all indented items with ~ so we can id them easily while processing
 		# note that if user, may get error of read permissions
 		# for some weird reason, real mem and avail mem are use a '=' separator, who knows why, the others are ':'
-		dmsg_boot_data="$( cat $FILE_DMESG_BOOT 2>/dev/null | sed -e 's/"//g' -e 's/[[:space:]]*=[[:space:]]*/:/g' -e 's/:[[:space:]]*/:/g' )"
+		dmsg_boot_data="$( cat $FILE_DMESG_BOOT 2>/dev/null | gawk '
+		{
+			sub(/[[:space:]]*=[[:space:]]*|:[[:space:]]*/,":", $0)
+			gsub(/,/," ", $0)
+			gsub(/\"/, "", $0)
+			gsub(/[[:space:]][[:space:]]/, " ", $0)
+			print $0
+		}' )"
 	fi
 	echo "$dmsg_boot_data"
 	# log_function_data "$dmsg_boot_data"
