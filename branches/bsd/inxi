@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-19
-####  Patch Number: 30-bsd
+####  Patch Number: 31-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6081,7 +6081,7 @@ get_hard_drive_data_advanced()
 					hdd_serial=$( get_hdd_serial_number "${a_temp_working[0]}" )
 				fi
 				A_HDD_DATA[i]="${a_temp_working[0]},${a_temp_working[1]},${a_temp_working[2]},${a_temp_working[3]},$hdd_serial,$hdd_temp"
-				echo b: ${A_HDD_DATA[i]}
+				# echo b: ${A_HDD_DATA[i]}
 			fi
 		done
 	fi
@@ -11373,7 +11373,7 @@ print_hard_disk_data()
 	eval $LOGFS
 	local b_bsd_debugger='true'
 	local hdd_data='' hdd_data_2='' a_hdd_working='' hdd_temp_data='' hdd_string=''
-	local hdd_serial='' dev_string=''
+	local hdd_serial='' dev_string='/dev/'
 	local dev_data='' size_data='' hdd_model='' usb_data='' hdd_name=''
 	local Line_Starter='Drives:' # inherited by print_optical_drives
 	# load A_HDD_DATA - this will also populate the full bsd disk data array values
@@ -11391,7 +11391,7 @@ print_hard_disk_data()
 	local row_starter="${C1}HDD Total Size$SEP3${C2} $hdd_capacity ($hdd_used) "
 	# in bsd, /dev/wd0c is disk id
 	if [[ -n $BSD_TYPE ]];then
-		dev_string='c'
+		dev_string=''
 	fi
 
 	if [[ $B_SHOW_BASIC_DISK == 'true' || $B_SHOW_DISK == 'true' ]];then
@@ -11426,7 +11426,7 @@ print_hard_disk_data()
 					fi
 					hdd_serial=" ${C1}serial$SEP3${C2} $hdd_serial"
 				fi
-				dev_data="/dev/${a_hdd_working[0]}$dev_string "
+				dev_data="$dev_string${a_hdd_working[0]} "
 			fi
 			if [[ -n ${a_hdd_working[2]} ]];then
 				hdd_name_temp=${a_hdd_working[2]}
@@ -12128,13 +12128,14 @@ print_networking_ip_data()
 print_optical_drive_data()
 {
 	eval $LOGFS
-	local a_drives='' drive_data='' counter='' 
+	local a_drives='' drive_data='' counter='' dev_string='/dev/'
 	local drive_id='' drive_links='' vendor='' speed='' multisession='' mcn='' audio=''
 	local dvd='' state='' rw_support='' rev='' separator='' drive_string='' part_2_data=''
 	if [[ -z $BSD_TYPE ]];then
 		get_optical_drive_data
 	else
 		get_optical_drive_data_bsd
+		dev_string=''
 	fi
 	# 0 - true dev path, ie, sr0, hdc
 	# 1 - dev links to true path
@@ -12170,7 +12171,7 @@ print_optical_drive_data()
 				if [[ -z ${a_drives[0]} ]];then
 					drive_id='N/A'
 				else
-					drive_id="/dev/${a_drives[0]}"
+					drive_id="$dev_string${a_drives[0]}"
 				fi
 				drive_links=$( sed 's/~/,/g' <<< ${a_drives[1]} )
 				if [[ -z $drive_links ]];then
