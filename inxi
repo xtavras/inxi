@@ -3,9 +3,9 @@
 # openbsd ftp does http
 ########################################################################
 ####  Script Name: inxi
-####  Version: 2.2.6
-####  Date: 2014-09-19
-####  Patch Number: 31-bsd
+####  Version: 2.2.7
+####  Date: 2014-09-20
+####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1891,7 +1891,7 @@ debug_data_collector()
 			gpart list &> $debug_data_dir/bsd-gpart-list.txt
 			gpart show &> $debug_data_dir/bsd-gpart-show.txt
 			gpart status &> $debug_data_dir/bsd-gpart-status.txt
-			swapctl -l &> $debug_data_dir/bsd-swapctl-l.txt
+			swapctl -l -k &> $debug_data_dir/bsd-swapctl-l-k.txt
 			swapon -s &> $debug_data_dir/swapon-s.txt
 			sysctl -b kern.geom.conftxt  &> $debug_data_dir/bsd-sysctl-b-kern.geom.conftxt.txt
 			sysctl -b kern.geom.confxml &> $debug_data_dir/bsd-sysctl-b-kern.geom.confxml.txt
@@ -5776,8 +5776,8 @@ get_hdd_data_basic()
 		else
 			df_string='df -k'
 		fi
-		if swapctl -l &>/dev/null;then
-			swap_size=$( swapctl -l 2>/dev/null | gawk '
+		if swapctl -l -k &>/dev/null;then
+			swap_size=$( swapctl -l -k 2>/dev/null | gawk '
 			BEGIN { 
 			swapSize=0
 			total=0
@@ -6117,7 +6117,7 @@ get_hard_drive_data_bsd()
 					bSetSize="true"
 				}
 			}
-			aDisks[nr, "id"] = diskId
+			aDisks[diskId, "id"] = diskId
 			if ($0 ~ /[^0-9][0-9\.]+[[:space:]]*[MG]B/ && $0 !~ /MB\/s/) {
 				workingSize=gensub(/.*[^0-9]([0-9\.]+[[:space:]]*[MG]B).*/,"\\1",1,$0)
 				if (workingSize ~ /GB/ ) {
@@ -6128,7 +6128,7 @@ get_hard_drive_data_bsd()
 					sub(/[[:space:]]*MB/,"",workingSize)
 					workingSize=workingSize
 				}
-				aDisks[nr, "size"] = workingSize
+				aDisks[diskId, "size"] = workingSize
 				if ( bSetSize == "true" ) {
 					if ( workingSize != "" ){
 						size=size+workingSize
@@ -6138,21 +6138,21 @@ get_hard_drive_data_bsd()
 			}
 			if ( $NF ~ /<.*>/ ){
 				gsub(/.*<|>.*/,"",$NF)
-				aDisks[nr, "model"] = $NF
+				aDisks[diskId, "model"] = $NF
 			}
 			if ( $NF ~ /serial number/ ){
 				sub(/serial[[:space:]]+number[[:space:]]*/,"",$NF)
-				aDisks[nr, "serial"] = $NF
+				aDisks[diskId, "serial"] = $NF
 			}
 		}
 		END {
-			for (i=1;i<=nr;i++) {
+			for ( key in aIds ) {
 				# we are not adding to size above for raid, and we do not print it for raid
 				# this is re openbsd raid, which uses sd0 for raid array, even though sd is for scsi
-				if ( aDisks[i, "model"] !~ /raid/ ) {
-					workingSize = aDisks[i, "size"]/1000
+				if ( aDisks[aIds[key], "model"] !~ /raid/ ) {
+					workingSize = aDisks[aIds[key], "size"]/1000
 					workingSize = sprintf( "%.1fGB", workingSize )
-					print aDisks[i, "id"] "," workingSize "," aDisks[i, "model"] "," "," aDisks[i, "serial"] "," 
+					print aDisks[aIds[key], "id"] "," workingSize "," aDisks[aIds[key], "model"] "," "," aDisks[aIds[key], "serial"] "," 
 				}
 			}
 			size = size/1000                # calculate size in GB size
@@ -7445,18 +7445,26 @@ get_optical_drive_data_bsd()
 					aDisks[nr, "rev"] = rev_number
 				}
 				model=gensub(/(.*[^0-9\.])[0-9\.]+$/,"\\1",1,$NF)
+				sub(/[[:space:]]+$/,"",model)
 				aDisks[nr, "model"] = model
 			}
 			if ( $NF ~ /serial number/ ){
 				sub(/serial[[:space:]]+number[[:space:]]*/,"",$NF)
 				aDisks[nr, "serial"] = $NF
 			}
+			if ( $NF ~ /[GM]B\/s/ ){
+				speed=gensub(/^([0-9\.]+[[:space:]]*[GM]B\/s).*/,"\\1",1,$NF)
+				sub(/\.[0-9]+/,"",speed)
+				if ( speed ~ /^[0-9]+/ ) {
+					aDisks[nr, "speed"] = speed
+				}
+			}
 		}
 		# "$link,dev-readlinks,$vendor,$model,$rev_number,$proc_info_string,$state"
 		# $proc_info_string: print speed "," multisession "," mcn "," audio "," cdr "," cdrw "," dvd "," dvdr "," dvdram
 		END {
 			for (i=1;i<=nr;i++) {
-				print aDisks[i, "id"] ",,," aDisks[i, "model"] "," aDisks[i, "rev"] ",,,,,,,,," 
+				print aDisks[i, "id"] ",,," aDisks[i, "model"] "," aDisks[i, "rev"] "," aDisks[i, "speed"] ",,,,,,,," 
 			}
 		}' <<< "$Dmesg_Boot_Data" ) )
 		IFS="$ORIGINAL_IFS"
@@ -7485,7 +7493,7 @@ get_partition_data()
 		--exclude-type=fdescfs --exclude-type=iso9660 --exclude-type=linprocfs --exclude-type=procfs
 		--exclude-type=squashfs --exclude-type=sysfs --exclude-type=tmpfs --exclude-type=unionfs'
 	else
-		swap_data="$( swapctl -l 2>/dev/null )"
+		swap_data="$( swapctl -l -k 2>/dev/null )"
 		# default size is 512, -H only for size in human readable format
 		# older bsds don't support -T, pain, so we'll use partial output there
 		if df -h -T &>/dev/null;then
@@ -8465,6 +8473,7 @@ get_raid_data_bsd()
 		/SIZE.*ALLOC/ {
 			sub(/.*ALLOC.*/,"", $0)
 		}
+		# gptid/d874c7e7-3f6d-11e4-b7dc-080027ea466c
 		/^[^[:space:]]/ {
 			components=""
 			separator=""
@@ -12128,7 +12137,7 @@ print_networking_ip_data()
 print_optical_drive_data()
 {
 	eval $LOGFS
-	local a_drives='' drive_data='' counter='' dev_string='/dev/'
+	local a_drives='' drive_data='' counter='' dev_string='/dev/' speed_string='x'
 	local drive_id='' drive_links='' vendor='' speed='' multisession='' mcn='' audio=''
 	local dvd='' state='' rw_support='' rev='' separator='' drive_string='' part_2_data=''
 	if [[ -z $BSD_TYPE ]];then
@@ -12136,6 +12145,7 @@ print_optical_drive_data()
 	else
 		get_optical_drive_data_bsd
 		dev_string=''
+		speed_string=''
 	fi
 	# 0 - true dev path, ie, sr0, hdc
 	# 1 - dev links to true path
@@ -12247,7 +12257,7 @@ print_optical_drive_data()
 				if [[ -z ${a_drives[5]} ]];then
 					speed='N/A'
 				else
-					speed="${a_drives[5]}x"
+					speed="${a_drives[5]}$speed_string"
 				fi
 				if [[ -z ${a_drives[8]} ]];then
 					audio='N/A'
