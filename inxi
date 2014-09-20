@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.6
 ####  Date: 2014-09-18
-####  Patch Number: 13-bsd
+####  Patch Number: 15-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -4805,6 +4805,11 @@ get_disk_data_bsd()
 			}
 		}
 		END {
+			for (i=1;i<=nr;i++) {
+				workingSize = aDisks[i, "size"]/1000
+				workingSize = sprintf( "%.1fGB", workingSize )
+				print aDisks[i, "id"] "," workingSize "," aDisks[nr, "model"] "," "," "," 
+			}
 			size = size/1000                # calculate size in GB size
 			# in kb
 			workingUsed = hddUsed*1024/1000**3         # calculate workingUsed in GB used
@@ -4822,9 +4827,7 @@ get_disk_data_bsd()
 			else {
 				print "NA,-,,.." # print an empty array, this will be further handled in the print out function
 			}
-			for (i=1;i<=nr;i++) {
-				print aDisks[i, "id"] "," aDisks[i, "size"] "," aDisks[nr, "model"] "," "," "," 
-			}
+			
 		}' <<< "$Dmesg_Boot_Data" ) )
 		IFS="$ORIGINAL_IFS"
 	fi
