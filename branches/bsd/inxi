@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-21
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8570,7 +8570,10 @@ get_raid_component_data_bsd()
 					IGNORECASE=1
 					separator=""
 				}
-				$1 ~ /^'${component//\//%}'$/ {
+				{
+					gsub(/\//,"%",)
+				}
+				$1 ~ /^'$component'$/ {
 					sub( /ONLINE/, "", $2 )
 					print "'$component'" $2
 					exit
