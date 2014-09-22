@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-21
-####  Patch Number: 03-bsd
+####  Patch Number: 04-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8482,6 +8482,7 @@ get_raid_data_bsd()
 		A_RAID_DATA=( $(
 		gawk '
 		BEGIN {
+			IGNORECASE=1
 			raidString=""
 			separator=""
 			components=""
@@ -8506,10 +8507,11 @@ get_raid_data_bsd()
 			getline
 			# raid level is the second item in the output, unless it is not, sometimes it is absent
 			if ( $1 != "" ) {
-				if ( $1 ~ /raid|mirror/i ) {
+				if ( $1 ~ /raid|mirror/ ) {
 					raidLevel="zfs " $1
 				}
 				else {
+					raidLevel="zfs-no-raid"
 					components = $1
 					separator=" "
 				}
@@ -8591,9 +8593,16 @@ get_raid_component_data_bsd()
 			$1 ~ /^'$device'$/ {
 				while ( getline && !/^$/ ) {
 					# raid level is the second item in the output, unless it is not, sometimes it is absent
-					if ( $1 != "" && raidLevel == "" && $1 ~ /raid|mirror/ ) {
-						raidLevel="zfs " $1
-						getline
+					if ( $1 != "" ) {
+						if ( raidLevel == "" ) {
+							if (  $1 ~ /raid|mirror/ ) {
+								raidLevel="zfs " $1
+								getline
+							}
+							else {
+								raidLevel="zfs-no-raid"
+							}
+						}
 					}
 					sub( /ONLINE/, "", $2 )
 					components=components separator $1 separator $2
