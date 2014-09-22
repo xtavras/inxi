@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.7
 ####  Date: 2014-09-21
-####  Patch Number: 02-bsd
+####  Patch Number: 03-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -828,7 +828,7 @@ initialize_data()
 	initialize_paths
 	
 	# set downloaders. 
-	if type -p wget &>/dev/null;then
+	if ! type -p wget &>/dev/null;then
 		# first check for bsd stuff
 		if type -p fetch &>/dev/null;then
 			DOWNLOADER='fetch'
