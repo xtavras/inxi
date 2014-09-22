@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-22
-####  Patch Number: 11-bsd
+####  Patch Number: 12-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9428,12 +9428,8 @@ $repo_data_working"
 						}
 						if ( $1 == "enabled" ) {
 							if ( $2 == "yes" ) {
-								enabled="enabled"
+								print "BSD ports server:" repoFile ":" repoName " " repoUrl 
 							}
-							else {
-								enabled="disabled"
-							}
-							print "BSD ports server:" repoFile ":" repoName " (enabled-" enabled ") " repoUrl 
 						}
 					}
 				}
