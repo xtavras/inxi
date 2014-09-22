@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-22
-####  Patch Number: 02-bsd
+####  Patch Number: 03-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9381,7 +9381,7 @@ $repo_data_working"
 		fi
 		if [[ -d $ports_dir ]];then
 			repo_files=$(ls ${ports_dir}*.conf 2>/dev/null )
-			for repo in $repofiles
+			for repo_file in $repo_files
 			do
 				repo_data_working="$repo_data_working$( gawk -v repoFile=$repo_file '
 				BEGIN {
@@ -9392,8 +9392,9 @@ $repo_data_working"
 					enabled=""
 				}
 				{
-					gsub(/({|}|^[[:space:]]+|[[:space:]]+$),"",$1)
-					gsub((({|}|^[[:space:]]+|[[:space:]]+$),"",$2)
+					sub(/^#.*/,"",$0)
+					gsub(/({|}|^[[:space:]]+|[[:space:]]+$)/,"",$1)
+					gsub(/({|}|^[[:space:]]+|[[:space:]]+$)/,"",$2)
 				}
 				/^[^[:space:]]*$/ {
 					repoName=$1
@@ -9401,7 +9402,7 @@ $repo_data_working"
 					enabled=""
 					while ( getline && $0 ~ /^$/ ) {
 						if ( $1 == "url" ) {
-							repoUrl=$2
+							repoUrl=$2$3
 						}
 						if ( $1 == "enabled" ) {
 							enabled=$2
