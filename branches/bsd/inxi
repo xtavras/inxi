@@ -8571,7 +8571,7 @@ get_raid_component_data_bsd()
 					separator=""
 				}
 				{
-					gsub(/\//,"%",)
+					gsub(/\//,"%",$1)
 				}
 				$1 ~ /^'$component'$/ {
 					sub( /ONLINE/, "", $2 )
