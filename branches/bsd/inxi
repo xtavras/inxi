@@ -3,9 +3,9 @@
 # openbsd ftp does http
 ########################################################################
 ####  Script Name: inxi
-####  Version: 2.2.7
+####  Version: 2.2.8
 ####  Date: 2014-09-21
-####  Patch Number: 05-bsd
+####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -12709,7 +12709,7 @@ print_raid_data()
 				fi
 				if [[ ${a_raid_working[3]} == '' ]];then
 					if [[ ${a_raid_working[1]} != 'inactive' ]];then
-						device_components='N/A'
+						device_components=" ${C1}components$SEP3${C2}N/A"
 					fi
 				else
 					for component in ${a_raid_working[3]}
