@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-22
-####  Patch Number: 09-bsd
+####  Patch Number: 11-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9442,7 +9442,7 @@ $repo_data_working"
 		fi
 		if [[ -z $REPO_DATA ]];then
 			REPO_DATA="$repo_data_working"
-		else
+		elif [[ -n $repo_data_working ]];then
 			REPO_DATA="$REPO_DATA
 $repo_data_working"
 		fi
