@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-22
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -6166,7 +6166,7 @@ get_hard_drive_data_bsd()
 			# multi dimensional pseudo arrays are sorted at total random, not in order of
 			# creation, so force a sort of the aIds, which deletes the array index but preserves
 			# the sorted keys.
-			sort(aIds) 
+			asort(aIds) 
 			
 			for ( key in aIds ) {
 				# we are not adding to size above for raid, and we do not print it for raid
@@ -7503,7 +7503,7 @@ get_optical_drive_data_bsd()
 			# multi dimensional pseudo arrays are sorted at total random, not in order of
 			# creation, so force a sort of the aIds, which deletes the array index but preserves
 			# the sorted keys.
-			sort(aIds) 
+			asort(aIds) 
 			for ( key in aIds ) {
 				print aDisks[aIds[key], "id"] ",,," aDisks[aIds[key], "model"] "," aDisks[aIds[key], "rev"] "," aDisks[aIds[key], "speed"] ",,,,,,,," 
 			}
