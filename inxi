@@ -4,8 +4,8 @@
 ########################################################################
 ####  Script Name: inxi
 ####  Version: 2.2.8
-####  Date: 2014-09-21
-####  Patch Number: 00
+####  Date: 2014-09-22
+####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -3580,7 +3580,7 @@ get_audio_data()
 				modules[audioCard] = modules[audioCard] gensub( /(.*): (.*)/ ,"\\2" ,"g" ,$0 ) ""
 			}
 			else if (/^[[:space:]]*I\/O/) {
-				portsTemp = gensub(/\t*I\/O ports at (.*) \[.*\]/,"\\1","g",$0)
+				portsTemp = gensub(/\t*I\/O ports at ([a-z0-9]+)(| \[.*\])/,"\\1","g",$0)
 				ports[audioCard] = ports[audioCard] portsTemp " "
 			}
 		}
@@ -8095,7 +8095,7 @@ EOF"
 				sub(/:$/, "", pciId)
 				itemData=$4
 				chipId=gensub(/.*chip=([0-9a-f][0-9a-f][0-9a-f][0-9a-f])([0-9a-f][0-9a-f][0-9a-f][0-9a-f]).*/, "\\2:\\1", itemData )
-				if ( $2 ~ /class=020000|class=068000/ ) {
+				if ( $2 ~ /class=020000/ ) {
 					class="network"
 				}
 				else if ( $2 == "class=030000" ) {
@@ -8518,6 +8518,10 @@ get_raid_data_bsd()
 			}
 			
 			while ( getline && $1 !~ /^$/ ) {
+				# https://blogs.oracle.com/eschrock/entry/zfs_hot_spares
+				if ($1 ~ /spares/) {
+					getline
+				}
 				# print $1
 				components = components separator $1
 				separator=" "
@@ -8606,6 +8610,10 @@ get_raid_component_data_bsd()
 								raidLevel="zfs-no-raid"
 							}
 						}
+					}
+					# https://blogs.oracle.com/eschrock/entry/zfs_hot_spares
+					if ($1 ~ /spares/) {
+						getline
 					}
 					sub( /ONLINE/, "", $2 )
 					components=components separator $1 separator $2
@@ -9169,6 +9177,7 @@ get_repo_data()
 	local apt_file='/etc/apt/sources.list' yum_repo_dir='/etc/yum.repos.d/' yum_conf='/etc/yum.conf'
 	local pacman_conf='/etc/pacman.conf' pacman_repo_dir='/etc/pacman.d/' pisi_dir='/etc/pisi/'
 	local zypp_repo_dir='/etc/zypp/repos.d/' freebsd_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
+	local ports_dir='/usr/local/etc/pkg/repos/*.conf'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
@@ -9359,15 +9368,57 @@ $repo_data_working"
 		done <<< "$REPO_DATA"
 		# echo and execute the line breaks inserted
 		REPO_DATA="$( echo -e $repo_data_working )"
-	elif [[ -f $freebsd_conf ]];then
-		REPO_DATA="$( gawk -F '=' -v repoFile=$freebsd_conf '
-		BEGIN {
-			IGNORECASE=1
-		}
-		/^SERVERNAME/ {
-			print "BSD ports servers:" repoFile ":" $2
-		}
-		' $freebsd_conf )"
+	elif [[ -f $freebsd_conf || -d $ports_dir ]];then
+		if [[ -f $freebsd_conf ]];then
+			REPO_DATA="$( gawk -F '=' -v repoFile=$freebsd_conf '
+			BEGIN {
+				IGNORECASE=1
+			}
+			/^SERVERNAME/ {
+				print "BSD ports servers:" repoFile ":" $2
+			}
+			' $freebsd_conf )"
+		fi
+		if [[ -d $ports_dir ]];then
+			repo_files=$(ls $ports_dir/*.conf 2>/dev/null )
+			for repo in $repofiles
+			do
+				repo_data_working="$repo_data_working$( gawk -v repoFile=$repo_file '
+				BEGIN {
+					FS=":"
+					IGNORECASE=1
+					repoName=""
+					repoUrl=""
+					enabled=""
+				}
+				{
+					gsub(/({|}|^[[:space:]]+|[[:space:]]+$),"",$1)
+					gsub((({|}|^[[:space:]]+|[[:space:]]+$),"",$2)
+				}
+				/^[^[:space:]]*$/ {
+					repoName=$1
+					repoUrl=""
+					enabled=""
+					while ( getline && $0 ~ /^$/ ) {
+						if ( $1 == "url" ) {
+							repoUrl=$2
+						}
+						if ( $1 == "enabled" ) {
+							enabled=$2
+							print "BSD ports server:" repoFile ":" repoName " (enabled-" enabled ") " repoUrl "\\n"
+						}
+					}
+				}
+				' $repo_file )"
+			done
+		fi
+		if [[ -z $REPO_DATA ]];then
+			REPO_DATA="$repo_data_working"
+		else
+			REPO_DATA="$REPO_DATA
+$repo_data_working"
+		fi
+		repo_data_working=''
 	elif [[ -f $openbsd_conf ]];then
 		REPO_DATA="$( gawk -F '=' -v repoFile=$openbsd_conf '
 		BEGIN {
