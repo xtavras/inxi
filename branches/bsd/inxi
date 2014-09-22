@@ -8503,10 +8503,16 @@ get_raid_data_bsd()
 			blocksAvailable=$4
 			chunkRaidAllocated=$3
 			
-			# go to the next line now, this will probably need fixing later with weird data sets
 			getline
+			# raid level is the second item in the output, unless it is not, sometimes it is absent
 			if ( $1 != "" ) {
-				raidLevel="zfs " $1
+				if ( $1 ~ /raid|mirror/ ) {
+					raidLevel="zfs " $1
+				}
+				else {
+					components = $1
+					separator=" "
+				}
 			}
 			
 			while ( getline && $1 !~ /^$/ ) {
@@ -8583,8 +8589,8 @@ get_raid_component_data_bsd()
 			}
 			$1 ~ /^'$device'$/ {
 				while ( getline && !/^$/ ) {
-					# raid level is the second item in the output
-					if ( $1 != "" && raidLevel == "" ) {
+					# raid level is the second item in the output, unless it is not, sometimes it is absent
+					if ( $1 != "" && raidLevel == "" && $1 ~ /raid|mirror/ ) {
 						raidLevel="zfs " $1
 						getline
 					}
@@ -12709,7 +12715,7 @@ print_raid_data()
 				fi
 				if [[ ${a_raid_working[3]} == '' ]];then
 					if [[ ${a_raid_working[1]} != 'inactive' ]];then
-						device_components=" ${C1}components$SEP3${C2}N/A"
+						device_components=" ${C1}components$SEP3${C2} N/A"
 					fi
 				else
 					for component in ${a_raid_working[3]}
