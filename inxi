@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-22
-####  Patch Number: 01-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9177,7 +9177,7 @@ get_repo_data()
 	local apt_file='/etc/apt/sources.list' yum_repo_dir='/etc/yum.repos.d/' yum_conf='/etc/yum.conf'
 	local pacman_conf='/etc/pacman.conf' pacman_repo_dir='/etc/pacman.d/' pisi_dir='/etc/pisi/'
 	local zypp_repo_dir='/etc/zypp/repos.d/' freebsd_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
-	local ports_dir='/usr/local/etc/pkg/repos/*.conf'
+	local ports_dir='/usr/local/etc/pkg/repos/'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
@@ -9380,7 +9380,7 @@ $repo_data_working"
 			' $freebsd_conf )"
 		fi
 		if [[ -d $ports_dir ]];then
-			repo_files=$(ls $ports_dir/*.conf 2>/dev/null )
+			repo_files=$(ls ${ports_dir}*.conf 2>/dev/null )
 			for repo in $repofiles
 			do
 				repo_data_working="$repo_data_working$( gawk -v repoFile=$repo_file '
