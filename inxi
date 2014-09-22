@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-22
-####  Patch Number: 08-bsd
+####  Patch Number: 09-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9414,7 +9414,7 @@ $repo_data_working"
 					enabled=""
 				}
 				{
-					gsub(/|{|}|^#.*/,"",$0)
+					gsub(/|{|}|,|^#.*/,"",$0)
 				}
 				/^[^[:space:]]/ {
 					repoName=$1
@@ -9427,8 +9427,13 @@ $repo_data_working"
 							repoUrl=$2$3
 						}
 						if ( $1 == "enabled" ) {
-							enabled=$2
-							print "BSD ports server:" repoFile ":" repoName " (enabled-" enabled ") " repoUrl "\\n"
+							if ( $2 == "yes" ) {
+								enabled="enabled"
+							}
+							else {
+								enabled="disabled"
+							}
+							print "BSD ports server:" repoFile ":" repoName " (enabled-" enabled ") " repoUrl 
 						}
 					}
 				}
