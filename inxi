@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.8
 ####  Date: 2014-09-21
-####  Patch Number: 01-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -8520,7 +8520,7 @@ get_raid_data_bsd()
 				components = components separator $1
 				separator=" "
 			}
-
+			gsub(/\//,"~",components)
 			# print $1
 			raidString = device "," deviceState "," raidLevel "," components "," reportSize "," uData 
 			raidString = raidString "," blocksAvailable "," superBlock "," algorithm "," chunkRaidAllocated 
