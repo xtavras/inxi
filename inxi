@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.12
 ####  Date: 2014-09-25
-####  Patch Number: 01-bsd
+####  Patch Number: 02-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9286,6 +9286,7 @@ get_repo_data()
 	local pacman_conf='/etc/pacman.conf' pacman_repo_dir='/etc/pacman.d/' pisi_dir='/etc/pisi/'
 	local zypp_repo_dir='/etc/zypp/repos.d/' freebsd_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
 	local ports_dir='/usr/local/etc/pkg/repos/' slackpkg_file='/etc/slackpkg/mirrors'
+	local netbsd_file='/usr/pkg/etc/pkgin/repositories.conf'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
@@ -9580,6 +9581,24 @@ $repo_data_working"
 			print "BSD ports servers^" repoFile "^" $2
 		}
 		' $openbsd_conf )"
+	elif [[ -f $netbsd_file ]];then
+		# note, only one file, but loop it in case more are added in future
+		for repo_file in $netbsd_file
+		do
+			repo_data_working="$( gawk -v repoFile="$repo_file" '
+			!/^[[:space:]]*$|^[[:space:]]*#/ {
+				print "NetBSD pkg servers^" repoFile "^" $0
+			}' $repo_file )"
+			if [[ -n $repo_data_working ]];then
+				if [[ -z $REPO_DATA ]];then
+					REPO_DATA="$repo_data_working"
+				else
+					REPO_DATA="$REPO_DATA
+					$repo_data_working"
+				fi
+			fi
+		done
+		repo_data_working=''
 	fi
 	eval $LOGFE
 }
