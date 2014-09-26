@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.12
 ####  Date: 2014-09-25
-####  Patch Number: 08-bsd
+####  Patch Number: 09-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9290,7 +9290,7 @@ get_repo_data()
 	local zypp_repo_dir='/etc/zypp/repos.d/' ports_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
 	local bsd_pkg_dir='/usr/local/etc/pkg/repos/' slackpkg_file='/etc/slackpkg/mirrors'
 	local netbsd_file='/usr/pkg/etc/pkgin/repositories.conf' freebsd_file='/etc/freebsd-update.conf'
-	local freebsd_pkg_file='/etc/pkg/FreeBSD.conf'
+	local freebsd_pkg_file='/etc/pkg/FreeBSD.conf' slackpkg_plus_file='/etc/slackpkg/slackpkgplus.conf'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
@@ -9446,17 +9446,16 @@ $repo_data_working"
 		REPO_DATA="$( echo -e $repo_data_working2 )"
 		repo_data_working=''
 	# pisi - pardus
-	elif [[ -f $slackpkg_file ]];then
+	elif [[ -f $slackpkg_file || -f $slackpkg_plus_file ]];then
 		# note, only one file, but loop it in case more are added in future
-		for repo_file in $slackpkg_file
-		do
+		if [[ -f $slackpkg_file ]];then
 			if [[ -n $1 ]];then
-				cat $repo_file &> $1/repo-data_${repo_file//\//-}.txt
+				cat $slackpkg_file &> $1/repo-data_${slackpkg_file//\//-}.txt
 			fi
-			repo_data_working="$( gawk -v repoFile="$repo_file" '
+			repo_data_working="$( gawk -v repoFile="$slackpkg_file" '
 			!/^[[:space:]]*$|^[[:space:]]*#/ {
 				print "slackpkg sources^" repoFile "^" $0
-			}' $repo_file )"
+			}' $slackpkg_file )"
 			if [[ -n $repo_data_working ]];then
 				if [[ -z $REPO_DATA ]];then
 					REPO_DATA="$repo_data_working"
@@ -9465,7 +9464,51 @@ $repo_data_working"
 					$repo_data_working"
 				fi
 			fi
-		done
+		fi
+		if [[ -f $slackpkg_plus_file ]];then
+			if [[ -n $1 ]];then
+				cat $slackpkg_plus_file &> $1/repo-data_${slackpkg_plus_file//\//-}.txt
+			fi
+			# if this is off, then all are disabled
+			# SLACKPKGPLUS=off
+			# else if listed in here and present, they are enabled
+			# REPOPLUS=( slackpkgplus restricted alienbob ktown multilib slacky)
+			# MIRRORPLUS['multilib']=http://taper.alienbase.nl/mirrors/people/alien/multilib/14.1/
+			# MIRRORPLUS['alienbob']=http://taper.alienbase.nl/mirrors/people/alien/sbrepos/14.1/x86_64/
+			# MIRRORPLUS['restricted']=http://taper.alienbase.nl/mirrors/people/alien/restricted_sbrepos/14.1/x86_64/
+			# MIRRORPLUS['ktown']=http://taper.alienbase.nl/mirrors/alien-kde/14.1/latest/x86_64/
+			# MIRRORPLUS['slacky']=http://repository.slacky.eu/slackware64-14.1/
+			# MIRRORPLUS['slackpkgplus']=http://slakfinder.org/slackpkg+/
+			repo_data_working="$( gawk -F '=' -v repoFile="$slackpkg_plus_file" '
+			BEGIN {
+				activeRepos=""
+				repoName=""
+			}
+			/^SLACKPKGPLUS/ {
+				if ( $2 == "off" ){
+					exit
+				}
+			}
+			/^REPOPLUS/ {
+				activeRepos=$2
+			}
+			/^MIRRORPLUS/ {
+				if ( activeRepos != "" ) {
+					gsub(/MIRRORPLUS\['\''|'\''\]/,"",$1)
+					if ( match( activeRepos, $1 ) ){
+						print "slackpkg+ sources^" repoFile "^" $2
+					}
+				}
+			}' $slackpkg_plus_file )"
+			if [[ -n $repo_data_working ]];then
+				if [[ -z $REPO_DATA ]];then
+					REPO_DATA="$repo_data_working"
+				else
+					REPO_DATA="$REPO_DATA
+					$repo_data_working"
+				fi
+			fi
+		fi
 		repo_data_working=''
 	elif [[ -d $pisi_dir && -n $( type -p pisi ) ]];then
 		REPO_DATA="$( pisi list-repo )"
