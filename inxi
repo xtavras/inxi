@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.12
 ####  Date: 2014-09-25
-####  Patch Number: 04-bsd
+####  Patch Number: 05-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9286,7 +9286,7 @@ get_repo_data()
 	local pacman_conf='/etc/pacman.conf' pacman_repo_dir='/etc/pacman.d/' pisi_dir='/etc/pisi/'
 	local zypp_repo_dir='/etc/zypp/repos.d/' ports_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
 	local bsd_pkg_dir='/usr/local/etc/pkg/repos/' slackpkg_file='/etc/slackpkg/mirrors'
-	local netbsd_file='/usr/pkg/etc/pkgin/repositories.conf' freebsd_file='/etc/freebsd-update.conf '
+	local netbsd_file='/usr/pkg/etc/pkgin/repositories.conf' freebsd_file='/etc/freebsd-update.conf'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
@@ -9524,7 +9524,8 @@ $repo_data_working"
 				IGNORECASE=1
 			}
 			/^SERVERNAME/ {
-				print "BSD ports servers^" repoFile "^" $2
+				print "BSD ports server^" repoFile "^" $2
+				exit
 			}
 			' $ports_conf )"
 			if [[ -z $REPO_DATA ]];then
@@ -9535,12 +9536,13 @@ $repo_data_working"
 			fi
 		fi
 		if [[ -f $freebsd_file ]];then
-			repo_data_working="$( gawk -F '=' -v repoFile=$ports_conf '
+			repo_data_working="$( gawk -v repoFile=$freebsd_file '
 			BEGIN {
 				IGNORECASE=1
 			}
 			/^ServerName/ {
-				print "FreeBSD pkg servers^" repoFile "^" $2
+				print "FreeBSD update server^" repoFile "^" $2
+				exit
 			}
 			' $freebsd_file )"
 			if [[ -z $REPO_DATA ]];then
