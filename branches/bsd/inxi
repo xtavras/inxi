@@ -3,8 +3,8 @@
 # openbsd ftp does http
 ########################################################################
 ####  Script Name: inxi
-####  Version: 2.2.10
-####  Date: 2014-09-24
+####  Version: 2.2.12
+####  Date: 2014-09-25
 ####  Patch Number: 01-bsd
 ########################################################################
 ####  SPECIAL THANKS
@@ -1455,7 +1455,10 @@ log_function_data()
 				;;
 			cat)
 				if [[ $B_LOG_FULL_DATA == 'true' ]];then
-					logged_data="\n$line\nFull file data: cat $2\n\n$( cat $2 )\n$line\n"
+					for cat_file in $2
+					do
+						logged_data="$logged_data\n$line\nFull file data: cat $cat_file\n\n$( cat $cat_file )\n$line\n"
+					done
 					spacer=''
 				fi
 				;;
@@ -3115,7 +3118,12 @@ get_start_client()
 		case $App_Working_Name in
 			# bsd will never use this section
 			bash|dash|sh|python*|perl*)	# We want to know who wrapped it into the shell or perl.
-				pppid="$( ps -p $PPID -o ppid --no-headers | sed 's/[[:space:]]//g' )"
+				if [[ $BSD_TYPE != 'bsd' ]];then
+					pppid=$( ps -p $PPID -o ppid --no-headers 2>/dev/null | gawk '{print $NF}' )
+				else
+					# without --no-headers we need the second line
+					pppid=$( ps -p $PPID -o ppid 2>/dev/null | gawk '$1 ~ /^[0-9]+/ {print $5}' )
+				fi
 				if [[ -n $pppid && -f /proc/$pppid/exe ]];then
 					Irc_Client_Path="$( readlink /proc/$pppid/exe )"
 					irc_client_path_lower=$( tr '[A-Z]' '[a-z]' <<< $Irc_Client_Path )
@@ -4816,12 +4824,24 @@ get_de_gtk_data()
 		# Name        : libgtk-3-0
 		# Version     : 3.12.2
 		elif type -p rpm &>/dev/null;then
-			toolkit=$( rpm -qi libgtk-3-0 2>/dev/null | gawk -F ':' '/^[[:space:]]*Version/ {print $3}' )
+			toolkit=$( rpm -qi libgtk-3-0 2>/dev/null | gawk -F ':' '
+			/^[[:space:]]*Version/ { 
+				gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2)
+				print $2 
+			}' )
 			if [[ -z $toolkit ]];then
-				toolkit=$( rpm -qi libgtk-4-0 2>/dev/null | gawk -F ':' '/^[[:space:]]*Version/ {print $3}' )
+				toolkit=$( rpm -qi libgtk-4-0 2>/dev/null | gawk -F ':' '
+				/^[[:space:]]*Version/ {
+					gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2)
+					print $2
+				}' )
 			fi
 			if [[ -z $toolkit ]];then
-				toolkit=$( rpm -qi libgtk-2-0 2>/dev/null | gawk -F ':' '/^[[:space:]]*Version/ {print $3}' )
+				toolkit=$( rpm -qi libgtk-2-0 2>/dev/null | gawk -F ':' '
+				/^[[:space:]]*Version/ {
+					gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2)
+					print $2
+				}' )
 			fi
 		fi
 	fi
@@ -6740,7 +6760,7 @@ get_memory_data()
 				}
 				else {
 					sub(/K/,"",$4)
-					# dragonfly can have null avm
+					# dragonfly can have 0 avm, but they may fix that so make test dynamic
 					if ( $4 != 0 ) {
 						memory=$4
 					}
@@ -9269,7 +9289,22 @@ get_repo_data()
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
-		REPO_DATA="$( grep -Esv '(^[[:space:]]*$|^[[:space:]]*#)' $apt_file $apt_file.d/*.list | sed $SED_RX 's/^(.*)/apt sources:\1/' )"
+		for repo_file in $apt_file $( ls $apt_file.d/*.list 2>/dev/null)
+		do
+			repo_data_working="$( gawk -v repoFile="$repo_file" '
+			!/^[[:space:]]*$|^[[:space:]]*#/ {
+				print "apt sources^" repoFile "^" $0
+			}' $repo_file )"
+			if [[ -n $repo_data_working ]];then
+				if [[ -z $REPO_DATA ]];then
+					REPO_DATA="$repo_data_working"
+				else
+					REPO_DATA="$REPO_DATA
+					$repo_data_working"
+				fi
+			fi
+		done
+		repo_data_working=''
 	fi
 	# yum - fedora, redhat, centos, etc. Note that rpmforge also may create apt sources
 	# in /etc/apt/sources.list.d/. Therefore rather than trying to assume what package manager is
@@ -9281,11 +9316,11 @@ get_repo_data()
 			# older redhats put their yum data in /etc/yum.conf
 			repo_files=$( ls $yum_repo_dir*.repo $yum_conf 2>/dev/null )
 			repo_name='yum'
-			log_function_data "yum repo filess: $repo_files"
+			log_function_data "yum repo files: $repo_files"
 		elif [[ -d $zypp_repo_dir ]];then
 			repo_files=$( ls $zypp_repo_dir*.repo 2>/dev/null )
 			repo_name='zypp'
-			log_function_data "zypp repo filess: $repo_files"
+			log_function_data "zypp repo files: $repo_files"
 		fi
 		log_function_data 'cat' "$repo_files"
 		if [[ -n $repo_files ]];then
@@ -9294,7 +9329,7 @@ get_repo_data()
 				repo_data_working="$( gawk -v repoFile=$repo_file '
 				# construct the string for the print function to work with, file name: data
 				function print_line( fileName, repoId, repoUrl ){
-					print "'$repo_name' sources:" fileName ":" repoId repoUrl
+					print "'$repo_name' sources^" fileName "^" repoId repoUrl
 				}
 				BEGIN {
 					FS="\n"
@@ -9354,10 +9389,10 @@ get_repo_data()
 						REPO_DATA="$REPO_DATA
 $repo_data_working"
 					fi
-					repo_data_working=''
 				fi
 			done
 		fi
+		repo_data_working=''
 	# pacman - archlinux, going to assume that pisi and arch/pacman, etc don't have the above issue with apt/yum
 	elif [[ -f $pacman_conf ]];then
 		# get list of mirror include files, trim white space off ends
@@ -9385,7 +9420,7 @@ $repo_data_working"
 				}
 				/^[[:space:]]*Server/ {
 					sub(/^[[:space:]]+|[[:space:]]+$/,"",$2)
-					print "pacman repo servers:" repoFile ":" $2 "\\n"
+					print "pacman repo servers^" repoFile "^" $2 "\\n"
 				}
 				' $repo_file )"
 			else
@@ -9394,11 +9429,29 @@ $repo_data_working"
 		done
 		# execute line breaks
 		REPO_DATA="$( echo -e $repo_data_working2 )"
+		repo_data_working=''
 	# pisi - pardus
 	elif [[ -f $slackpkg_file ]];then
-		REPO_DATA="$( grep -Esv '(^[[:space:]]*$|^[[:space:]]*#)' $slackpkg_file | sed $SED_RX 's/^(.*)/slackpkg sources:\1/' )"
+		# note, only one file, but loop it in case more are added in future
+		for repo_file in $slackpkg_file
+		do
+			repo_data_working="$( gawk -v repoFile="$repo_file" '
+			!/^[[:space:]]*$|^[[:space:]]*#/ {
+				print "slackpkg sources^" repoFile "^" $0
+			}' $repo_file )"
+			if [[ -n $repo_data_working ]];then
+				if [[ -z $REPO_DATA ]];then
+					REPO_DATA="$repo_data_working"
+				else
+					REPO_DATA="$REPO_DATA
+					$repo_data_working"
+				fi
+			fi
+		done
+		repo_data_working=''
 	elif [[ -d $pisi_dir && -n $( type -p pisi ) ]];then
 		REPO_DATA="$( pisi list-repo )"
+		log_function_data "pisi-list-repo: $REPO_DATA"
 		# now we need to create the structure: repo info: repo path
 		# we do that by looping through the lines of the output and then
 		# putting it back into the <data>:<url> format print repos expects to see
@@ -9419,16 +9472,18 @@ $repo_data_working"
 				print $0
 			}' <<< $repo_line )
 			if [[ -n $( grep '://' <<< $repo_line ) ]];then
-				repo_data_working="$repo_data_working:$repo_line\n"
+				repo_data_working="$repo_data_working^$repo_line\n"
 			else
-				repo_data_working="${repo_data_working}pisi repo:$repo_line"
+				repo_data_working="${repo_data_working}pisi repo^$repo_line"
 			fi
 		done <<< "$REPO_DATA"
 		# echo and execute the line breaks inserted
 		REPO_DATA="$( echo -e $repo_data_working )"
+		repo_data_working=''
 	# Mandriva/Mageia using: urpmq
 	elif type -p urpmq &>/dev/null;then
 		REPO_DATA="$( urpmq --list-media active --list-url )"
+		log_function_data "urpmq: $REPO_DATA"
 		# now we need to create the structure: repo info: repo path
 		# we do that by looping through the lines of the output and then
 		# putting it back into the <data>:<url> format print repos expects to see
@@ -9456,7 +9511,7 @@ $repo_data_working"
 				repo_data_working2=$( grep -Eo '([^[:space:]]+://|[[:space:]]/).*' <<< $repo_line )
 				# then get the repo name string by slicing out the url string
 				repo_name=$( sed "s|[[:space:]]*$repo_data_working2||" <<< $repo_line )
-				repo_data_working="${repo_data_working}urpmq repo:$repo_name:$repo_data_working2\n"
+				repo_data_working="${repo_data_working}urpmq repo^$repo_name^$repo_data_working2\n"
 			fi
 		done <<< "$REPO_DATA"
 		# echo and execute the line breaks inserted
@@ -9468,15 +9523,16 @@ $repo_data_working"
 				IGNORECASE=1
 			}
 			/^SERVERNAME/ {
-				print "BSD ports servers:" repoFile ":" $2
+				print "BSD ports servers^" repoFile "^" $2
 			}
 			' $freebsd_conf )"
 		fi
 		if [[ -d $ports_dir ]];then
 			repo_files=$(ls ${ports_dir}*.conf 2>/dev/null )
+			log_function_data 'cat' "$repo_files"
 			for repo_file in $repo_files
 			do
-				repo_data_working="$repo_data_working$( gawk -v repoFile=$repo_file '
+				repo_data_working="$( gawk -v repoFile=$repo_file '
 				BEGIN {
 					FS=":"
 					IGNORECASE=1
@@ -9500,19 +9556,19 @@ $repo_data_working"
 						}
 						if ( $1 == "enabled" ) {
 							if ( $2 == "yes" ) {
-								print "BSD ports server:" repoFile ":" repoName ":" repoUrl 
+								print "BSD ports server^" repoFile "^" repoName " " repoUrl 
 							}
 						}
 					}
 				}
 				' $repo_file )"
-			done
-		fi
-		if [[ -z $REPO_DATA ]];then
-			REPO_DATA="$repo_data_working"
-		elif [[ -n $repo_data_working ]];then
-			REPO_DATA="$REPO_DATA
+				if [[ -z $REPO_DATA ]];then
+					REPO_DATA="$repo_data_working"
+				elif [[ -n $repo_data_working ]];then
+					REPO_DATA="$REPO_DATA
 $repo_data_working"
+				fi
+			done
 		fi
 		repo_data_working=''
 	elif [[ -f $openbsd_conf ]];then
@@ -9521,7 +9577,7 @@ $repo_data_working"
 			IGNORECASE=1
 		}
 		/^installpath/ {
-			print "BSD ports servers:" repoFile ":" $2
+			print "BSD ports servers^" repoFile "^" $2
 		}
 		' $openbsd_conf )"
 	fi
@@ -13291,9 +13347,9 @@ print_repo_data()
 		while read repo_line
 		do
 			(( repo_count++ ))
-			repo_type=$( cut -d ':' -f 1 <<< $repo_line )
-			file_name=$( cut -d ':' -f 2 <<< $repo_line )
-			file_content=$( cut -d ':' -f 3-7 <<< $repo_line )
+			repo_type=$( cut -d '^' -f 1 <<< $repo_line )
+			file_name=$( cut -d '^' -f 2 <<< $repo_line )
+			file_content=$( cut -d '^' -f 3-7 <<< $repo_line )
 			# this will dump unwanted white space line starters. Some irc channels
 			# use bots that show page title for urls, so need to break the url by adding 
 			# a white space.
