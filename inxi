@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.12
 ####  Date: 2014-09-25
-####  Patch Number: 07-bsd
+####  Patch Number: 08-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9589,7 +9589,7 @@ $repo_data_working"
 				IGNORECASE=1
 			}
 			$1 ~ /^[[:space:]]*url/ {
-				gsub(/\"|pkg+/,"",$2)
+				gsub(/\"|pkg\+|,/,"",$2)
 				print "FreeBSD default pkg server^" repoFile "^" $2
 				exit
 			}
