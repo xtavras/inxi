@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.12
 ####  Date: 2014-09-25
-####  Patch Number: 05-bsd
+####  Patch Number: 06-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -1693,6 +1693,8 @@ debug_data_collector()
 		# diskinfo -v <disk>
 		# fdisk <disk>
 		dmidecode &> $debug_data_dir/dmidecode.txt
+		
+		get_repo_data "$SCRIPT_DATA_DIR/$debug_data_dir"
 		
 		if type -p shopt &>/dev/null;then
 			shopt -s nullglob;a_distro_ids=(/etc/*[-_]{release,version});shopt -u nullglob;echo ${a_distro_ids[@]} &> $debug_data_dir/etc-distro-files.txt
@@ -9277,6 +9279,7 @@ get_ram_data()
 # neat and readable. Each line of the total number contains the following sections,
 # separated by a : for splitting in the print function
 # part one, repo type/string : part two, file name, if present, of info : part 3, repo data
+# args: $1 - [file location of debug data file - optional, only for debugging data collection] 
 get_repo_data()
 {
 	eval $LOGFS
@@ -9287,11 +9290,17 @@ get_repo_data()
 	local zypp_repo_dir='/etc/zypp/repos.d/' ports_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
 	local bsd_pkg_dir='/usr/local/etc/pkg/repos/' slackpkg_file='/etc/slackpkg/mirrors'
 	local netbsd_file='/usr/pkg/etc/pkgin/repositories.conf' freebsd_file='/etc/freebsd-update.conf'
+	local freebsd_pkg_file='/etc/pkg/FreeBSD.conf'
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
-		for repo_file in $apt_file $( ls $apt_file.d/*.list 2>/dev/null)
+		repo_files=$(ls /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null)
+		log_function_data "apt repo files: $repo_files"
+		for repo_file in $apt_file $repo_files
 		do
+			if [[ -n $1 ]];then
+				cat $repo_file &> $1/repo-data_${repo_file//\//-}.txt
+			fi
 			repo_data_working="$( gawk -v repoFile="$repo_file" '
 			!/^[[:space:]]*$|^[[:space:]]*#/ {
 				print "apt sources^" repoFile "^" $0
@@ -9323,10 +9332,12 @@ get_repo_data()
 			repo_name='zypp'
 			log_function_data "zypp repo files: $repo_files"
 		fi
-		log_function_data 'cat' "$repo_files"
 		if [[ -n $repo_files ]];then
 			for repo_file in $repo_files
 			do
+				if [[ -n $1 ]];then
+					cat $repo_file &> $1/repo-data_${repo_file//\//-}.txt
+				fi
 				repo_data_working="$( gawk -v repoFile=$repo_file '
 				# construct the string for the print function to work with, file name: data
 				function print_line( fileName, repoId, repoUrl ){
@@ -9412,6 +9423,9 @@ $repo_data_working"
 		repo_data_working="$repo_data_working $pacman_conf"
 		for repo_file in $repo_data_working 
 		do
+			if [[ -n $1 ]];then
+				cat $repo_file &> $1/repo-data_${repo_file//\//-}.txt
+			fi
 			if [[ -f $repo_file ]];then
 				# inserting a new line after each found / processed match
 				repo_data_working2="$repo_data_working2$( gawk -v repoFile=$repo_file '
@@ -9436,6 +9450,9 @@ $repo_data_working"
 		# note, only one file, but loop it in case more are added in future
 		for repo_file in $slackpkg_file
 		do
+			if [[ -n $1 ]];then
+				cat $repo_file &> $1/repo-data_${repo_file//\//-}.txt
+			fi
 			repo_data_working="$( gawk -v repoFile="$repo_file" '
 			!/^[[:space:]]*$|^[[:space:]]*#/ {
 				print "slackpkg sources^" repoFile "^" $0
@@ -9452,6 +9469,9 @@ $repo_data_working"
 		repo_data_working=''
 	elif [[ -d $pisi_dir && -n $( type -p pisi ) ]];then
 		REPO_DATA="$( pisi list-repo )"
+		if [[ -n $1 ]];then
+			echo "$REPO_DATA" &> $1/repo-data_pisi-list-repo.txt
+		fi
 		log_function_data "pisi-list-repo: $REPO_DATA"
 		# now we need to create the structure: repo info: repo path
 		# we do that by looping through the lines of the output and then
@@ -9484,7 +9504,9 @@ $repo_data_working"
 	# Mandriva/Mageia using: urpmq
 	elif type -p urpmq &>/dev/null;then
 		REPO_DATA="$( urpmq --list-media active --list-url )"
-		log_function_data "urpmq: $REPO_DATA"
+		if [[ -n $1 ]];then
+			echo "$REPO_DATA" &> $1/repo-data_urpmq-list-media-active.txt
+		fi
 		# now we need to create the structure: repo info: repo path
 		# we do that by looping through the lines of the output and then
 		# putting it back into the <data>:<url> format print repos expects to see
@@ -9519,6 +9541,9 @@ $repo_data_working"
 		REPO_DATA="$( echo -e $repo_data_working )"
 	elif [[ -f $ports_conf || -f $freebsd_file || -d $bsd_pkg_dir ]];then
 		if [[ -f $ports_conf ]];then
+			if [[ -n $1 ]];then
+				cat $ports_conf &> $1/repo-data_${ports_conf//\//-}.txt
+			fi
 			repo_data_working="$( gawk -F '=' -v repoFile=$ports_conf '
 			BEGIN {
 				IGNORECASE=1
@@ -9536,6 +9561,9 @@ $repo_data_working"
 			fi
 		fi
 		if [[ -f $freebsd_file ]];then
+			if [[ -n $1 ]];then
+				cat $freebsd_file &> $1/repo-data_${freebsd_file//\//-}.txt
+			fi
 			repo_data_working="$( gawk -v repoFile=$freebsd_file '
 			BEGIN {
 				IGNORECASE=1
@@ -9552,12 +9580,38 @@ $repo_data_working"
 $repo_data_working"
 			fi
 		fi
+		if [[ -f $freebsd_pkg_file ]];then
+			if [[ -n $1 ]];then
+				cat $freebsd_pkg_file &> $1/repo-data_${freebsd_pkg_file//\//-}.txt
+			fi
+			repo_data_working="$( gawk -v repoFile=$freebsd_pkg_file '
+			BEGIN {
+				IGNORECASE=1
+				pkgServer=""
+			}
+			# FreeBSD: { url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest", mirror_type: "srv", signature_type: "fingerprints", fingerprints: "/usr/share/keys/pkg", enabled: yes
+			/^FreeBSD.*{.*url/ {
+				pkgServer=gensub(/[^\"]+\"([^\"]+)\".*/,"\\1",1,$0)
+				print "FreeBSD default pkg server^" repoFile "^" pkgServer
+				exit
+			}
+			' $freebsd_file )"
+			if [[ -z $REPO_DATA ]];then
+				REPO_DATA="$repo_data_working"
+			elif [[ -n $repo_data_working ]];then
+				REPO_DATA="$REPO_DATA
+$repo_data_working"
+			fi
+		fi
 		
 		if [[ -d $bsd_pkg_dir ]];then
 			repo_files=$(ls ${bsd_pkg_dir}*.conf 2>/dev/null )
 			log_function_data 'cat' "$repo_files"
 			for repo_file in $repo_files
 			do
+				if [[ -n $1 ]];then
+					cat $repo_file &> $1/repo-data_${repo_file//\//-}.txt
+				fi
 				repo_data_working="$( gawk -v repoFile=$repo_file '
 				BEGIN {
 					FS=":"
@@ -9598,18 +9652,24 @@ $repo_data_working"
 		fi
 		repo_data_working=''
 	elif [[ -f $openbsd_conf ]];then
+		if [[ -n $1 ]];then
+			cat $openbsd_conf &> $1/repo-data_${openbsd_conf//\//-}.txt
+		fi
 		REPO_DATA="$( gawk -F '=' -v repoFile=$openbsd_conf '
 		BEGIN {
 			IGNORECASE=1
 		}
 		/^installpath/ {
-			print "BSD ports servers^" repoFile "^" $2
+			print "OpenBSD pkg mirror^" repoFile "^" $2
 		}
 		' $openbsd_conf )"
 	elif [[ -f $netbsd_file ]];then
 		# note, only one file, but loop it in case more are added in future
 		for repo_file in $netbsd_file
 		do
+			if [[ -n $1 ]];then
+				cat $repo_file &> $1/repo-data_${repo_file//\//-}.txt
+			fi
 			repo_data_working="$( gawk -v repoFile="$repo_file" '
 			!/^[[:space:]]*$|^[[:space:]]*#/ {
 				print "NetBSD pkg servers^" repoFile "^" $0
