@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.12
 ####  Date: 2014-09-25
-####  Patch Number: 06-bsd
+####  Patch Number: 07-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9584,18 +9584,16 @@ $repo_data_working"
 			if [[ -n $1 ]];then
 				cat $freebsd_pkg_file &> $1/repo-data_${freebsd_pkg_file//\//-}.txt
 			fi
-			repo_data_working="$( gawk -v repoFile=$freebsd_pkg_file '
+			repo_data_working="$( gawk -F ': ' -v repoFile=$freebsd_pkg_file '
 			BEGIN {
 				IGNORECASE=1
-				pkgServer=""
 			}
-			# FreeBSD: { url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest", mirror_type: "srv", signature_type: "fingerprints", fingerprints: "/usr/share/keys/pkg", enabled: yes
-			/^FreeBSD.*{.*url/ {
-				pkgServer=gensub(/[^\"]+\"([^\"]+)\".*/,"\\1",1,$0)
-				print "FreeBSD default pkg server^" repoFile "^" pkgServer
+			$1 ~ /^[[:space:]]*url/ {
+				gsub(/\"|pkg+/,"",$2)
+				print "FreeBSD default pkg server^" repoFile "^" $2
 				exit
 			}
-			' $freebsd_file )"
+			' $freebsd_pkg_file )"
 			if [[ -z $REPO_DATA ]];then
 				REPO_DATA="$repo_data_working"
 			elif [[ -n $repo_data_working ]];then
@@ -9606,7 +9604,6 @@ $repo_data_working"
 		
 		if [[ -d $bsd_pkg_dir ]];then
 			repo_files=$(ls ${bsd_pkg_dir}*.conf 2>/dev/null )
-			log_function_data 'cat' "$repo_files"
 			for repo_file in $repo_files
 			do
 				if [[ -n $1 ]];then
