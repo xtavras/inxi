@@ -5,7 +5,7 @@
 ####  Script Name: inxi
 ####  Version: 2.2.12
 ####  Date: 2014-09-25
-####  Patch Number: 02-bsd
+####  Patch Number: 04-bsd
 ########################################################################
 ####  SPECIAL THANKS
 ########################################################################
@@ -9284,9 +9284,9 @@ get_repo_data()
 	local repo_name=''
 	local apt_file='/etc/apt/sources.list' yum_repo_dir='/etc/yum.repos.d/' yum_conf='/etc/yum.conf'
 	local pacman_conf='/etc/pacman.conf' pacman_repo_dir='/etc/pacman.d/' pisi_dir='/etc/pisi/'
-	local zypp_repo_dir='/etc/zypp/repos.d/' freebsd_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
-	local ports_dir='/usr/local/etc/pkg/repos/' slackpkg_file='/etc/slackpkg/mirrors'
-	local netbsd_file='/usr/pkg/etc/pkgin/repositories.conf'
+	local zypp_repo_dir='/etc/zypp/repos.d/' ports_conf='/etc/portsnap.conf' openbsd_conf='/etc/pkg.conf'
+	local bsd_pkg_dir='/usr/local/etc/pkg/repos/' slackpkg_file='/etc/slackpkg/mirrors'
+	local netbsd_file='/usr/pkg/etc/pkgin/repositories.conf' freebsd_file='/etc/freebsd-update.conf '
 	
 	# apt - debian, buntus, also sometimes some yum/rpm repos may create apt repos here as well
 	if [[ -f $apt_file || -d $apt_file.d ]];then
@@ -9517,19 +9517,42 @@ $repo_data_working"
 		done <<< "$REPO_DATA"
 		# echo and execute the line breaks inserted
 		REPO_DATA="$( echo -e $repo_data_working )"
-	elif [[ -f $freebsd_conf || -d $ports_dir ]];then
-		if [[ -f $freebsd_conf ]];then
-			REPO_DATA="$( gawk -F '=' -v repoFile=$freebsd_conf '
+	elif [[ -f $ports_conf || -f $freebsd_file || -d $bsd_pkg_dir ]];then
+		if [[ -f $ports_conf ]];then
+			repo_data_working="$( gawk -F '=' -v repoFile=$ports_conf '
 			BEGIN {
 				IGNORECASE=1
 			}
 			/^SERVERNAME/ {
 				print "BSD ports servers^" repoFile "^" $2
 			}
-			' $freebsd_conf )"
+			' $ports_conf )"
+			if [[ -z $REPO_DATA ]];then
+				REPO_DATA="$repo_data_working"
+			elif [[ -n $repo_data_working ]];then
+				REPO_DATA="$REPO_DATA
+$repo_data_working"
+			fi
 		fi
-		if [[ -d $ports_dir ]];then
-			repo_files=$(ls ${ports_dir}*.conf 2>/dev/null )
+		if [[ -f $freebsd_file ]];then
+			repo_data_working="$( gawk -F '=' -v repoFile=$ports_conf '
+			BEGIN {
+				IGNORECASE=1
+			}
+			/^ServerName/ {
+				print "FreeBSD pkg servers^" repoFile "^" $2
+			}
+			' $freebsd_file )"
+			if [[ -z $REPO_DATA ]];then
+				REPO_DATA="$repo_data_working"
+			elif [[ -n $repo_data_working ]];then
+				REPO_DATA="$REPO_DATA
+$repo_data_working"
+			fi
+		fi
+		
+		if [[ -d $bsd_pkg_dir ]];then
+			repo_files=$(ls ${bsd_pkg_dir}*.conf 2>/dev/null )
 			log_function_data 'cat' "$repo_files"
 			for repo_file in $repo_files
 			do
@@ -9557,7 +9580,7 @@ $repo_data_working"
 						}
 						if ( $1 == "enabled" ) {
 							if ( $2 == "yes" ) {
-								print "BSD ports server^" repoFile "^" repoName " " repoUrl 
+								print "BSD pkg server^" repoFile "^" repoName " " repoUrl 
 							}
 						}
 					}
